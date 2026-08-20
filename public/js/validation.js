@@ -1,5 +1,5 @@
 /* ========================================
-   ROYAL IGNITE - Universal Form Validation JS
+   ROYAL IGNITE - Universal Form Validation & Eye Password Toggle JS
    ======================================== */
 
 const Validation = {
@@ -16,6 +16,7 @@ const Validation = {
         this.clearError(inputElement);
         inputElement.classList.add("input-error");
 
+        const targetParent = inputElement.closest(".password-wrap") || inputElement.parentNode;
         const errorDiv = document.createElement("div");
         errorDiv.className = "js-error-message";
         errorDiv.style.color = "#E7000B";
@@ -24,12 +25,13 @@ const Validation = {
         errorDiv.style.fontWeight = "500";
         errorDiv.innerText = message;
 
-        inputElement.parentNode.appendChild(errorDiv);
+        targetParent.appendChild(errorDiv);
     },
 
     clearError(inputElement) {
         inputElement.classList.remove("input-error");
-        const existingError = inputElement.parentNode.querySelector(".js-error-message");
+        const targetParent = inputElement.closest(".password-wrap") || inputElement.parentNode;
+        const existingError = targetParent.querySelector(".js-error-message");
         if (existingError) {
             existingError.remove();
         }
@@ -114,10 +116,67 @@ const Validation = {
                 e.stopPropagation();
             }
         });
+    },
+
+    // Eye Icons SVGs
+    eyeOpenIcon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+    eyeClosedIcon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
+
+    initPasswordToggles() {
+        const passwordInputs = document.querySelectorAll('input[type="password"]');
+
+        passwordInputs.forEach(input => {
+            if (input.dataset.eyeAttached) return;
+            input.dataset.eyeAttached = "true";
+
+            // Ensure parent container is a password-wrap
+            let wrapper = input.parentElement;
+            if (!wrapper.classList.contains('password-wrap')) {
+                wrapper = document.createElement('div');
+                wrapper.className = 'password-wrap';
+                wrapper.style.position = 'relative';
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+            }
+
+            // Create Eye Toggle Button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'toggle-password-btn';
+            toggleBtn.setAttribute('aria-label', 'Toggle password visibility');
+            toggleBtn.style.position = 'absolute';
+            toggleBtn.style.right = '12px';
+            toggleBtn.style.top = '12px';
+            toggleBtn.style.background = 'none';
+            toggleBtn.style.border = 'none';
+            toggleBtn.style.cursor = 'pointer';
+            toggleBtn.style.color = '#71717A';
+            toggleBtn.style.display = 'flex';
+            toggleBtn.style.alignItems = 'center';
+            toggleBtn.style.justifyContent = 'center';
+            toggleBtn.style.zIndex = '10';
+            toggleBtn.innerHTML = this.eyeOpenIcon;
+
+            input.style.paddingRight = '42px';
+            wrapper.appendChild(toggleBtn);
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                toggleBtn.innerHTML = isPassword ? this.eyeClosedIcon : this.eyeOpenIcon;
+                toggleBtn.style.color = isPassword ? '#111111' : '#71717A';
+            });
+        });
     }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    Validation.initPasswordToggles();
     const forms = document.querySelectorAll("form");
     forms.forEach(form => Validation.attachFormValidation(form));
 });
