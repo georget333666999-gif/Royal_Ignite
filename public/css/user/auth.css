@@ -1,0 +1,467 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700&display=swap');
+
+/* ========================================
+   ROYAL IGNITE - Luxury Black & Gold Theme
+   ======================================== */
+
+:root {
+    --bg-main: #050505;
+    --card-gold: #EAAB14;
+    --logo-gold: #C8923D;
+    --text-dark: #050505;
+    --text-muted: #6B7280;
+    --text-light: #F0F0F0;
+    --text-subtle: #A0A0A0;
+    --input-bg: rgba(217, 217, 217, 0.3);
+    --input-border: rgba(0, 0, 0, 0.2);
+    --button-black: #050505;
+    --button-hover: #1f1f1f;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Instrument Sans', 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* ========================================
+   Header Partial
+   ======================================== */
+
+.royal-header {
+    background: rgba(5, 5, 5, 0.9);
+    border-bottom: 1px solid rgba(160, 160, 160, 0.2);
+    backdrop-filter: blur(8px);
+    padding: 16px 48px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-logo {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 24px;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    color: var(--logo-gold);
+    text-decoration: none;
+    font-weight: 400;
+}
+
+.header-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.header-icon {
+    color: #F0F0F0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.header-icon:hover {
+    opacity: 0.8;
+}
+
+/* ========================================
+   Auth Content Layout
+   ======================================== */
+
+.auth-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    background: var(--bg-main);
+}
+
+.gold-card {
+    background-color: var(--card-gold);
+    width: 100%;
+    max-width: 540px;
+    padding: 50px 48px;
+    border-radius: 4px;
+    box-shadow: 0px 8px 40px -12px rgba(0, 0, 0, 0.3);
+    color: var(--text-dark);
+}
+
+.auth-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 44px;
+    line-height: 1.1;
+    text-align: center;
+    letter-spacing: -1.1px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.auth-subtitle {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 15px;
+    line-height: 24px;
+    text-align: center;
+    color: #333333;
+    margin-bottom: 32px;
+}
+
+/* ========================================
+   Form Components
+   ======================================== */
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+
+.form-input {
+    width: 100%;
+    height: 48px;
+    padding: 12px 16px;
+    background: var(--input-bg);
+    border: none;
+    border-bottom: 1px solid var(--input-border);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+    border-radius: 2px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.45);
+    border-bottom: 1.5px solid var(--text-dark);
+}
+
+.form-input::placeholder {
+    color: rgba(5, 5, 5, 0.6);
+}
+
+.forgot-link {
+    display: block;
+    text-align: right;
+    font-size: 13px;
+    color: #4b5563;
+    text-decoration: none;
+    margin-top: 6px;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: var(--text-dark);
+    text-decoration: underline;
+}
+
+.primary-btn {
+    width: 100%;
+    height: 52px;
+    background: var(--button-black);
+    color: #FFFFFF;
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.primary-btn:hover {
+    background: var(--button-hover);
+}
+
+.divider-container {
+    display: flex;
+    align-items: center;
+    margin: 28px 0;
+    gap: 12px;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.divider-text {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.google-btn {
+    width: 100%;
+    height: 52px;
+    background: rgba(217, 217, 217, 0.3);
+    border: 0.8px solid var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.35px;
+    color: var(--text-dark);
+    transition: background 0.2s ease;
+}
+
+.google-btn:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.auth-switch a {
+    color: var(--text-dark);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+.terms-notice {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: #333333;
+    line-height: 1.5;
+}
+
+.terms-notice a {
+    color: var(--text-dark);
+    text-decoration: underline;
+}
+
+.error-badge {
+    background: #fee2e2;
+    border: 1px solid #f87171;
+    color: #991b1b;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    text-align: center;
+}
+
+.success-badge {
+    background: #dcfce7;
+    border: 1px solid #4ade80;
+    color: #166534;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    text-align: center;
+}
+
+/* ========================================
+   Footer Partial
+   ======================================== */
+
+.royal-footer {
+    background: var(--bg-main);
+    border-top: 1px solid rgba(160, 160, 160, 0.2);
+    padding: 48px 48px 32px;
+    margin-top: auto;
+}
+
+.footer-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1.3fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-brand {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--logo-gold);
+    margin-bottom: 14px;
+}
+
+.footer-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-subtle);
+    font-weight: 300;
+}
+
+.footer-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #F0F0F0;
+    margin-bottom: 16px;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-links a {
+    color: var(--text-subtle);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #FFFFFF;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+}
+
+.newsletter-input {
+    flex: 1;
+    height: 38px;
+    background: transparent;
+    border: 1px solid rgba(160, 160, 160, 0.5);
+    padding: 0 12px;
+    color: #FFFFFF;
+    font-size: 13px;
+}
+
+.newsletter-input:focus {
+    outline: none;
+    border-color: var(--logo-gold);
+}
+
+.newsletter-btn {
+    background: transparent;
+    border: none;
+    color: var(--logo-gold);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0 8px;
+    transition: color 0.2s;
+}
+
+.newsletter-btn:hover {
+    color: #FFFFFF;
+}
+
+.footer-bottom {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-top: 24px;
+    border-top: 1px solid rgba(160, 160, 160, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-subtle);
+    font-weight: 300;
+}
+
+.footer-legal a {
+    color: var(--text-subtle);
+    text-decoration: none;
+    margin-left: 16px;
+    transition: color 0.2s;
+}
+
+.footer-legal a:hover {
+    color: #FFFFFF;
+}
+
+/* ========================================
+   Responsive Styling
+   ======================================== */
+
+@media (max-width: 900px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .royal-header {
+        padding: 16px 20px;
+    }
+    .gold-card {
+        padding: 32px 20px;
+    }
+    .auth-title {
+        font-size: 34px;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+    .footer-legal a {
+        margin: 0 8px;
+    }
+}

@@ -4,43 +4,54 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Change Email Address</title>
+    <title>Change Email Address - ROYAL IGNITE</title>
+    <link rel="stylesheet" href="/css/user/auth.css" />
 </head>
 
 <body>
 
-    <h1>Change Email Address</h1>
+    <%- include('partials/header') %>
 
-    <p>Enter your new email address. We will send an OTP to verify ownership.</p>
+    <main class="auth-wrapper">
+        <div class="gold-card">
+            
+            <h1 class="auth-title">Change Email Address</h1>
+            <p class="auth-subtitle">
+                Enter your new email address. We will send an OTP code to verify ownership.
+            </p>
 
-    <% if (error) { %>
-        <p style="color: red;"><%= error %></p>
-    <% } %>
+            <% if (error) { %>
+                <div class="error-badge"><%= error %></div>
+            <% } %>
 
-    <form
-        method="POST"
-        action="/user/profile/change-email"
-    >
+            <form action="/user/profile/change-email" method="POST">
+                
+                <div class="form-group">
+                    <label for="newEmail">New Email Address *</label>
+                    <input
+                        type="email"
+                        id="newEmail"
+                        name="newEmail"
+                        class="form-input"
+                        placeholder="e.g. new.email@example.com"
+                        required
+                    />
+                </div>
 
-        <label for="newEmail">New Email Address</label>
-        <input
-            type="email"
-            id="newEmail"
-            name="newEmail"
-            required
-        />
+                <button type="submit" class="primary-btn">
+                    SEND VERIFICATION OTP &rarr;
+                </button>
 
-        <br /><br />
+            </form>
 
-        <button type="submit">
-            Send Verification OTP
-        </button>
+            <div class="auth-switch" style="margin-top: 24px;">
+                <a href="/user/profile/edit">&larr; Back to Edit Profile</a>
+            </div>
 
-    </form>
+        </div>
+    </main>
 
-    <br />
-
-    <a href="/user/profile/edit">Back to Edit Profile</a>
+    <%- include('partials/footer') %>
 
 </body>
 
