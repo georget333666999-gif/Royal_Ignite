@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OTP Verification - ROYAL IGNITE Admin</title>
+    <link rel="stylesheet" href="/css/admin/login.css" />
+    <style>
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .otp-box {
+            width: 54px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            background: rgba(253, 252, 251, 0.5);
+        }
+        .otp-box:focus {
+            outline: none;
+            border-color: #000000;
+            background: #FFFFFF;
+        }
+        .timer-badge {
+            text-align: center;
+            font-size: 13px;
+            color: var(--admin-text-muted);
+            margin-bottom: 24px;
+        }
+        .timer-badge strong {
+            color: var(--admin-text-dark);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Admin Header Branding -->
+    <div class="admin-header">
+        <a href="/" class="admin-logo">ROYAL IGNITE</a>
+        <span class="admin-badge">ADMIN PANEL</span>
+    </div>
+
+    <!-- OTP Card -->
+    <main class="admin-card">
+        
+        <h1 class="admin-title">OTP Verification</h1>
+        <p class="admin-subtitle">
+            Enter the 6-digit verification code sent to your registered admin email address to continue securely.
+        </p>
+
+        <% if (typeof error !== "undefined" && error) { %>
+            <div class="error-badge"><%= error %></div>
+        <% } %>
+
+        <form action="/admin/verify-otp" method="POST" id="otpForm">
+            
+            <input type="hidden" name="otpCode" id="fullOtp" />
+
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" class="otp-box" autofocus />
+                <input type="text" maxlength="1" class="otp-box" />
+                <input type="text" maxlength="1" class="otp-box" />
+                <input type="text" maxlength="1" class="otp-box" />
+                <input type="text" maxlength="1" class="otp-box" />
+                <input type="text" maxlength="1" class="otp-box" />
+            </div>
+
+            <div class="timer-badge">
+                ⏱ Code expires in <strong id="timer">01:59</strong>
+            </div>
+
+            <button type="submit" class="primary-btn">
+                VERIFY OTP &rarr;
+            </button>
+
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; font-size: 13px; color: var(--admin-text-muted);">
+            Didn't receive the code? 
+            <form action="/admin/resend-otp" method="POST" style="display: inline;">
+                <button type="submit" style="background: none; border: none; font-weight: 600; color: #1A1A1A; cursor: pointer; text-decoration: underline;">Resend OTP</button>
+            </form>
+        </div>
+
+        <div style="text-align: center; margin-top: 16px;">
+            <a href="/admin/login" class="forgot-link" style="display: inline-flex; align-items: center; gap: 6px;">
+                &larr; Back to Login
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Bottom Security Note -->
+    <div class="security-note-box">
+        <div class="shield-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+        </div>
+        <div class="security-note-title">Secure Verification</div>
+        <div class="security-note-desc">
+            Your OTP helps ensure secure access to the ROYAL IGNITE admin panel.
+        </div>
+    </div>
+
+    <script>
+        const boxes = document.querySelectorAll('.otp-box');
+        const fullOtp = document.getElementById('fullOtp');
+        const form = document.getElementById('otpForm');
+
+        boxes.forEach((box, idx) => {
+            box.addEventListener('input', (e) => {
+                if (e.target.value && idx < boxes.length - 1) {
+                    boxes[idx + 1].focus();
+                }
+                combineOtp();
+            });
+
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !box.value && idx > 0) {
+                    boxes[idx - 1].focus();
+                }
+            });
+        });
+
+        function combineOtp() {
+            fullOtp.value = Array.from(boxes).map(b => b.value).join('');
+        }
+
+        form.addEventListener('submit', combineOtp);
+
+        // Timer Countdown
+        let duration = 119;
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            const min = String(Math.floor(duration / 60)).padStart(2, '0');
+            const sec = String(duration % 60).padStart(2, '0');
+            if (timerEl) timerEl.textContent = `${min}:${sec}`;
+            if (--duration < 0) {
+                clearInterval(interval);
+                if (timerEl) timerEl.textContent = 'Expired';
+            }
+        }, 1000);
+    </script>
+
+</body>
+
+</html>
