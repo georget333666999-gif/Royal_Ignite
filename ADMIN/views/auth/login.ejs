@@ -28,7 +28,7 @@
             <div class="error-badge"><%= error %></div>
         <% } %>
 
-        <form action="/admin/login" method="POST">
+        <form action="/admin/login" method="POST" id="adminLoginForm" novalidate>
             
             <div class="form-group">
                 <label for="email">EMAIL ADDRESS</label>
@@ -39,6 +39,7 @@
                     class="form-input"
                     placeholder="Enter your admin email"
                     value="<%= typeof email !== 'undefined' ? email : '' %>"
+                    data-validate="email"
                     required
                 />
             </div>
@@ -54,6 +55,7 @@
                     name="password"
                     class="form-input"
                     placeholder="Enter your password"
+                    data-validate="password"
                     required
                 />
             </div>
@@ -98,6 +100,8 @@
     <div class="admin-footer-links">
         <a href="#">Help Center</a> &bull; <a href="#">Contact Support</a>
     </div>
+
+    <script src="/js/validation.js"></script>
 
 </body>
 

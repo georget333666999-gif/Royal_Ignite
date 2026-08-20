@@ -24,7 +24,7 @@
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
-            <form action="/user/addresses/add" method="POST">
+            <form action="/user/addresses/add" method="POST" id="addAddressForm" novalidate>
                 
                 <div class="modal-form-grid">
                     
@@ -37,6 +37,7 @@
                             class="form-input"
                             placeholder="e.g. John Doe"
                             value="<%= formData.fullName || '' %>"
+                            data-validate="name"
                             required
                         />
                     </div>
@@ -51,6 +52,7 @@
                             placeholder="10-digit mobile"
                             maxlength="10"
                             value="<%= formData.phone || '' %>"
+                            data-validate="phone"
                             required
                         />
                     </div>
@@ -103,39 +105,36 @@
                             placeholder="6-digit pincode"
                             maxlength="6"
                             value="<%= formData.pincode || '' %>"
+                            data-validate="pincode"
                             required
                         />
                     </div>
 
                     <div class="form-group">
-                        <label for="country">Country *</label>
+                        <label for="addressType">Address Type *</label>
+                        <select id="addressType" name="addressType" class="form-input" required>
+                            <option value="Home" <%= formData.addressType === 'Home' ? 'selected' : '' %>>Home</option>
+                            <option value="Work" <%= formData.addressType === 'Work' ? 'selected' : '' %>>Work</option>
+                            <option value="Other" <%= formData.addressType === 'Other' ? 'selected' : '' %>>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
                         <input
-                            type="text"
-                            id="country"
-                            name="country"
-                            class="form-input"
-                            value="<%= formData.country || 'India' %>"
-                            required
+                            type="checkbox"
+                            id="isDefault"
+                            name="isDefault"
+                            style="width: 18px; height: 18px; accent-color: #050505;"
+                            <%= formData.isDefault ? 'checked' : '' %>
                         />
+                        <label for="isDefault" style="margin-bottom: 0; cursor: pointer; text-transform: none; font-size: 14px;">Set as default shipping address</label>
                     </div>
 
                 </div>
 
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input
-                            type="checkbox"
-                            name="isDefault"
-                            value="true"
-                            style="width: 16px; height: 16px;"
-                        />
-                        Set as default delivery address
-                    </label>
-                </div>
-
-                <!-- Footer Actions -->
+                <!-- Action Footer -->
                 <div class="modal-actions">
-                    <a href="/user/addresses" class="btn-cancel">Cancel</a>
+                    <a href="/user/addresses" class="btn-cancel">CANCEL</a>
                     <button type="submit" class="btn-save">SAVE ADDRESS</button>
                 </div>
 
@@ -145,6 +144,7 @@
     </div>
 
     <%- include('partials/footer') %>
+    <script src="/js/validation.js"></script>
 
 </body>
 

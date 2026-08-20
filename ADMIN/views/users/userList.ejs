@@ -401,7 +401,7 @@
                 <h3 class="modal-title">Edit Customer Profile</h3>
                 <button type="button" class="modal-close-btn" onclick="closeEditModal()">&times;</button>
             </div>
-            <form id="editUserForm" action="" method="POST">
+            <form id="editUserForm" action="" method="POST" novalidate>
                 <div class="modal-body">
                     <input type="hidden" name="search" value="<%= search || '' %>">
                     <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
@@ -410,17 +410,17 @@
 
                     <div class="form-group">
                         <label class="form-label">Full Name</label>
-                        <input type="text" id="editName" name="name" class="form-input" required />
+                        <input type="text" id="editName" name="name" class="form-input" data-validate="name" required />
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Email Address</label>
-                        <input type="email" id="editEmail" name="email" class="form-input" required />
+                        <input type="email" id="editEmail" name="email" class="form-input" data-validate="email" required />
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Phone Number</label>
-                        <input type="text" id="editPhone" name="phone" class="form-input" placeholder="e.g. +91 9876543210" />
+                        <input type="text" id="editPhone" name="phone" class="form-input" placeholder="e.g. 9876543210" data-validate="phone" />
                     </div>
                 </div>
 
@@ -431,6 +431,8 @@
             </form>
         </div>
     </div>
+
+    <script src="/js/validation.js"></script>
 
     <script>
         function openEditModal(userId, name, email, phone) {

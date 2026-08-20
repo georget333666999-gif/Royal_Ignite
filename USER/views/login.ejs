@@ -24,7 +24,7 @@
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
-            <form action="/user/login" method="POST">
+            <form action="/user/login" method="POST" id="loginForm" novalidate>
                 
                 <div class="form-group">
                     <label for="email">Email Address *</label>
@@ -35,6 +35,7 @@
                         class="form-input"
                         placeholder="e.g. john@example.com"
                         value="<%= formData.email || '' %>"
+                        data-validate="email"
                         required
                     />
                 </div>
@@ -47,6 +48,7 @@
                         name="password"
                         class="form-input"
                         placeholder="Enter your password"
+                        data-validate="password"
                         required
                     />
                     <a href="/user/forgot-password" class="forgot-link">Forgot Password?</a>
@@ -86,6 +88,7 @@
     </main>
 
     <%- include('partials/footer') %>
+    <script src="/js/validation.js"></script>
 
 </body>
 
