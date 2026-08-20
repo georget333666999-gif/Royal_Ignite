@@ -2,138 +2,135 @@
 <html lang="en">
 
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Edit Profile</title>
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile - ROYAL IGNITE</title>
+    <link rel="stylesheet" href="/css/user/auth.css" />
+    <link rel="stylesheet" href="/css/user/profile.css" />
 </head>
 
 <body>
 
-    <h1>Edit Profile</h1>
+    <%- include('partials/header') %>
 
-    <% if (error) { %>
+    <div class="modal-overlay">
+        <div class="modal-card">
+            
+            <a href="/user/profile" class="modal-close" title="Close">&times;</a>
 
-        <p>
-            <%= error %>
-        </p>
+            <h2 class="modal-title">Edit Profile</h2>
 
-    <% } %>
+            <% if (error) { %>
+                <div class="error-badge"><%= error %></div>
+            <% } %>
 
-<form
-    action="/user/profile/edit"
-    method="POST"
-    enctype="multipart/form-data"
->
+            <form action="/user/profile/edit" method="POST" enctype="multipart/form-data">
+                
+                <!-- Avatar Photo Actions -->
+                <div class="modal-avatar-sec">
+                    <img 
+                        src="<%= user.imgUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=111111&color=ffffff&size=150' %>" 
+                        alt="<%= user.name %>" 
+                        class="avatar-img"
+                        id="avatarPreview"
+                        style="width: 100px; height: 100px;"
+                    />
+                    
+                    <div class="photo-actions">
+                        <label for="profileImage" class="btn-choose-photo">
+                            CHOICE IMAGE
+                        </label>
+                        <input 
+                            type="file" 
+                            id="profileImage" 
+                            name="profileImage" 
+                            accept="image/jpeg,image/png,image/webp" 
+                            style="display: none;" 
+                            onchange="previewImage(this);"
+                        />
+                    </div>
+                </div>
 
-    <div>
+                <!-- Input Grid -->
+                <div class="modal-form-grid">
+                    
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            class="form-input"
+                            value="<%= user.name %>"
+                            required
+                        />
+                    </div>
 
-        <label for="profileImage">
-            Profile Image
-        </label>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            class="form-input"
+                            value="<%= user.phone || '' %>"
+                            maxlength="10"
+                            placeholder="Enter 10-digit phone"
+                            required
+                        />
+                    </div>
 
-        <br>
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input
+                            type="email"
+                            id="email"
+                            class="form-input"
+                            value="<%= user.email %>"
+                            disabled
+                        />
+                        <small style="display: block; margin-top: 4px; color: #333333;">
+                            <a href="/user/profile/change-email" style="color: #111111; font-weight: 600; text-decoration: underline;">Change email via OTP</a>
+                        </small>
+                    </div>
 
-        <% if (user.imgUrl) { %>
+                    <div class="form-group">
+                        <label for="memberSince">Member Since *</label>
+                        <input
+                            type="text"
+                            id="memberSince"
+                            class="form-input"
+                            value="<%= user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A' %>"
+                            disabled
+                        />
+                    </div>
 
-            <img
-                src="<%= user.imgUrl %>"
-                alt="Profile"
-                width="120"
-                height="120"
-            >
+                </div>
 
-            <br><br>
+                <!-- Footer Actions -->
+                <div class="modal-actions">
+                    <a href="/user/profile" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">SAVE</button>
+                </div>
 
-        <% } %>
+            </form>
 
-        <input
-            type="file"
-            id="profileImage"
-            name="profileImage"
-            accept="image/jpeg,image/png,image/webp"
-        >
-
-        <small>
-            JPG, PNG or WEBP. Maximum 2 MB.
-        </small>
-
+        </div>
     </div>
 
-    <br>
+    <%- include('partials/footer') %>
 
-    <div>
-
-        <label for="name">
-            Full Name
-        </label>
-
-        <input
-            type="text"
-            id="name"
-            name="name"
-            value="<%= user.name %>"
-            required
-        >
-
-    </div>
-
-    <br>
-
-    <div>
-
-        <label for="email">
-            Email
-        </label>
-
-        <input
-            type="email"
-            value="<%= user.email %>"
-            disabled
-        >
-
-        <small>
-            To change your email address, <a href="/user/profile/change-email">click here to verify a new email via OTP</a>.
-        </small>
-
-    </div>
-
-    <br>
-
-    <div>
-
-        <label for="phone">
-            Phone
-        </label>
-
-        <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value="<%= user.phone || '' %>"
-            maxlength="10"
-            required
-        >
-
-    </div>
-
-    <br>
-
-    <button type="submit">
-        Save Changes
-    </button>
-
-    <a href="/user/profile">
-        Cancel
-    </a>
-
-</form>
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 
 </body>
 
