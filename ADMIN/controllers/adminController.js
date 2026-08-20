@@ -29,6 +29,27 @@ const login = async (req, res) => {
     }
 };
 
+// Admin Dashboard GET
+const getDashboard = async (req, res) => {
+    try {
+        const metrics = await adminService.getDashboardMetrics();
+        res.render("dashboard", {
+            totalUsers: metrics.totalUsers
+        });
+    } catch (error) {
+        res.status(500).render("dashboard", {
+            totalUsers: 0
+        });
+    }
+};
+
+// Logout POST
+const logout = (req, res) => {
+    req.session.destroy(() => {
+        res.redirect("/admin/login");
+    });
+};
+
 // Forgot Password GET
 const getForgotPassword = (req, res) => {
     res.render("auth/forgotPassword", { error: null });
@@ -132,6 +153,8 @@ const postResetPassword = async (req, res) => {
 module.exports = {
     showLoginPage,
     login,
+    getDashboard,
+    logout,
     getForgotPassword,
     postForgotPassword,
     getVerifyOtp,

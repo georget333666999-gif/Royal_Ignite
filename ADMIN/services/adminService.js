@@ -103,9 +103,18 @@ const resetPassword = async (adminId, newPassword) => {
     return true;
 };
 
+// Get Dashboard Metrics
+const getDashboardMetrics = async () => {
+    const totalUsers = await User.countDocuments({ isAdmin: false });
+    return {
+        totalUsers
+    };
+};
+
 module.exports = {
     loginAdmin,
     sendResetOtp,
     verifyOtp,
-    resetPassword
+    resetPassword,
+    getDashboardMetrics
 };

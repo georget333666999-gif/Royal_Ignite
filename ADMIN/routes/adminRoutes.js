@@ -4,9 +4,13 @@ const userRoutes = require("./userRoutes");
 
 const router = express.Router();
 
-// Admin Login
+// Admin Login & Session
 router.get("/login", adminController.showLoginPage);
 router.post("/login", adminController.login);
+router.post("/logout", adminController.logout);
+
+// Admin Dashboard
+router.get("/dashboard", adminController.getDashboard);
 
 // Admin Forgot Password Flow
 router.get("/forgot-password", adminController.getForgotPassword);
