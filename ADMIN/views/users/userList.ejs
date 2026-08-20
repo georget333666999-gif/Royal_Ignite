@@ -159,7 +159,19 @@
 
         <!-- Main Content Area -->
         <main class="content-padding">
-            
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert-box alert-danger">
+                    <strong>Error:</strong> <%= error %>
+                </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert-box alert-success">
+                    <strong>Success:</strong> <%= success %>
+                </div>
+            <% } %>
+
             <!-- Top Metric Cards Row -->
             <div class="metrics-grid">
                 
@@ -308,25 +320,35 @@
                                             <% } %>
                                         </td>
 
-                                        <!-- Actions -->
+                                        <!-- Actions (Edit & Block/Unblock) -->
                                         <td style="text-align: right;">
-                                            <% if (user.isBlocked) { %>
-                                                <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock <%= user.name %>?');">
-                                                    <input type="hidden" name="search" value="<%= search || '' %>">
-                                                    <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
-                                                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
-                                                    <input type="hidden" name="page" value="<%= currentPage %>">
-                                                    <button type="submit" class="btn-pill-unblock">Unblock</button>
-                                                </form>
-                                            <% } else { %>
-                                                <form action="/admin/users/<%= user._id %>/block" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to block <%= user.name %>?');">
-                                                    <input type="hidden" name="search" value="<%= search || '' %>">
-                                                    <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
-                                                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
-                                                    <input type="hidden" name="page" value="<%= currentPage %>">
-                                                    <button type="submit" class="btn-pill-block">Block</button>
-                                                </form>
-                                            <% } %>
+                                            <div class="action-buttons-group">
+                                                <button
+                                                    type="button"
+                                                    class="btn-pill-edit"
+                                                    onclick="openEditModal('<%= user._id %>', '<%= user.name.replace(/'/g, "\\'") %>', '<%= user.email %>', '<%= user.phone || '' %>')"
+                                                >
+                                                    Edit
+                                                </button>
+
+                                                <% if (user.isBlocked) { %>
+                                                    <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock <%= user.name %>?');">
+                                                        <input type="hidden" name="search" value="<%= search || '' %>">
+                                                        <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
+                                                        <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
+                                                        <input type="hidden" name="page" value="<%= currentPage %>">
+                                                        <button type="submit" class="btn-pill-unblock">Unblock</button>
+                                                    </form>
+                                                <% } else { %>
+                                                    <form action="/admin/users/<%= user._id %>/block" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to block <%= user.name %>?');">
+                                                        <input type="hidden" name="search" value="<%= search || '' %>">
+                                                        <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
+                                                        <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
+                                                        <input type="hidden" name="page" value="<%= currentPage %>">
+                                                        <button type="submit" class="btn-pill-block">Block</button>
+                                                    </form>
+                                                <% } %>
+                                            </div>
                                         </td>
                                     </tr>
                                 <% }) %>
@@ -371,6 +393,70 @@
         </main>
 
     </div>
+
+    <!-- Edit Customer Modal Dialog -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Customer Profile</h3>
+                <button type="button" class="modal-close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editUserForm" action="" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="search" value="<%= search || '' %>">
+                    <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
+                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
+                    <input type="hidden" name="page" value="<%= currentPage %>">
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="editName" name="name" class="form-input" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="editEmail" name="email" class="form-input" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" id="editPhone" name="phone" class="form-input" placeholder="e.g. +91 9876543210" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(userId, name, email, phone) {
+            const modal = document.getElementById('editUserModal');
+            const form = document.getElementById('editUserForm');
+            
+            form.action = '/admin/users/' + userId + '/edit';
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = phone || '';
+
+            modal.classList.add('active');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editUserModal');
+            modal.classList.remove('active');
+        }
+
+        // Close on background click
+        document.getElementById('editUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
 
 </body>
 

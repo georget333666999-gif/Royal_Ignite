@@ -178,6 +178,26 @@ body {
     font-size: 14px;
 }
 
+/* Alert Banners */
+.alert-box {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.alert-danger {
+    background: #FEE2E2;
+    border: 1px solid #FCA5A5;
+    color: #991B1B;
+}
+
+.alert-success {
+    background: #D1FAE5;
+    border: 1px solid #6EE7B7;
+    color: #065F46;
+}
+
 /* Dashboard Body Content */
 .content-padding {
     padding: 32px;
@@ -420,12 +440,36 @@ body {
     color: #666666;
 }
 
-/* Action Pill Buttons */
+/* Action Buttons */
+.action-buttons-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-pill-edit {
+    background: #F4F4F5;
+    color: #111111;
+    border: 1px solid var(--border-color);
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-pill-edit:hover {
+    background: #E4E4E7;
+}
+
 .btn-pill-block {
     background: #E7000B;
     color: #FFFFFF;
     border: none;
-    padding: 8px 24px;
+    padding: 8px 22px;
     border-radius: 30px;
     font-family: 'Instrument Sans', sans-serif;
     font-size: 14px;
@@ -442,7 +486,7 @@ body {
     background: #00A63E;
     color: #FFFFFF;
     border: none;
-    padding: 8px 24px;
+    padding: 8px 22px;
     border-radius: 30px;
     font-family: 'Instrument Sans', sans-serif;
     font-size: 14px;
@@ -497,6 +541,135 @@ body {
     background: rgba(235, 235, 235, 0.3);
     color: var(--text-dark);
     font-weight: 600;
+}
+
+/* Modal Overlay & Card */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-card {
+    background: #FFFFFF;
+    width: 480px;
+    max-width: 90%;
+    border-radius: 16px;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    background: #050505;
+    color: #FFFFFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: #FFFFFF;
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.modal-close-btn:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text-dark);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #000000;
+}
+
+.modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancel {
+    height: 42px;
+    padding: 0 20px;
+    background: #F4F4F5;
+    color: #111111;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-save {
+    height: 42px;
+    padding: 0 24px;
+    background: #000000;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-save:hover {
+    background: #2b2b2b;
 }
 
 /* Responsive */

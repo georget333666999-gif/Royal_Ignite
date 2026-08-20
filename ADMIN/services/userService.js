@@ -59,6 +59,50 @@ const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) 
     };
 };
 
+// Get User by ID
+const getUserById = async (userId) => {
+    return await User.findOne({ _id: userId, isAdmin: false }).select("-password");
+};
+
+// Update User Details
+const updateUser = async (userId, { name, email, phone }) => {
+    const trimmedName = name ? name.trim() : "";
+    const trimmedEmail = email ? email.trim().toLowerCase() : "";
+    const trimmedPhone = phone ? phone.trim() : "";
+
+    if (!trimmedName || !trimmedEmail) {
+        throw new Error("Name and Email are required");
+    }
+
+    // Check email conflict
+    const existingUser = await User.findOne({
+        email: trimmedEmail,
+        _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+        throw new Error("Another user account is already using this email address");
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+        { _id: userId, isAdmin: false },
+        {
+            $set: {
+                name: trimmedName,
+                email: trimmedEmail,
+                phone: trimmedPhone
+            }
+        },
+        { new: true }
+    );
+
+    if (!updatedUser) {
+        throw new Error("User not found");
+    }
+
+    return updatedUser;
+};
+
 const blockUser = async (userId) => {
     return await User.findOneAndUpdate(
         { _id: userId, isAdmin: false },
@@ -77,6 +121,8 @@ const unblockUser = async (userId) => {
 
 module.exports = {
     getUsers,
+    getUserById,
+    updateUser,
     blockUser,
     unblockUser
 };
