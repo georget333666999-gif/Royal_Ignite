@@ -14,19 +14,20 @@
             margin: 24px 0;
         }
         .otp-box {
-            width: 54px;
+            width: 52px;
             height: 60px;
             text-align: center;
             font-size: 24px;
             font-weight: 600;
             border: 1px solid var(--admin-border);
             border-radius: 8px;
-            background: rgba(253, 252, 251, 0.5);
+            background: rgba(253, 252, 251, 0.8);
         }
         .otp-box:focus {
             outline: none;
             border-color: #000000;
             background: #FFFFFF;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
         }
         .timer-badge {
             text-align: center;
@@ -64,17 +65,17 @@
             
             <input type="hidden" name="otpCode" id="fullOtp" />
 
-            <div class="otp-inputs">
-                <input type="text" maxlength="1" class="otp-box" autofocus />
-                <input type="text" maxlength="1" class="otp-box" />
-                <input type="text" maxlength="1" class="otp-box" />
-                <input type="text" maxlength="1" class="otp-box" />
-                <input type="text" maxlength="1" class="otp-box" />
-                <input type="text" maxlength="1" class="otp-box" />
+            <div class="otp-inputs" id="otpInputsContainer">
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" autofocus />
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" />
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" />
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" />
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" />
+                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]*" inputmode="numeric" />
             </div>
 
             <div class="timer-badge">
-                ⏱ Code expires in <strong id="timer">01:59</strong>
+                ⏱ Code expires in <strong id="timer">10:00</strong>
             </div>
 
             <button type="submit" class="primary-btn">
@@ -116,6 +117,10 @@
         const fullOtp = document.getElementById('fullOtp');
         const form = document.getElementById('otpForm');
 
+        function combineOtp() {
+            fullOtp.value = Array.from(boxes).map(b => b.value).join('');
+        }
+
         boxes.forEach((box, idx) => {
             box.addEventListener('input', (e) => {
                 if (e.target.value && idx < boxes.length - 1) {
@@ -129,16 +134,30 @@
                     boxes[idx - 1].focus();
                 }
             });
+
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+                if (pasteData.length === 6 && /^\d+$/.test(pasteData)) {
+                    boxes.forEach((b, i) => {
+                        b.value = pasteData[i] || '';
+                    });
+                    combineOtp();
+                    boxes[5].focus();
+                }
+            });
         });
 
-        function combineOtp() {
-            fullOtp.value = Array.from(boxes).map(b => b.value).join('');
-        }
+        form.addEventListener('submit', function(e) {
+            combineOtp();
+            if (!fullOtp.value || fullOtp.value.length !== 6) {
+                e.preventDefault();
+                alert('Please enter all 6 digits of the OTP code.');
+            }
+        });
 
-        form.addEventListener('submit', combineOtp);
-
-        // Timer Countdown
-        let duration = 119;
+        // Timer Countdown (10 Minutes)
+        let duration = 600;
         const timerEl = document.getElementById('timer');
         const interval = setInterval(() => {
             const min = String(Math.floor(duration / 60)).padStart(2, '0');

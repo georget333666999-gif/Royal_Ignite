@@ -44,33 +44,41 @@ const sendResetOtp = async (email) => {
 
     // Generate 6 digit OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    const expiredAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     await OTP.create({
         userId: admin._id,
         otpCode,
-        expiresAt
+        expiredAt,
+        purpose: "admin_password_reset"
     });
 
+    console.log(`\n========================================`);
     console.log(`[ADMIN OTP] Sent to ${admin.email}: ${otpCode}`);
+    console.log(`========================================\n`);
 
     return { admin, otpCode };
 };
 
 // Verify Admin OTP
 const verifyOtp = async (adminId, otpCode) => {
+    if (!otpCode || otpCode.length !== 6) {
+        throw new Error("Please enter a valid 6-digit OTP code");
+    }
+
     const otpRecord = await OTP.findOne({ userId: adminId });
 
     if (!otpRecord) {
         throw new Error("OTP expired or not requested");
     }
 
-    if (otpRecord.otpCode !== otpCode) {
-        throw new Error("Invalid OTP code");
+    if (new Date() > new Date(otpRecord.expiredAt)) {
+        await OTP.deleteOne({ _id: otpRecord._id });
+        throw new Error("OTP has expired. Please request a new code.");
     }
 
-    if (new Date() > new Date(otpRecord.expiresAt)) {
-        throw new Error("OTP has expired");
+    if (otpRecord.otpCode !== otpCode.trim()) {
+        throw new Error("Invalid OTP code. Please check and try again.");
     }
 
     await OTP.deleteOne({ _id: otpRecord._id });
