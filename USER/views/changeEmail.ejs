@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Change Email Address</title>
+</head>
+
+<body>
+
+    <h1>Change Email Address</h1>
+
+    <p>Enter your new email address. We will send an OTP to verify ownership.</p>
+
+    <% if (error) { %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+
+    <form
+        method="POST"
+        action="/user/profile/change-email"
+    >
+
+        <label for="newEmail">New Email Address</label>
+        <input
+            type="email"
+            id="newEmail"
+            name="newEmail"
+            required
+        />
+
+        <br /><br />
+
+        <button type="submit">
+            Send Verification OTP
+        </button>
+
+    </form>
+
+    <br />
+
+    <a href="/user/profile/edit">Back to Edit Profile</a>
+
+</body>
+
+</html>

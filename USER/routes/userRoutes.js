@@ -167,6 +167,37 @@ router.post(
 );
 
 // ========================================
+// Change Email & Verification
+// ========================================
+
+router.get(
+    "/profile/change-email",
+    userMiddleware,
+    profileController.getChangeEmail
+);
+
+router.post(
+    "/profile/change-email",
+    userMiddleware,
+    authValidationMiddleware.validateChangeEmail,
+    profileController.postChangeEmail
+);
+
+router.get(
+    "/profile/verify-email-otp",
+    userMiddleware,
+    profileController.getVerifyEmailOTP
+);
+
+router.post(
+    "/profile/verify-email-otp",
+    userMiddleware,
+    authValidationMiddleware.validateOTP,
+    profileController.postVerifyEmailOTP
+);
+
+
+// ========================================
 // Addresses
 // ========================================
 

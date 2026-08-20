@@ -309,10 +309,170 @@ const postChangePassword = async (req, res) => {
 };
 
 
+// ========================================
+// Change Email Page
+// ========================================
+
+const getChangeEmail = (req, res) => {
+
+    res.render("changeEmail", {
+        error: null
+    });
+
+};
+
+
+// ========================================
+// Request Email Change Form
+// ========================================
+
+const postChangeEmail = async (req, res) => {
+
+    try {
+
+        const { newEmail } = req.body;
+
+        const userService = require("../services/userService");
+
+        const result =
+            await userService.requestEmailChange(
+                req.session.userId,
+                newEmail
+            );
+
+        if (!result.success) {
+
+            return res.status(400).render(
+                "changeEmail",
+                {
+                    error: result.message
+                }
+            );
+
+        }
+
+        // Store pending email in session
+        req.session.pendingNewEmail =
+            result.pendingNewEmail;
+
+        res.redirect("/user/profile/verify-email-otp");
+
+    } catch (error) {
+
+        console.error(
+            "Request change email error:",
+            error
+        );
+
+        res.status(500).render(
+            "changeEmail",
+            {
+                error:
+                    "Something went wrong. Please try again."
+            }
+        );
+
+    }
+
+};
+
+
+// ========================================
+// Verify Email OTP Page
+// ========================================
+
+const getVerifyEmailOTP = (req, res) => {
+
+    if (!req.session.pendingNewEmail) {
+
+        return res.redirect(
+            "/user/profile/change-email"
+        );
+
+    }
+
+    res.render("verifyEmailOtp", {
+        pendingEmail: req.session.pendingNewEmail,
+        error: null
+    });
+
+};
+
+
+// ========================================
+// Verify Email OTP Form
+// ========================================
+
+const postVerifyEmailOTP = async (req, res) => {
+
+    try {
+
+        const { otpCode } = req.body;
+        const pendingNewEmail = req.session.pendingNewEmail;
+
+        if (!pendingNewEmail) {
+
+            return res.redirect(
+                "/user/profile/change-email"
+            );
+
+        }
+
+        const userService = require("../services/userService");
+
+        const result =
+            await userService.verifyEmailChange(
+                req.session.userId,
+                pendingNewEmail,
+                otpCode.trim()
+            );
+
+        if (!result.success) {
+
+            return res.status(400).render(
+                "verifyEmailOtp",
+                {
+                    pendingEmail: pendingNewEmail,
+                    error: result.message
+                }
+            );
+
+        }
+
+        // Clean up session
+        delete req.session.pendingNewEmail;
+
+        res.redirect("/user/profile");
+
+    } catch (error) {
+
+        console.error(
+            "Verify email OTP error:",
+            error
+        );
+
+        res.status(500).render(
+            "verifyEmailOtp",
+            {
+                pendingEmail: req.session.pendingNewEmail || "",
+                error:
+                    "Something went wrong. Please try again."
+            }
+        );
+
+    }
+
+};
+
+
 module.exports = {
     getProfile,
     getEditProfile,
     postEditProfile,
     getChangePassword,
-    postChangePassword
+    postChangePassword,
+    getChangeEmail,
+    postChangeEmail,
+    getVerifyEmailOTP,
+    postVerifyEmailOTP
 };

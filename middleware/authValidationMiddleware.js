@@ -181,11 +181,43 @@ const validateChangePassword = (req, res, next) => {
 };
 
 
+// ========================================
+// Change Email Validation
+// ========================================
+
+const validateChangeEmail = (req, res, next) => {
+
+    const { newEmail } = req.body;
+
+    if (!newEmail) {
+
+        return res.status(400).render("changeEmail", {
+            error: "Please enter your new email address."
+        });
+
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(newEmail.trim())) {
+
+        return res.status(400).render("changeEmail", {
+            error: "Please enter a valid email address."
+        });
+
+    }
+
+    next();
+
+};
+
+
 module.exports = {
     validateSignup,
     validateLogin,
     validateOTP,
     validateForgotPassword,
     validateResetPassword,
-    validateChangePassword
+    validateChangePassword,
+    validateChangeEmail
 };

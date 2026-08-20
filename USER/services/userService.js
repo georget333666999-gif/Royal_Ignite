@@ -576,6 +576,146 @@ const changePassword = async (
 };
 
 
+// ========================================
+// Request Email Change (Send OTP)
+// ========================================
+
+const requestEmailChange = async (userId, newEmail) => {
+
+    const formattedEmail = newEmail.trim().toLowerCase();
+
+    // Check if user exists
+    const user = await User.findById(userId);
+
+    if (!user) {
+
+        return {
+            success: false,
+            message: "User not found."
+        };
+
+    }
+
+    // Check if new email is same as current email
+    if (user.email === formattedEmail) {
+
+        return {
+            success: false,
+            message: "New email must be different from current email."
+        };
+
+    }
+
+    // Check if email already registered by another account
+    const existingUser = await User.findOne({
+        email: formattedEmail
+    });
+
+    if (existingUser) {
+
+        return {
+            success: false,
+            message: "This email address is already in use."
+        };
+
+    }
+
+    // Remove existing OTP for email change
+    await OTP.deleteMany({
+        userId,
+        purpose: "email-change"
+    });
+
+    const otp = generateOTP();
+
+    const expiredAt = new Date(
+        Date.now() + 5 * 60 * 1000
+    );
+
+    const otpDocument = await OTP.create({
+        userId,
+        otpCode: otp,
+        expiredAt,
+        purpose: "email-change"
+    });
+
+    // TEMPORARY - development only
+    console.log(
+        `Email Change OTP for ${formattedEmail}: ${otpDocument.otpCode}`
+    );
+
+    return {
+        success: true,
+        pendingNewEmail: formattedEmail
+    };
+
+};
+
+
+// ========================================
+// Verify Email Change OTP
+// ========================================
+
+const verifyEmailChange = async (userId, pendingNewEmail, enteredOTP) => {
+
+    const otpDocument = await OTP.findOne({
+        userId,
+        purpose: "email-change"
+    });
+
+    if (!otpDocument) {
+
+        return {
+            success: false,
+            message: "OTP expired or not found."
+        };
+
+    }
+
+    if (otpDocument.expiredAt < new Date()) {
+
+        await OTP.deleteOne({
+            _id: otpDocument._id
+        });
+
+        return {
+            success: false,
+            message: "OTP has expired."
+        };
+
+    }
+
+    if (otpDocument.otpCode !== enteredOTP) {
+
+        return {
+            success: false,
+            message: "Invalid OTP."
+        };
+
+    }
+
+    // Update user's email in DB
+    await User.findByIdAndUpdate(
+        userId,
+        {
+            $set: {
+                email: pendingNewEmail
+            }
+        }
+    );
+
+    // Clean up OTP
+    await OTP.deleteOne({
+        _id: otpDocument._id
+    });
+
+    return {
+        success: true
+    };
+
+};
+
+
 module.exports = {
     createUser,
     createOTP,
@@ -584,5 +724,7 @@ module.exports = {
     resendOTP,
     forgotPassword,
     resetPassword,
-    changePassword
+    changePassword,
+    requestEmailChange,
+    verifyEmailChange
 };

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify New Email OTP</title>
+</head>
+
+<body>
+
+    <h1>Verify New Email Address</h1>
+
+    <p>Enter the 6-digit OTP sent to: <strong><%= pendingEmail %></strong></p>
+
+    <% if (error) { %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+
+    <form
+        method="POST"
+        action="/user/profile/verify-email-otp"
+    >
+
+        <label for="otpCode">OTP Code</label>
+        <input
+            type="text"
+            id="otpCode"
+            name="otpCode"
+            maxlength="6"
+            minlength="6"
+            required
+        />
+
+        <br /><br />
+
+        <button type="submit">
+            Confirm & Change Email
+        </button>
+
+    </form>
+
+    <br />
+
+    <a href="/user/profile/change-email">
+        Re-enter Email
+    </a>
+
+</body>
+
+</html>
