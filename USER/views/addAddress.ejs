@@ -2,198 +2,149 @@
 <html lang="en">
 
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Add Address</title>
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add New Address - ROYAL IGNITE</title>
+    <link rel="stylesheet" href="/css/user/auth.css" />
+    <link rel="stylesheet" href="/css/user/profile.css" />
 </head>
 
 <body>
 
-    <h1>Add New Address</h1>
+    <%- include('partials/header') %>
 
-    <% if (error) { %>
+    <div class="modal-overlay">
+        <div class="modal-card">
+            
+            <a href="/user/addresses" class="modal-close" title="Close">&times;</a>
 
-        <p>
-            <%= error %>
-        </p>
+            <h2 class="modal-title">Add New Address</h2>
 
-    <% } %>
+            <% if (error) { %>
+                <div class="error-badge"><%= error %></div>
+            <% } %>
 
+            <form action="/user/addresses/add" method="POST">
+                
+                <div class="modal-form-grid">
+                    
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input
+                            type="text"
+                            id="fullName"
+                            name="fullName"
+                            class="form-input"
+                            placeholder="e.g. John Doe"
+                            value="<%= formData.fullName || '' %>"
+                            required
+                        />
+                    </div>
 
-    <form
-        action="/user/addresses/add"
-        method="POST"
-    >
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            class="form-input"
+                            placeholder="10-digit mobile"
+                            maxlength="10"
+                            value="<%= formData.phone || '' %>"
+                            required
+                        />
+                    </div>
 
-        <div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="addressLine">Address / Street / House *</label>
+                        <textarea
+                            id="addressLine"
+                            name="addressLine"
+                            class="form-input"
+                            style="height: 70px; resize: none;"
+                            placeholder="Building name, street, area"
+                            required
+                        ><%= formData.addressLine || '' %></textarea>
+                    </div>
 
-            <label for="fullName">
-                Full Name
-            </label>
+                    <div class="form-group">
+                        <label for="city">City / Town *</label>
+                        <input
+                            type="text"
+                            id="city"
+                            name="city"
+                            class="form-input"
+                            placeholder="e.g. Kochi"
+                            value="<%= formData.city || '' %>"
+                            required
+                        />
+                    </div>
 
-            <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value="<%= formData.fullName || '' %>"
-                required
-            >
+                    <div class="form-group">
+                        <label for="state">State *</label>
+                        <input
+                            type="text"
+                            id="state"
+                            name="state"
+                            class="form-input"
+                            placeholder="e.g. Kerala"
+                            value="<%= formData.state || '' %>"
+                            required
+                        />
+                    </div>
 
-        </div>
+                    <div class="form-group">
+                        <label for="pincode">Pincode *</label>
+                        <input
+                            type="text"
+                            id="pincode"
+                            name="pincode"
+                            class="form-input"
+                            placeholder="6-digit pincode"
+                            maxlength="6"
+                            value="<%= formData.pincode || '' %>"
+                            required
+                        />
+                    </div>
 
-        <br>
+                    <div class="form-group">
+                        <label for="country">Country *</label>
+                        <input
+                            type="text"
+                            id="country"
+                            name="country"
+                            class="form-input"
+                            value="<%= formData.country || 'India' %>"
+                            required
+                        />
+                    </div>
 
+                </div>
 
-        <div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input
+                            type="checkbox"
+                            name="isDefault"
+                            value="true"
+                            style="width: 16px; height: 16px;"
+                        />
+                        Set as default delivery address
+                    </label>
+                </div>
 
-            <label for="phone">
-                Phone
-            </label>
+                <!-- Footer Actions -->
+                <div class="modal-actions">
+                    <a href="/user/addresses" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">SAVE ADDRESS</button>
+                </div>
 
-            <input
-                type="tel"
-                id="phone"
-                name="phone"
-                maxlength="10"
-                value="<%= formData.phone || '' %>"
-                required
-            >
-
-        </div>
-
-        <br>
-
-
-        <div>
-
-            <label for="addressLine">
-                Address
-            </label>
-
-            <textarea
-                id="addressLine"
-                name="addressLine"
-                required
-            ><%= formData.addressLine || '' %></textarea>
-
-        </div>
-
-        <br>
-
-
-        <div>
-
-            <label for="city">
-                City
-            </label>
-
-            <input
-                type="text"
-                id="city"
-                name="city"
-                value="<%= formData.city || '' %>"
-                required
-            >
-
-        </div>
-
-        <br>
-
-
-        <div>
-
-            <label for="state">
-                State
-            </label>
-
-            <input
-                type="text"
-                id="state"
-                name="state"
-                value="<%= formData.state || '' %>"
-                required
-            >
-
-        </div>
-
-        <br>
-
-
-        <div>
-
-            <label for="pincode">
-                Pincode
-            </label>
-
-            <input
-                type="text"
-                id="pincode"
-                name="pincode"
-                maxlength="6"
-                value="<%= formData.pincode || '' %>"
-                required
-            >
-
-        </div>
-
-        <br>
-
-
-        <div>
-
-            <label for="country">
-                Country
-            </label>
-
-            <input
-                type="text"
-                id="country"
-                name="country"
-                value="<%= formData.country || 'India' %>"
-                required
-            >
+            </form>
 
         </div>
+    </div>
 
-        <br>
-
-
-        <div>
-
-            <label>
-
-                <input
-                    type="checkbox"
-                    name="isDefault"
-                    value="true"
-                >
-
-                Set as default address
-
-            </label>
-
-        </div>
-
-        <br>
-
-
-        <button type="submit">
-            Save Address
-        </button>
-
-
-        <a href="/user/addresses">
-            Cancel
-        </a>
-
-    </form>
+    <%- include('partials/footer') %>
 
 </body>
 
