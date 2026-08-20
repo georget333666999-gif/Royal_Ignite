@@ -242,6 +242,13 @@
                             <option value="inactive" <%= typeof statusFilter !== 'undefined' && statusFilter === 'inactive' ? 'selected' : '' %>>Inactive</option>
                         </select>
 
+                        <select name="limit" class="filter-select" onchange="this.form.submit();">
+                            <option value="4" <%= typeof limit !== 'undefined' && limit === 4 ? 'selected' : '' %>>4 per page</option>
+                            <option value="8" <%= typeof limit !== 'undefined' && limit === 8 ? 'selected' : '' %>>8 per page</option>
+                            <option value="10" <%= typeof limit !== 'undefined' && limit === 10 ? 'selected' : '' %>>10 per page</option>
+                            <option value="20" <%= typeof limit !== 'undefined' && limit === 20 ? 'selected' : '' %>>20 per page</option>
+                        </select>
+
                         <button type="submit" class="btn-filter-search">Search</button>
 
                         <% if (search || (typeof statusFilter !== 'undefined' && statusFilter !== 'all')) { %>
@@ -307,6 +314,7 @@
                                                 <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock <%= user.name %>?');">
                                                     <input type="hidden" name="search" value="<%= search || '' %>">
                                                     <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
+                                                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
                                                     <input type="hidden" name="page" value="<%= currentPage %>">
                                                     <button type="submit" class="btn-pill-unblock">Unblock</button>
                                                 </form>
@@ -314,6 +322,7 @@
                                                 <form action="/admin/users/<%= user._id %>/block" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to block <%= user.name %>?');">
                                                     <input type="hidden" name="search" value="<%= search || '' %>">
                                                     <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
+                                                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
                                                     <input type="hidden" name="page" value="<%= currentPage %>">
                                                     <button type="submit" class="btn-pill-block">Block</button>
                                                 </form>
@@ -326,37 +335,35 @@
                     </table>
                 </div>
 
-                <!-- Footer Pagination -->
+                <!-- Footer Pagination Controls -->
                 <div class="directory-footer">
                     <div>
-                        Showing <strong><%= users.length > 0 ? (currentPage - 1) * 10 + 1 : 0 %></strong> to <strong><%= Math.min(currentPage * 10, totalUsers) %></strong> of <strong><%= totalUsers %></strong> entries
+                        Showing <strong><%= users.length > 0 ? (currentPage - 1) * limit + 1 : 0 %></strong> to <strong><%= Math.min(currentPage * limit, totalUsers) %></strong> of <strong><%= totalUsers %></strong> entries
                     </div>
 
-                    <% if (totalPages > 1) { %>
-                        <div class="pagination-group">
-                            <% if (currentPage > 1) { %>
-                                <a href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>" class="page-btn">
-                                    &larr; Previous
-                                </a>
-                            <% } else { %>
-                                <span class="page-btn" style="opacity: 0.5; cursor: not-allowed;">&larr; Previous</span>
-                            <% } %>
+                    <div class="pagination-group">
+                        <% if (currentPage > 1) { %>
+                            <a href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>&limit=<%= limit %>" class="page-btn">
+                                &larr; Previous
+                            </a>
+                        <% } else { %>
+                            <span class="page-btn" style="opacity: 0.4; cursor: not-allowed;">&larr; Previous</span>
+                        <% } %>
 
-                            <% for (let page = 1; page <= totalPages; page++) { %>
-                                <a href="/admin/users?page=<%= page %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>" class="page-btn <%= page === currentPage ? 'active' : '' %>">
-                                    <%= page %>
-                                </a>
-                            <% } %>
+                        <% for (let page = 1; page <= totalPages; page++) { %>
+                            <a href="/admin/users?page=<%= page %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>&limit=<%= limit %>" class="page-btn <%= page === currentPage ? 'active' : '' %>">
+                                <%= page %>
+                            </a>
+                        <% } %>
 
-                            <% if (currentPage < totalPages) { %>
-                                <a href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>" class="page-btn">
-                                    Next &rarr;
-                                </a>
-                            <% } else { %>
-                                <span class="page-btn" style="opacity: 0.5; cursor: not-allowed;">Next &rarr;</span>
-                            <% } %>
-                        </div>
-                    <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <a href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %><%= statusFilter !== 'all' ? '&status=' + statusFilter : '' %>&limit=<%= limit %>" class="page-btn">
+                                Next &rarr;
+                            </a>
+                        <% } else { %>
+                            <span class="page-btn" style="opacity: 0.4; cursor: not-allowed;">Next &rarr;</span>
+                        <% } %>
+                    </div>
                 </div>
 
             </div>

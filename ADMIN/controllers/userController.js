@@ -7,18 +7,20 @@ const getUserList = async (req, res) => {
         const search = req.query.search || "";
         const statusFilter = req.query.status || "all";
         let page = Number(req.query.page) || 1;
+        let limit = Number(req.query.limit) || 4;
 
         const result = await userService.getUsers(
             search,
             statusFilter,
             page,
-            10
+            limit
         );
 
         res.render("users/userList", {
             users: result.users,
             search,
             statusFilter,
+            limit: result.limit,
             currentPage: result.currentPage,
             totalPages: result.totalPages,
             totalUsers: result.totalUsers,
@@ -48,11 +50,13 @@ const blockUser = async (req, res) => {
 
         const search = req.body.search || "";
         const status = req.body.status || "all";
+        const limit = req.body.limit || 4;
         const page = req.body.page || 1;
 
         const query = new URLSearchParams();
         if (search) query.set("search", search);
         if (status) query.set("status", status);
+        if (limit) query.set("limit", limit);
         query.set("page", page);
 
         res.redirect(`/admin/users?${query.toString()}`);
@@ -77,11 +81,13 @@ const unblockUser = async (req, res) => {
 
         const search = req.body.search || "";
         const status = req.body.status || "all";
+        const limit = req.body.limit || 4;
         const page = req.body.page || 1;
 
         const query = new URLSearchParams();
         if (search) query.set("search", search);
         if (status) query.set("status", status);
+        if (limit) query.set("limit", limit);
         query.set("page", page);
 
         res.redirect(`/admin/users?${query.toString()}`);

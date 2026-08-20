@@ -5,7 +5,7 @@ const escapeRegex = (value) => {
 };
 
 // Get Users with Status Filter & Counts
-const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 10) => {
+const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) => {
     const filter = {
         isAdmin: false
     };
@@ -54,7 +54,8 @@ const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 10)
         inactiveUsers,
         totalUsers,
         totalPages,
-        currentPage
+        currentPage,
+        limit
     };
 };
 
