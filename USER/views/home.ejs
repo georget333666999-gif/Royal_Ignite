@@ -2,71 +2,354 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Home</title>
-
-    <link
-        rel="stylesheet"
-        href="/css/user/home.css"
-    >
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ROYAL IGNITE — Where Elegance Meets Flame</title>
+    <link rel="stylesheet" href="/css/user/home.css" />
 </head>
 
 <body>
 
-    <header class="navbar">
+    <!-- Header Navigation -->
+    <header class="royal-header">
+        <div class="header-container">
+            <a href="/" class="brand-logo">ROYAL IGNITE</a>
+            
+            <nav class="header-nav">
+                <a href="#hero">New Arrivals</a>
+                <a href="#art-of-ignition">Craftsmanship</a>
+                <a href="#collections">Featured Editions</a>
+                <a href="#newsletter">The Atelier</a>
+            </nav>
 
-        <div class="logo">
-            Luxury Lighters
+            <div class="header-actions">
+                <!-- Search Icon -->
+                <a href="#" class="header-icon" title="Search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <!-- Profile / Account Icon -->
+                <a href="/user/profile" class="header-icon" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+                <!-- Shopping Bag Icon -->
+                <a href="#" class="header-icon" title="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
-
-        <nav>
-
-            <a href="/">
-                Home
-            </a>
-
-            <a href="/user/login">
-                Login
-            </a>
-
-            <a href="/user/signup">
-                Sign Up
-            </a>
-
-        </nav>
-
     </header>
 
+    <!-- Main Content Area -->
+    <main>
 
-    <main class="home">
+        <!-- 1. Hero Section -->
+        <section class="hero-section" id="hero">
+            <div class="section-container">
+                <div class="hero-grid">
+                    
+                    <!-- Left Hero Content -->
+                    <div class="hero-content">
+                        <div class="hero-badge-wrap">
+                            <div class="hero-line"></div>
+                            <span class="hero-tag">ROYAL IGNITE</span>
+                        </div>
+                        
+                        <h1 class="hero-title">Royal Ignite</h1>
+                        <p class="hero-subtitle-italic">Where elegance meets flame.</p>
+                        
+                        <p class="hero-description">
+                            Crafted for collectors and designed for distinction. Explore luxury lighters that unite artistry, engineering, and a century of timeless craftsmanship.
+                        </p>
 
-        <section class="hero">
+                        <div class="hero-buttons">
+                            <a href="#collections" class="btn-gold">
+                                EXPLORE THE COLLECTION
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                            <a href="#art-of-ignition" class="btn-ghost">
+                                OUR CRAFTSMANSHIP
+                            </a>
+                        </div>
 
-            <h1>
-                Discover Luxury Lighters
-            </h1>
+                        <!-- Stats Row -->
+                        <div class="stats-grid">
+                            <div>
+                                <div class="stat-num">100+</div>
+                                <div class="stat-label">Yrs of Craft</div>
+                            </div>
+                            <div>
+                                <div class="stat-num">27</div>
+                                <div class="stat-label">Atelier Hands</div>
+                            </div>
+                            <div>
+                                <div class="stat-num">1/1</div>
+                                <div class="stat-label">Bespoke Pieces</div>
+                            </div>
+                        </div>
+                    </div>
 
-            <p>
-                Explore our collection of premium and
-                sophisticated luxury lighters.
-            </p>
+                    <!-- Right Hero Image & Floating Card -->
+                    <div class="hero-image-wrap">
+                        <img src="/uploads/hero_lighter.png" alt="Ornate Black Luxury Lighter" class="hero-img" />
+                        
+                        <div class="floating-product-card">
+                            <div class="floating-card-tag">FEATURED EDITION</div>
+                            <h3 class="floating-card-title">The Sovereign</h3>
+                            <p class="floating-card-desc">Hand-engraved sterling silver case. Limited to 500 pieces worldwide.</p>
+                        </div>
+                    </div>
 
-            <a
-                href="/user/signup"
-                class="shop-button"
-            >
-                Explore Collection
-            </a>
+                </div>
+            </div>
+        </section>
 
+        <!-- 2. Feature Section: The Art of Ignition -->
+        <section class="features-section" id="art-of-ignition">
+            <div class="section-container">
+                <div class="section-tag">OUR HIGHLIGHTS</div>
+                <h2 class="section-title">The Art of Ignition</h2>
+                <p class="section-subtitle">
+                    Auctions, limited runs, and bespoke pieces designed for those who demand distinction.
+                </p>
+
+                <div class="features-grid">
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card-title">Collector Rarity</h3>
+                        <p class="feature-card-desc">
+                            Hand-numbered series with individual signed certificates of authenticity for serious connoisseurs.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card-title">Precision Engineering</h3>
+                        <p class="feature-card-desc">
+                            Reliable windproof flame mechanisms built with micro-calibrated precision to last generations.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card-title">Bespoke Designs</h3>
+                        <p class="feature-card-desc">
+                            Personalized engraving service for creating truly unique family heirlooms and custom gifts.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Featured Collections Showcase -->
+        <section class="collections-section" id="collections">
+            <div class="section-container">
+                
+                <div class="collections-header">
+                    <div>
+                        <div class="section-tag">HANDCRAFTED EDITIONS</div>
+                        <h2 class="section-title" style="margin-bottom: 0;">Featured Collections</h2>
+                    </div>
+                    <a href="#" class="collections-link">
+                        VIEW ALL
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Collection 01: The Monarch Series -->
+                <div class="collection-row">
+                    <div class="collection-img-box">
+                        <div class="collection-watermark">01</div>
+                        <img src="/uploads/monarch_lighter.png" alt="The Monarch Series Sterling Silver Lighter" />
+                    </div>
+
+                    <div class="collection-info">
+                        <span class="collection-num-tag">COLLECTION 01</span>
+                        <h3 class="collection-title">The Monarch Series</h3>
+                        <p class="collection-desc">
+                            Sterling silver-cased lighters adorned with hand-chased royal engravings. A tribute to regal craftsmanship — each piece numbered, sealed, and signed by the master engraver.
+                        </p>
+
+                        <div class="collection-action-wrap">
+                            <a href="#" class="btn-underline-gold">
+                                EXPLORE THE SERIES
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                            <span class="collection-badge-text">LIMITED RUN OF 500</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection 02: The Heritage Edition -->
+                <div class="collection-row reverse">
+                    <div class="collection-img-box">
+                        <div class="collection-watermark">02</div>
+                        <img src="/uploads/heritage_lighter.png" alt="The Heritage Edition Brass Lighter" />
+                    </div>
+
+                    <div class="collection-info">
+                        <span class="collection-num-tag">COLLECTION 02</span>
+                        <h3 class="collection-title">The Heritage Edition</h3>
+                        <p class="collection-desc">
+                            Patinated brass and aged steel rebuilt from original 1923 blueprints. A working museum of mechanical fire — restored, refined, and remade for the modern collector.
+                        </p>
+
+                        <div class="collection-action-wrap">
+                            <a href="#" class="btn-underline-gold">
+                                EXPLORE THE EDITION
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                            <span class="collection-badge-text">AUTHENTIC RESTORATION</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection 03: The Signature Collection -->
+                <div class="collection-row">
+                    <div class="collection-img-box">
+                        <div class="collection-watermark">03</div>
+                        <img src="/uploads/signature_lighter.png" alt="The Signature Collection Obsidian Steel Lighter" />
+                    </div>
+
+                    <div class="collection-info">
+                        <span class="collection-num-tag">COLLECTION 03</span>
+                        <h3 class="collection-title">The Signature Collection</h3>
+                        <p class="collection-desc">
+                            Architectural minimalism cut from a single block of obsidian-finished steel, signed by an amber thread of warm light. Modernity, distilled.
+                        </p>
+
+                        <div class="collection-action-wrap">
+                            <a href="#" class="btn-underline-gold">
+                                EXPLORE THE SIGNATURE
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                            <span class="collection-badge-text">PERPETUAL EDITION</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. Newsletter Section ("The Royal Circle") -->
+        <section class="newsletter-section" id="newsletter">
+            <div class="section-container">
+                <div class="newsletter-grid">
+                    
+                    <div>
+                        <div class="section-tag">NEWSLETTER</div>
+                        <h2 class="section-title">Join The Royal Circle</h2>
+                        <p class="hero-description" style="margin-bottom: 0; max-width: 480px;">
+                            Receive private invitations to limited drops, bespoke commissions, and private collector events.
+                        </p>
+                    </div>
+
+                    <div class="newsletter-form-wrap">
+                        <form onsubmit="event.preventDefault(); alert('Thank you for joining The Royal Circle.');" class="newsletter-input-group">
+                            <input type="email" placeholder="your@address.com" class="newsletter-input" required />
+                            <button type="submit" class="btn-subscribe">SUBSCRIBE</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
         </section>
 
     </main>
+
+    <!-- Luxury Dark Footer -->
+    <footer class="royal-footer">
+        <div class="section-container">
+            
+            <div class="footer-grid">
+                <div>
+                    <h3 class="footer-brand-title">ROYAL IGNITE</h3>
+                    <p class="footer-brand-desc">
+                        Dedicated to the art of fine ignition. Crafting heirloom-grade luxury lighters for collectors worldwide.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Collections</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">The Monarch</a></li>
+                        <li><a href="#">The Heritage</a></li>
+                        <li><a href="#">The Signature</a></li>
+                        <li><a href="#">Bespoke Pieces</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Craftsmanship</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Atelier Hands</a></li>
+                        <li><a href="#">Engraving Art</a></li>
+                        <li><a href="#">Flame Engineering</a></li>
+                        <li><a href="#">Restoration</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-col-title">Account</h4>
+                    <ul class="footer-links">
+                        <li><a href="/user/login">Sign In</a></li>
+                        <li><a href="/user/signup">Create Account</a></li>
+                        <li><a href="/user/profile">My Account</a></li>
+                        <li><a href="/user/addresses">Saved Addresses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>© 2026 ROYAL IGNITE. All rights reserved.</div>
+                <div style="display: flex; gap: 24px;">
+                    <a href="#" style="color: inherit; text-decoration: none;">Privacy Policy</a>
+                    <a href="#" style="color: inherit; text-decoration: none;">Terms of Distinction</a>
+                </div>
+            </div>
+
+        </div>
+    </footer>
 
 </body>
 
