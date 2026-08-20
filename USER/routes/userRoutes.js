@@ -1,6 +1,8 @@
 const express = require("express");
 
 const authController = require("../controllers/authController");
+const otpController = require("../controllers/otpController");
+const passwordController = require("../controllers/passwordController");
 const profileController = require("../controllers/profileController");
 const userMiddleware = require("../../middleware/userMiddleware");
 const authValidationMiddleware = require("../../middleware/authValidationMiddleware");
@@ -38,7 +40,7 @@ router.post(
 
 router.get(
     "/verify-otp",
-    authController.getVerifyOTP
+    otpController.getVerifyOTP
 );
 
 
@@ -49,7 +51,7 @@ router.get(
 router.post(
     "/verify-otp",
     authValidationMiddleware.validateOTP,
-    authController.postVerifyOTP
+    otpController.postVerifyOTP
 );
 // ========================================
 // OTP ReSend
@@ -57,7 +59,7 @@ router.post(
 
 router.post(
     "/resend-otp",
-    authController.resendOTP
+    otpController.resendOTP
 );
 
 // ========================================
@@ -90,13 +92,13 @@ router.post(
 
 router.get(
     "/forgot-password",
-    authController.getForgotPassword
+    passwordController.getForgotPassword
 );
 
 router.post(
     "/forgot-password",
     authValidationMiddleware.validateForgotPassword,
-    authController.postForgotPassword
+    passwordController.postForgotPassword
 );
 
 // ========================================
@@ -105,13 +107,13 @@ router.post(
 
 router.get(
     "/reset-password",
-    authController.getResetPassword
+    passwordController.getResetPassword
 );
 
 router.post(
     "/reset-password",
     authValidationMiddleware.validateResetPassword,
-    authController.postResetPassword
+    passwordController.postResetPassword
 );
 
 // ========================================
