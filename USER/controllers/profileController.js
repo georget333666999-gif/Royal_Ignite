@@ -230,8 +230,89 @@ const postEditProfile = async (req, res) => {
     }
 };
 
+
+// ========================================
+// Change Password Page
+// ========================================
+
+const getChangePassword = async (req, res) => {
+
+    res.render("changePassword", {
+        error: null,
+        success: null
+    });
+
+};
+
+
+// ========================================
+// Change Password Form
+// ========================================
+
+const postChangePassword = async (req, res) => {
+
+    try {
+
+        const {
+            currentPassword,
+            newPassword,
+            confirmPassword
+        } = req.body;
+
+        const userService = require("../services/userService");
+
+        const result =
+            await userService.changePassword(
+                req.session.userId,
+                currentPassword,
+                newPassword
+            );
+
+
+        if (!result.success) {
+
+            return res.status(400).render(
+                "changePassword",
+                {
+                    error: result.message,
+                    success: null
+                }
+            );
+
+        }
+
+
+        res.render("changePassword", {
+            error: null,
+            success: "Password changed successfully!"
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Change password error:",
+            error
+        );
+
+        res.status(500).render(
+            "changePassword",
+            {
+                error:
+                    "Something went wrong. Please try again.",
+                success: null
+            }
+        );
+
+    }
+
+};
+
+
 module.exports = {
     getProfile,
     getEditProfile,
-    postEditProfile
+    postEditProfile,
+    getChangePassword,
+    postChangePassword
 };

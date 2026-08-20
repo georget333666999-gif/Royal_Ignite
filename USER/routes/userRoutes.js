@@ -85,6 +85,36 @@ router.post(
 );
 
 // ========================================
+// Forgot Password
+// ========================================
+
+router.get(
+    "/forgot-password",
+    authController.getForgotPassword
+);
+
+router.post(
+    "/forgot-password",
+    authValidationMiddleware.validateForgotPassword,
+    authController.postForgotPassword
+);
+
+// ========================================
+// Reset Password
+// ========================================
+
+router.get(
+    "/reset-password",
+    authController.getResetPassword
+);
+
+router.post(
+    "/reset-password",
+    authValidationMiddleware.validateResetPassword,
+    authController.postResetPassword
+);
+
+// ========================================
 // User Profile
 // ========================================
 
@@ -115,6 +145,23 @@ router.post(
     userMiddleware,
     upload.single("profileImage"),
     profileController.postEditProfile
+);
+
+// ========================================
+// Change Password
+// ========================================
+
+router.get(
+    "/profile/change-password",
+    userMiddleware,
+    profileController.getChangePassword
+);
+
+router.post(
+    "/profile/change-password",
+    userMiddleware,
+    authValidationMiddleware.validateChangePassword,
+    profileController.postChangePassword
 );
 
 // ========================================
