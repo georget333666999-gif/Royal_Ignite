@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Add Address</title>
+
+</head>
+
+<body>
+
+    <h1>Add New Address</h1>
+
+    <% if (error) { %>
+
+        <p>
+            <%= error %>
+        </p>
+
+    <% } %>
+
+
+    <form
+        action="/user/addresses/add"
+        method="POST"
+    >
+
+        <div>
+
+            <label for="fullName">
+                Full Name
+            </label>
+
+            <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                value="<%= formData.fullName || '' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="phone">
+                Phone
+            </label>
+
+            <input
+                type="tel"
+                id="phone"
+                name="phone"
+                maxlength="10"
+                value="<%= formData.phone || '' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="addressLine">
+                Address
+            </label>
+
+            <textarea
+                id="addressLine"
+                name="addressLine"
+                required
+            ><%= formData.addressLine || '' %></textarea>
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="city">
+                City
+            </label>
+
+            <input
+                type="text"
+                id="city"
+                name="city"
+                value="<%= formData.city || '' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="state">
+                State
+            </label>
+
+            <input
+                type="text"
+                id="state"
+                name="state"
+                value="<%= formData.state || '' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="pincode">
+                Pincode
+            </label>
+
+            <input
+                type="text"
+                id="pincode"
+                name="pincode"
+                maxlength="6"
+                value="<%= formData.pincode || '' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label for="country">
+                Country
+            </label>
+
+            <input
+                type="text"
+                id="country"
+                name="country"
+                value="<%= formData.country || 'India' %>"
+                required
+            >
+
+        </div>
+
+        <br>
+
+
+        <div>
+
+            <label>
+
+                <input
+                    type="checkbox"
+                    name="isDefault"
+                    value="true"
+                >
+
+                Set as default address
+
+            </label>
+
+        </div>
+
+        <br>
+
+
+        <button type="submit">
+            Save Address
+        </button>
+
+
+        <a href="/user/addresses">
+            Cancel
+        </a>
+
+    </form>
+
+</body>
+
+</html>

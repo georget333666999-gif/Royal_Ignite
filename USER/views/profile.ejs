@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Profile</title>
+
+</head>
+
+<body>
+
+    <h1>My Profile</h1>
+
+    <div>
+
+        <p>
+            <strong>Name:</strong>
+            <%= user.name %>
+        </p>
+
+        <p>
+            <strong>Email:</strong>
+            <%= user.email %>
+        </p>
+
+        <p>
+            <strong>Phone:</strong>
+            <%= user.phone || "Not added" %>
+        </p>
+
+        <p>
+            <strong>Account Status:</strong>
+
+            <%= user.isVerified
+                ? "Verified"
+                : "Not Verified"
+            %>
+
+        </p>
+
+    </div>
+
+    <form
+        action="/user/logout"
+        method="POST"
+    >
+
+        <button type="submit">
+            Logout
+        </button>
+
+    </form>
+
+</body>
+
+</html>

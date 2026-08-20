@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Addresses</title>
+
+</head>
+
+<body>
+
+    <h1>My Addresses</h1>
+
+
+    <!-- Add New Address -->
+
+    <a href="/user/addresses/add">
+        + Add New Address
+    </a>
+
+    <br>
+    <br>
+
+
+    <!-- Check if addresses exist -->
+
+    <% if (addresses.length === 0) { %>
+
+        <p>
+            No addresses added yet.
+        </p>
+
+    <% } else { %>
+
+
+        <!-- Display all addresses -->
+
+        <% addresses.forEach(address => { %>
+
+            <div>
+
+                <!-- Address Name -->
+
+                <h3>
+
+                    <%= address.fullName %>
+
+
+                    <% if (address.isDefault) { %>
+
+                        <strong>
+                            — Default
+                        </strong>
+
+                    <% } %>
+
+                </h3>
+
+
+                <!-- Phone -->
+
+                <p>
+                    <%= address.phone %>
+                </p>
+
+
+                <!-- Address -->
+
+                <p>
+                    <%= address.addressLine %>
+                </p>
+
+
+                <!-- City / State / Pincode -->
+
+                <p>
+
+                    <%= address.city %>,
+
+                    <%= address.state %>
+
+                    -
+
+                    <%= address.pincode %>
+
+                </p>
+
+
+                <!-- Country -->
+
+                <p>
+                    <%= address.country %>
+                </p>
+
+
+                <!-- ================================ -->
+                <!-- Edit Address -->
+                <!-- ================================ -->
+
+                <a
+                    href="/user/addresses/edit/<%= address._id %>"
+                >
+                    Edit
+                </a>
+
+
+                <!-- ================================ -->
+                <!-- Delete Address -->
+                <!-- ================================ -->
+
+                <form
+                    action="/user/addresses/delete/<%= address._id %>"
+                    method="POST"
+                    style="display: inline;"
+                    onsubmit="return confirm('Are you sure you want to delete this address?');"
+                >
+
+                    <button type="submit">
+                        Delete
+                    </button>
+
+                </form>
+
+
+                <!-- ================================ -->
+                <!-- Set Default Address -->
+                <!-- ================================ -->
+
+                <% if (!address.isDefault) { %>
+
+                    <form
+                        action="/user/addresses/default/<%= address._id %>"
+                        method="POST"
+                        style="display: inline;"
+                    >
+
+                        <button type="submit">
+                            Set as Default
+                        </button>
+
+                    </form>
+
+                <% } %>
+
+
+                <hr>
+
+            </div>
+
+        <% }) %>
+
+
+    <% } %>
+
+
+    <br>
+
+
+    <!-- Back to Profile -->
+
+    <a href="/user/profile">
+        Back to Profile
+    </a>
+
+
+</body>
+
+</html>

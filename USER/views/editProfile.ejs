@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Edit Profile</title>
+
+</head>
+
+<body>
+
+    <h1>Edit Profile</h1>
+
+    <% if (error) { %>
+
+        <p>
+            <%= error %>
+        </p>
+
+    <% } %>
+
+<form
+    action="/user/profile/edit"
+    method="POST"
+    enctype="multipart/form-data"
+>
+
+    <div>
+
+        <label for="profileImage">
+            Profile Image
+        </label>
+
+        <br>
+
+        <% if (user.imgUrl) { %>
+
+            <img
+                src="<%= user.imgUrl %>"
+                alt="Profile"
+                width="120"
+                height="120"
+            >
+
+            <br><br>
+
+        <% } %>
+
+        <input
+            type="file"
+            id="profileImage"
+            name="profileImage"
+            accept="image/jpeg,image/png,image/webp"
+        >
+
+        <small>
+            JPG, PNG or WEBP. Maximum 2 MB.
+        </small>
+
+    </div>
+
+    <br>
+
+    <div>
+
+        <label for="name">
+            Full Name
+        </label>
+
+        <input
+            type="text"
+            id="name"
+            name="name"
+            value="<%= user.name %>"
+            required
+        >
+
+    </div>
+
+    <br>
+
+    <div>
+
+        <label for="email">
+            Email
+        </label>
+
+        <input
+            type="email"
+            value="<%= user.email %>"
+            disabled
+        >
+
+        <small>
+            Email cannot be changed here.
+        </small>
+
+    </div>
+
+    <br>
+
+    <div>
+
+        <label for="phone">
+            Phone
+        </label>
+
+        <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value="<%= user.phone || '' %>"
+            maxlength="10"
+            required
+        >
+
+    </div>
+
+    <br>
+
+    <button type="submit">
+        Save Changes
+    </button>
+
+    <a href="/user/profile">
+        Cancel
+    </a>
+
+</form>
+
+</body>
+
+</html>

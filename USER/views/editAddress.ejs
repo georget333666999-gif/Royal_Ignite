@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Edit Address</title>
+
+</head>
+
+<body>
+
+    <h1>Edit Address</h1>
+
+    <% if (error) { %>
+
+        <p>
+            <%= error %>
+        </p>
+
+    <% } %>
+
+    <form
+        action="/user/addresses/edit/<%= address._id %>"
+        method="POST"
+    >
+
+        <label>
+            Full Name
+        </label>
+
+        <input
+            type="text"
+            name="fullName"
+            value="<%= address.fullName %>"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+            Phone
+        </label>
+
+        <input
+            type="tel"
+            name="phone"
+            value="<%= address.phone %>"
+            maxlength="10"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+            Address
+        </label>
+
+        <textarea
+            name="addressLine"
+            required
+        ><%= address.addressLine %></textarea>
+
+        <br><br>
+
+
+        <label>
+            City
+        </label>
+
+        <input
+            type="text"
+            name="city"
+            value="<%= address.city %>"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+            State
+        </label>
+
+        <input
+            type="text"
+            name="state"
+            value="<%= address.state %>"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+            Pincode
+        </label>
+
+        <input
+            type="text"
+            name="pincode"
+            value="<%= address.pincode %>"
+            maxlength="6"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+            Country
+        </label>
+
+        <input
+            type="text"
+            name="country"
+            value="<%= address.country %>"
+            required
+        >
+
+        <br><br>
+
+
+        <label>
+
+            <input
+                type="checkbox"
+                name="isDefault"
+                value="true"
+                <%= address.isDefault ? "checked" : "" %>
+            >
+
+            Set as default address
+
+        </label>
+
+        <br><br>
+
+
+        <button type="submit">
+            Save Changes
+        </button>
+
+        <a href="/user/addresses">
+            Cancel
+        </a>
+
+    </form>
+
+</body>
+
+</html>

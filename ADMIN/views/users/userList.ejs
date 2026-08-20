@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>User Management</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/admin/userList.css"
+    >
+</head>
+
+<body>
+
+    <main class="user-management">
+
+        <h1>User Management</h1>
+
+        <!-- Search Form -->
+        <form
+            action="/admin/users"
+            method="GET"
+            class="search-form"
+        >
+
+            <input
+                type="text"
+                name="search"
+                placeholder="Search users..."
+                value="<%= search || '' %>"
+            >
+
+            <button type="submit">
+                Search
+            </button>
+
+            <a href="/admin/users" class="clear-button">
+                Clear
+            </a>
+
+        </form>
+
+
+        <!-- User Table -->
+        <div class="table-container">
+
+            <table>
+
+                        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Verification</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+
+            <tbody>
+
+    <% if (users.length === 0) { %>
+
+        <tr>
+            <td colspan="7">
+                No users found
+            </td>
+        </tr>
+
+    <% } else { %>
+
+        <% users.forEach(user => { %>
+
+            <tr>
+
+                <!-- Name -->
+                <td>
+                    <%= user.name %>
+                </td>
+
+                <!-- Email -->
+                <td>
+                    <%= user.email %>
+                </td>
+
+                <!-- Phone -->
+                <td>
+                    <%= user.phone || "N/A" %>
+                </td>
+
+                <!-- Verification -->
+                <td>
+                    <%= user.isVerified ? "Verified" : "Not Verified" %>
+                </td>
+
+                <!-- Status -->
+                <td>
+
+                    <% if (user.isBlocked) { %>
+
+                        <span class="status-blocked">
+                            Blocked
+                        </span>
+
+                    <% } else { %>
+
+                        <span class="status-active">
+                            Active
+                        </span>
+
+                    <% } %>
+
+                </td>
+
+                <!-- Created At -->
+                <td>
+                    <%= user.createdAt.toLocaleString() %>
+                </td>
+
+                <!-- Action -->
+                <td>
+
+                    <% if (user.isBlocked) { %>
+
+                        <!-- UNBLOCK -->
+
+                        <form
+                            action="/admin/users/<%= user._id %>/unblock"
+                            method="POST"
+                            onsubmit="return confirm('Are you sure you want to unblock this user?');"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="search"
+                                value="<%= search || '' %>"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="page"
+                                value="<%= currentPage %>"
+                            >
+
+                            <button
+                                type="submit"
+                                class="unblock-button"
+                            >
+                                Unblock
+                            </button>
+
+                        </form>
+
+                    <% } else { %>
+
+                        <!-- BLOCK -->
+
+                        <form
+                            action="/admin/users/<%= user._id %>/block"
+                            method="POST"
+                            onsubmit="return confirm('Are you sure you want to block this user?');"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="search"
+                                value="<%= search || '' %>"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="page"
+                                value="<%= currentPage %>"
+                            >
+
+                            <button
+                                type="submit"
+                                class="block-button"
+                            >
+                                Block
+                            </button>
+
+                        </form>
+
+                    <% } %>
+
+                </td>
+
+            </tr>
+
+        <% }) %>
+
+    <% } %>
+
+</tbody>
+
+            </table>
+            <% if (totalPages > 1) { %>
+
+    <div class="pagination">
+
+        <% if (currentPage > 1) { %>
+
+            <a
+                href="/admin/users?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                class="pagination-button"
+            >
+                Previous
+            </a>
+
+        <% } %>
+
+
+        <% for (let page = 1; page <= totalPages; page++) { %>
+
+            <a
+                href="/admin/users?page=<%= page %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                class="pagination-button <%= page === currentPage ? 'active-page' : '' %>"
+            >
+                <%= page %>
+            </a>
+
+        <% } %>
+
+
+        <% if (currentPage < totalPages) { %>
+
+            <a
+                href="/admin/users?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                class="pagination-button"
+            >
+                Next
+            </a>
+
+        <% } %>
+
+    </div>
+
+<% } %>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

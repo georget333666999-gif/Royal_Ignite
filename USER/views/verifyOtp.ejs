@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Verify OTP</title>
+
+</head>
+
+<body>
+
+    <main>
+
+        <h1>Verify Your Account</h1>
+
+        <p>
+            Enter the 6-digit OTP sent to your email.
+        </p>
+
+
+        <% if (error) { %>
+
+            <div class="error-message">
+                <%= error %>
+            </div>
+
+        <% } %>
+
+
+        <form
+            action="/user/verify-otp"
+            method="POST"
+        >
+
+            <label for="otp">
+                Enter OTP
+            </label>
+
+            <input
+                type="text"
+                id="otp"
+                name="otp"
+                maxlength="6"
+                minlength="6"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                pattern="[0-9]{6}"
+                required
+            >
+
+
+            <p>
+                OTP expires in:
+                <strong id="timer">
+                    01:00
+                </strong>
+            </p>
+
+
+            <button
+                type="submit"
+                id="verifyButton"
+            >
+                Verify OTP
+            </button>
+
+        </form>
+
+
+        <div>
+
+            <span id="resendText">
+                Didn't receive the OTP?
+            </span>
+
+
+            <form
+                action="/user/resend-otp"
+                method="POST"
+                id="resendForm"
+                style="display: inline;"
+            >
+
+                <button
+                    type="submit"
+                    id="resendButton"
+                    disabled
+                >
+                    Resend OTP
+                </button>
+
+            </form>
+
+        </div>
+
+    </main>
+
+
+ <script>
+
+    // ========================================
+    // OTP Timer
+    // ========================================
+
+    let otpTimeLeft = 60;
+
+    const timerElement =
+        document.getElementById("timer");
+
+    const resendButton =
+        document.getElementById("resendButton");
+
+
+    function updateOtpTimer() {
+
+        const minutes =
+            Math.floor(otpTimeLeft / 60);
+
+        const seconds =
+            otpTimeLeft % 60;
+
+
+        timerElement.textContent =
+            String(minutes).padStart(2, "0")
+            + ":"
+            +
+            String(seconds).padStart(2, "0");
+
+
+        if (otpTimeLeft <= 0) {
+
+            clearInterval(otpTimer);
+
+            timerElement.textContent =
+                "Expired";
+
+            return;
+
+        }
+
+
+        otpTimeLeft--;
+
+    }
+
+
+    updateOtpTimer();
+
+
+    const otpTimer =
+        setInterval(updateOtpTimer, 1000);
+
+
+    // ========================================
+    // Resend OTP Cooldown
+    // ========================================
+
+    let resendTimeLeft = 30;
+
+
+    function updateResendTimer() {
+
+        if (resendTimeLeft <= 0) {
+
+            clearInterval(resendTimer);
+
+            resendButton.disabled = false;
+
+            resendButton.textContent =
+                "Resend OTP";
+
+            return;
+
+        }
+
+
+        resendButton.disabled = true;
+
+        resendButton.textContent =
+            `Resend OTP (${resendTimeLeft}s)`;
+
+
+        resendTimeLeft--;
+
+    }
+
+
+    updateResendTimer();
+
+
+    const resendTimer =
+        setInterval(updateResendTimer, 1000);
+
+</script>
+
+</body>
+
+</html>
