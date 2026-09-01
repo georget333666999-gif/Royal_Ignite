@@ -1,46 +1,34 @@
 const addressService = require("../USER/services/addressService");
 
+// Helper to validate common address fields
+const checkAddressFields = (body) => {
+    const { fullName, phone, addressLine, city, state, pincode } = body;
+
+    if (!fullName || !phone || !addressLine || !city || !state || !pincode) {
+        return "All address fields are required.";
+    }
+    if (fullName.trim().length < 2) {
+        return "Please enter a valid name.";
+    }
+    if (!/^[0-9]{10}$/.test(phone.trim())) {
+        return "Please enter a valid 10-digit phone number.";
+    }
+    if (!/^[0-9]{6}$/.test(pincode.trim())) {
+        return "Please enter a valid 6-digit pincode.";
+    }
+    return null;
+};
+
 // ========================================
 // Add Address Validation
 // ========================================
-
 const validateAddAddress = (req, res, next) => {
-    const {
-        fullName,
-        phone,
-        addressLine,
-        city,
-        state,
-        pincode,
-        country
-    } = req.body;
+    if (!req.body.country) req.body.country = "India";
 
-    if (!fullName || !phone || !addressLine || !city || !state || !pincode || !country) {
+    const error = checkAddressFields(req.body);
+    if (error) {
         return res.status(400).render("addAddress", {
-            error: "All address fields are required.",
-            formData: req.body
-        });
-    }
-
-    if (fullName.trim().length < 2) {
-        return res.status(400).render("addAddress", {
-            error: "Please enter a valid name.",
-            formData: req.body
-        });
-    }
-
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(phone.trim())) {
-        return res.status(400).render("addAddress", {
-            error: "Please enter a valid 10-digit phone number.",
-            formData: req.body
-        });
-    }
-
-    const pincodeRegex = /^[0-9]{6}$/;
-    if (!pincodeRegex.test(pincode.trim())) {
-        return res.status(400).render("addAddress", {
-            error: "Please enter a valid 6-digit pincode.",
+            error,
             formData: req.body
         });
     }
@@ -51,50 +39,15 @@ const validateAddAddress = (req, res, next) => {
 // ========================================
 // Edit Address Validation
 // ========================================
-
 const validateEditAddress = async (req, res, next) => {
-    const {
-        fullName,
-        phone,
-        addressLine,
-        city,
-        state,
-        pincode,
-        country
-    } = req.body;
+    if (!req.body.country) req.body.country = "India";
 
-    let address = null;
-
-    const getAddress = async () => {
-        if (!address) {
-            address = await addressService.getAddressById(
-                req.params.id,
-                req.session.userId
-            );
-        }
-        return address;
-    };
-
-    if (!fullName || !phone || !addressLine || !city || !state || !pincode || !country) {
+    const error = checkAddressFields(req.body);
+    if (error) {
+        const address = await addressService.getAddressById(req.params.id, req.session.userId);
         return res.status(400).render("editAddress", {
-            address: await getAddress(),
-            error: "All address fields are required."
-        });
-    }
-
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(phone.trim())) {
-        return res.status(400).render("editAddress", {
-            address: await getAddress(),
-            error: "Please enter a valid 10-digit phone number."
-        });
-    }
-
-    const pincodeRegex = /^[0-9]{6}$/;
-    if (!pincodeRegex.test(pincode.trim())) {
-        return res.status(400).render("editAddress", {
-            address: await getAddress(),
-            error: "Please enter a valid 6-digit pincode."
+            address,
+            error
         });
     }
 

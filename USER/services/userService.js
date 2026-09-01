@@ -4,10 +4,47 @@ const User = require("../../models/userModel");
 const OTP = require("../../models/otpModel");
 
 // ========================================
-// Generate OTP
+// Helper Utilities
 // ========================================
-const generateOTP = () => {
-    return crypto.randomInt(100000, 1000000).toString();
+const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
+
+const createOtpDocument = async (userId, purpose, expiryMinutes = 5) => {
+    await OTP.deleteMany({ userId, ...(purpose ? { purpose } : {}) });
+    const otp = generateOTP();
+    const expiredAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
+    return await OTP.create({ userId, otpCode: otp, expiredAt, ...(purpose ? { purpose } : {}) });
+};
+
+const checkOtpCooldown = async (userId, purpose, cooldownSeconds = 30) => {
+    const existingOTP = await OTP.findOne({ userId, ...(purpose ? { purpose } : {}) });
+    if (!existingOTP) return { onCooldown: false };
+
+    const cooldownTime = cooldownSeconds * 1000;
+    const timeSinceCreation = Date.now() - new Date(existingOTP.createdAt).getTime();
+    if (timeSinceCreation < cooldownTime) {
+        const remainingTime = Math.ceil((cooldownTime - timeSinceCreation) / 1000);
+        return {
+            onCooldown: true,
+            message: `Please wait ${remainingTime} seconds before requesting a new OTP.`
+        };
+    }
+    return { onCooldown: false };
+};
+
+const verifyAndDeleteOtp = async (query, enteredOTP) => {
+    const otpDocument = await OTP.findOne(query);
+    if (!otpDocument) {
+        return { success: false, message: "OTP expired or not found." };
+    }
+    if (otpDocument.expiredAt < new Date()) {
+        await OTP.deleteOne({ _id: otpDocument._id });
+        return { success: false, message: "OTP has expired." };
+    }
+    if (otpDocument.otpCode !== enteredOTP) {
+        return { success: false, message: "Invalid OTP." };
+    }
+    await OTP.deleteOne({ _id: otpDocument._id });
+    return { success: true };
 };
 
 // ========================================
@@ -26,7 +63,7 @@ const createUser = async ({ name, email, phone, password }) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    return await User.create({
         name,
         email,
         phone,
@@ -35,54 +72,25 @@ const createUser = async ({ name, email, phone, password }) => {
         isBlocked: false,
         isVerified: false
     });
-
-    return user;
 };
 
 // ========================================
 // Create OTP
 // ========================================
 const createOTP = async (userId) => {
-    const otp = generateOTP();
-    const expiredAt = new Date(Date.now() + 1 * 60 * 1000);
-
-    // Remove any previous OTP
-    await OTP.deleteMany({ userId });
-
-    const otpDocument = await OTP.create({
-        userId,
-        otpCode: otp,
-        expiredAt,
-        purpose: "signup"
-    });
-
-    return otpDocument;
+    return await createOtpDocument(userId, "signup", 1);
 };
 
 // ========================================
 // Verify OTP
 // ========================================
 const verifyOTP = async (userId, enteredOTP) => {
-    const otpDocument = await OTP.findOne({ userId });
-
-    if (!otpDocument) {
-        return { success: false, message: "OTP expired or not found." };
-    }
-
-    if (otpDocument.expiredAt < new Date()) {
-        await OTP.deleteOne({ _id: otpDocument._id });
-        return { success: false, message: "OTP has expired." };
-    }
-
-    if (otpDocument.otpCode !== enteredOTP) {
-        return { success: false, message: "Invalid OTP." };
-    }
+    const result = await verifyAndDeleteOtp({ userId }, enteredOTP);
+    if (!result.success) return result;
 
     await User.findByIdAndUpdate(userId, {
         $set: { isVerified: true }
     });
-
-    await OTP.deleteOne({ _id: otpDocument._id });
 
     return { success: true };
 };
@@ -108,7 +116,6 @@ const loginUser = async (email, password) => {
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
-
     if (!passwordMatch) {
         return { success: false, message: "Invalid email or password." };
     }
@@ -121,28 +128,16 @@ const loginUser = async (email, password) => {
 // ========================================
 const resendOTP = async (userId) => {
     const user = await User.findById(userId);
-
     if (!user) {
         return { success: false, message: "User not found." };
     }
-
     if (user.isVerified) {
         return { success: false, message: "User is already verified." };
     }
 
-    const existingOTP = await OTP.findOne({ userId });
-
-    if (existingOTP) {
-        const cooldownTime = 30 * 1000;
-        const timeSinceCreation = Date.now() - new Date(existingOTP.createdAt).getTime();
-
-        if (timeSinceCreation < cooldownTime) {
-            const remainingTime = Math.ceil((cooldownTime - timeSinceCreation) / 1000);
-            return {
-                success: false,
-                message: `Please wait ${remainingTime} seconds before requesting a new OTP.`
-            };
-        }
+    const cooldown = await checkOtpCooldown(userId);
+    if (cooldown.onCooldown) {
+        return { success: false, message: cooldown.message };
     }
 
     const otp = await createOTP(userId);
@@ -162,44 +157,16 @@ const forgotPassword = async (email) => {
     if (!user) {
         return { success: false, message: "No account found with this email." };
     }
-
     if (user.isBlocked) {
         return { success: false, message: "Your account has been blocked." };
     }
 
-    const existingOTP = await OTP.findOne({
-        userId: user._id,
-        purpose: "reset-password"
-    });
-
-    if (existingOTP) {
-        const cooldownTime = 30 * 1000;
-        const timeSinceCreation = Date.now() - new Date(existingOTP.createdAt).getTime();
-
-        if (timeSinceCreation < cooldownTime) {
-            const remainingTime = Math.ceil((cooldownTime - timeSinceCreation) / 1000);
-            return {
-                success: false,
-                message: `Please wait ${remainingTime} seconds before requesting a new OTP.`
-            };
-        }
+    const cooldown = await checkOtpCooldown(user._id, "reset-password");
+    if (cooldown.onCooldown) {
+        return { success: false, message: cooldown.message };
     }
 
-    await OTP.deleteMany({
-        userId: user._id,
-        purpose: "reset-password"
-    });
-
-    const otp = generateOTP();
-    const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
-
-    const otpDocument = await OTP.create({
-        userId: user._id,
-        otpCode: otp,
-        expiredAt,
-        purpose: "reset-password"
-    });
-
+    const otpDocument = await createOtpDocument(user._id, "reset-password", 5);
     console.log(`Password Reset OTP for ${user.email}: ${otpDocument.otpCode}`);
 
     return { success: true, userId: user._id };
@@ -209,31 +176,13 @@ const forgotPassword = async (email) => {
 // Reset Password (Verify OTP + Update)
 // ========================================
 const resetPassword = async (userId, enteredOTP, newPassword) => {
-    const otpDocument = await OTP.findOne({
-        userId,
-        purpose: "reset-password"
-    });
-
-    if (!otpDocument) {
-        return { success: false, message: "OTP expired or not found." };
-    }
-
-    if (otpDocument.expiredAt < new Date()) {
-        await OTP.deleteOne({ _id: otpDocument._id });
-        return { success: false, message: "OTP has expired." };
-    }
-
-    if (otpDocument.otpCode !== enteredOTP) {
-        return { success: false, message: "Invalid OTP." };
-    }
+    const result = await verifyAndDeleteOtp({ userId, purpose: "reset-password" }, enteredOTP);
+    if (!result.success) return result;
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     await User.findByIdAndUpdate(userId, {
         $set: { password: hashedPassword }
     });
-
-    await OTP.deleteOne({ _id: otpDocument._id });
 
     return { success: true };
 };
@@ -243,19 +192,23 @@ const resetPassword = async (userId, enteredOTP, newPassword) => {
 // ========================================
 const changePassword = async (userId, currentPassword, newPassword) => {
     const user = await User.findById(userId);
-
     if (!user) {
         return { success: false, message: "User not found." };
     }
 
-    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!user.password) {
+        return {
+            success: false,
+            message: "This account does not have a local password set (e.g. Google Sign-In)."
+        };
+    }
 
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
     if (!passwordMatch) {
         return { success: false, message: "Current password is incorrect." };
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     await User.findByIdAndUpdate(userId, {
         $set: { password: hashedPassword }
     });
@@ -273,32 +226,16 @@ const requestEmailChange = async (userId, newEmail) => {
     if (!user) {
         return { success: false, message: "User not found." };
     }
-
     if (user.email === formattedEmail) {
         return { success: false, message: "New email must be different from current email." };
     }
 
     const existingUser = await User.findOne({ email: formattedEmail });
-
     if (existingUser) {
         return { success: false, message: "This email address is already in use." };
     }
 
-    await OTP.deleteMany({
-        userId,
-        purpose: "email-change"
-    });
-
-    const otp = generateOTP();
-    const expiredAt = new Date(Date.now() + 5 * 60 * 1000);
-
-    const otpDocument = await OTP.create({
-        userId,
-        otpCode: otp,
-        expiredAt,
-        purpose: "email-change"
-    });
-
+    const otpDocument = await createOtpDocument(userId, "email-change", 5);
     console.log(`Email Change OTP for ${formattedEmail}: ${otpDocument.otpCode}`);
 
     return { success: true, pendingNewEmail: formattedEmail };
@@ -308,29 +245,12 @@ const requestEmailChange = async (userId, newEmail) => {
 // Verify Email Change OTP
 // ========================================
 const verifyEmailChange = async (userId, pendingNewEmail, enteredOTP) => {
-    const otpDocument = await OTP.findOne({
-        userId,
-        purpose: "email-change"
-    });
-
-    if (!otpDocument) {
-        return { success: false, message: "OTP expired or not found." };
-    }
-
-    if (otpDocument.expiredAt < new Date()) {
-        await OTP.deleteOne({ _id: otpDocument._id });
-        return { success: false, message: "OTP has expired." };
-    }
-
-    if (otpDocument.otpCode !== enteredOTP) {
-        return { success: false, message: "Invalid OTP." };
-    }
+    const result = await verifyAndDeleteOtp({ userId, purpose: "email-change" }, enteredOTP);
+    if (!result.success) return result;
 
     await User.findByIdAndUpdate(userId, {
         $set: { email: pendingNewEmail }
     });
-
-    await OTP.deleteOne({ _id: otpDocument._id });
 
     return { success: true };
 };
@@ -347,3 +267,5 @@ module.exports = {
     requestEmailChange,
     verifyEmailChange
 };
+
+

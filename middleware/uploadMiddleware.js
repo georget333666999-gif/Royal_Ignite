@@ -53,16 +53,46 @@ const fileFilter = (req, file, cb) => {
 
 };
 
+const User = require("../models/userModel");
+
 const upload = multer({
-
     storage,
-
     fileFilter,
-
     limits: {
         fileSize: 2 * 1024 * 1024
     }
-
 });
 
-module.exports = upload;
+const handleProfileUpload = (req, res, next) => {
+    upload.single("profileImage")(req, res, async (err) => {
+        if (err) {
+            let errorMessage = "Failed to upload image.";
+            if (err.code === "LIMIT_FILE_SIZE") {
+                errorMessage = "Image size exceeds 2MB limit. Please choose a smaller image.";
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            try {
+                const user = await User.findById(req.session.userId).select("-password");
+                return res.status(400).render("editProfile", {
+                    user: user || {},
+                    error: errorMessage,
+                    success: null
+                });
+            } catch (error) {
+                return res.status(400).render("editProfile", {
+                    user: {},
+                    error: errorMessage,
+                    success: null
+                });
+            }
+        }
+        next();
+    });
+};
+
+module.exports = {
+    upload,
+    handleProfileUpload
+};

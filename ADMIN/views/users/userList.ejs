@@ -185,7 +185,7 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="metric-value"><%= totalCustomers || 248 %></div>
+                    <div class="metric-value"><%= typeof totalCustomers !== 'undefined' ? totalCustomers : 0 %></div>
                 </div>
 
                 <div class="metric-card">
@@ -195,7 +195,7 @@
                             <div class="dot-green"></div>
                         </div>
                     </div>
-                    <div class="metric-value"><%= activeUsers || 198 %></div>
+                    <div class="metric-value"><%= typeof activeUsers !== 'undefined' ? activeUsers : 0 %></div>
                 </div>
 
                 <div class="metric-card">
@@ -208,7 +208,7 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="metric-value"><%= blockedUsers || 32 %></div>
+                    <div class="metric-value"><%= typeof blockedUsers !== 'undefined' ? blockedUsers : 0 %></div>
                 </div>
 
                 <div class="metric-card">
@@ -222,7 +222,7 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="metric-value"><%= inactiveUsers || 18 %></div>
+                    <div class="metric-value"><%= typeof inactiveUsers !== 'undefined' ? inactiveUsers : 0 %></div>
                 </div>
 
             </div>
@@ -320,17 +320,9 @@
                                             <% } %>
                                         </td>
 
-                                        <!-- Actions (Edit & Block/Unblock) -->
+                                        <!-- Actions (Block/Unblock) -->
                                         <td style="text-align: right;">
                                             <div class="action-buttons-group">
-                                                <button
-                                                    type="button"
-                                                    class="btn-pill-edit"
-                                                    onclick="openEditModal('<%= user._id %>', '<%= user.name.replace(/'/g, "\\'") %>', '<%= user.email %>', '<%= user.phone || '' %>')"
-                                                >
-                                                    Edit
-                                                </button>
-
                                                 <% if (user.isBlocked) { %>
                                                     <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock <%= user.name %>?');">
                                                         <input type="hidden" name="search" value="<%= search || '' %>">
@@ -393,72 +385,6 @@
         </main>
 
     </div>
-
-    <!-- Edit Customer Modal Dialog -->
-    <div class="modal-overlay" id="editUserModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Customer Profile</h3>
-                <button type="button" class="modal-close-btn" onclick="closeEditModal()">&times;</button>
-            </div>
-            <form id="editUserForm" action="" method="POST" novalidate>
-                <div class="modal-body">
-                    <input type="hidden" name="search" value="<%= search || '' %>">
-                    <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
-                    <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
-                    <input type="hidden" name="page" value="<%= currentPage %>">
-
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" id="editName" name="name" class="form-input" data-validate="name" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" id="editEmail" name="email" class="form-input" data-validate="email" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" id="editPhone" name="phone" class="form-input" placeholder="e.g. 9876543210" data-validate="phone" />
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="btn-save">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="/js/validation.js"></script>
-
-    <script>
-        function openEditModal(userId, name, email, phone) {
-            const modal = document.getElementById('editUserModal');
-            const form = document.getElementById('editUserForm');
-            
-            form.action = '/admin/users/' + userId + '/edit';
-            document.getElementById('editName').value = name;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editPhone').value = phone || '';
-
-            modal.classList.add('active');
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById('editUserModal');
-            modal.classList.remove('active');
-        }
-
-        // Close on background click
-        document.getElementById('editUserModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
-    </script>
 
 </body>
 

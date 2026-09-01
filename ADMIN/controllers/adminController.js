@@ -46,6 +46,7 @@ const getDashboard = async (req, res) => {
 // Logout POST
 const logout = (req, res) => {
     req.session.destroy(() => {
+        res.clearCookie("admin.sid");
         res.redirect("/admin/login");
     });
 };

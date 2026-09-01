@@ -23,6 +23,9 @@ passport.use(
                 });
 
                 if (user) {
+                    if (user.isBlocked) {
+                        return done(null, false, { message: "Your account has been blocked." });
+                    }
                     return done(null, user);
                 }
 
@@ -54,6 +57,9 @@ passport.use(
                 );
 
                 if (user) {
+                    if (user.isBlocked) {
+                        return done(null, false, { message: "Your account has been blocked." });
+                    }
 
                     // Existing email account
                     user.googleId = profile.id;

@@ -24,7 +24,7 @@
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
-            <form action="/user/addresses/<%= address._id %>/edit" method="POST" id="editAddressForm" novalidate>
+            <form action="/user/addresses/edit/<%= address._id %>" method="POST" id="editAddressForm" novalidate>
                 
                 <div class="modal-form-grid">
                     
@@ -103,6 +103,8 @@
                             required
                         />
                     </div>
+
+                    <input type="hidden" name="country" value="<%= address.country || 'India' %>" />
 
                     <div class="form-group">
                         <label for="addressType">Address Type *</label>

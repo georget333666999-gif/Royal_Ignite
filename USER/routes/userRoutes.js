@@ -4,10 +4,10 @@ const authController = require("../controllers/authController");
 const otpController = require("../controllers/otpController");
 const passwordController = require("../controllers/passwordController");
 const profileController = require("../controllers/profileController");
-const userMiddleware = require("../../middleware/userMiddleware");
+const { userMiddleware, redirectIfUserLoggedIn } = require("../../middleware/userMiddleware");
 const authValidationMiddleware = require("../../middleware/authValidationMiddleware");
 const addressValidationMiddleware = require("../../middleware/addressValidationMiddleware");
-const upload = require("../../middleware/uploadMiddleware");
+const { handleProfileUpload } = require("../../middleware/uploadMiddleware");
 const addressController = require("../controllers/addressController");
 
 const router = express.Router();
@@ -19,6 +19,7 @@ const router = express.Router();
 
 router.get(
     "/signup",
+    redirectIfUserLoggedIn,
     authController.getSignup
 );
 
@@ -29,6 +30,7 @@ router.get(
 
 router.post(
     "/signup",
+    redirectIfUserLoggedIn,
     authValidationMiddleware.validateSignup,
     authController.postSignup
 );
@@ -40,6 +42,7 @@ router.post(
 
 router.get(
     "/verify-otp",
+    redirectIfUserLoggedIn,
     otpController.getVerifyOTP
 );
 
@@ -50,6 +53,7 @@ router.get(
 
 router.post(
     "/verify-otp",
+    redirectIfUserLoggedIn,
     authValidationMiddleware.validateOTP,
     otpController.postVerifyOTP
 );
@@ -59,6 +63,7 @@ router.post(
 
 router.post(
     "/resend-otp",
+    redirectIfUserLoggedIn,
     otpController.resendOTP
 );
 
@@ -68,11 +73,13 @@ router.post(
 
 router.get(
     "/login",
+    redirectIfUserLoggedIn,
     authController.getLogin
 );
 
 router.post(
     "/login",
+    redirectIfUserLoggedIn,
     authValidationMiddleware.validateLogin,
     authController.postLogin
 );
@@ -80,6 +87,11 @@ router.post(
 // ========================================
 // Logout
 // ========================================
+
+router.get(
+    "/logout",
+    authController.logout
+);
 
 router.post(
     "/logout",
@@ -92,11 +104,13 @@ router.post(
 
 router.get(
     "/forgot-password",
+    redirectIfUserLoggedIn,
     passwordController.getForgotPassword
 );
 
 router.post(
     "/forgot-password",
+    redirectIfUserLoggedIn,
     authValidationMiddleware.validateForgotPassword,
     passwordController.postForgotPassword
 );
@@ -107,11 +121,13 @@ router.post(
 
 router.get(
     "/reset-password",
+    redirectIfUserLoggedIn,
     passwordController.getResetPassword
 );
 
 router.post(
     "/reset-password",
+    redirectIfUserLoggedIn,
     authValidationMiddleware.validateResetPassword,
     passwordController.postResetPassword
 );
@@ -119,12 +135,6 @@ router.post(
 // ========================================
 // User Profile
 // ========================================
-
-router.get(
-    "/profile",
-    userMiddleware,
-    profileController.getProfile
-);
 
 router.get(
     "/profile",
@@ -145,7 +155,7 @@ router.get(
 router.post(
     "/profile/edit",
     userMiddleware,
-    upload.single("profileImage"),
+    handleProfileUpload,
     profileController.postEditProfile
 );
 

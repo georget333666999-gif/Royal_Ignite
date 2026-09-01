@@ -111,7 +111,7 @@ const postSignup = async (req, res) => {
 const getLogin = (req, res) => {
 
     res.render("login", {
-        error: null,
+        error: req.query.error || null,
         formData: {}
     });
 
@@ -219,7 +219,7 @@ const logout = (req, res) => {
             );
         }
 
-        res.clearCookie("connect.sid");
+        res.clearCookie("user.sid");
 
         res.redirect("/user/login");
 

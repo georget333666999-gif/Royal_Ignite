@@ -1,5 +1,6 @@
 const express = require("express");
 const passport = require("../../config/passport");
+const { redirectIfUserLoggedIn } = require("../../middleware/userMiddleware");
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const router = express.Router();
 
 router.get(
     "/google",
+    redirectIfUserLoggedIn,
     passport.authenticate("google", {
         scope: ["profile", "email"]
     })

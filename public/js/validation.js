@@ -37,6 +37,24 @@ const Validation = {
         }
     },
 
+    validators: {
+        name: (val, rules) => !rules.name.test(val) ? "Name must contain only letters and be at least 2 characters." : null,
+        email: (val, rules) => !rules.email.test(val) ? "Please enter a valid email address." : null,
+        phone: (val, rules) => !rules.phone.test(val) ? "Please enter a valid 10-digit mobile number." : null,
+        pincode: (val, rules) => !rules.pincode.test(val) ? "Pincode must be exactly 6 digits." : null,
+        otp: (val, rules) => !rules.otp.test(val) ? "OTP must be a valid 6-digit code." : null,
+        currentPassword: (val) => !val ? "Please enter your current password." : null,
+        password: (val) => val.length < 8 ? "Password must be at least 8 characters long." : null,
+        newPassword: (val) => val.length < 8 ? "Password must be at least 8 characters long." : null,
+        confirmPassword: (val, rules, el) => {
+            const form = el.closest("form");
+            const targetPasswordInput = form 
+                ? (form.querySelector('#newPassword') || form.querySelector('#password') || form.querySelector('input[name="newPassword"]') || form.querySelector('input[name="password"]') || form.querySelector('input[data-validate="password"]'))
+                : null;
+            return (targetPasswordInput && val !== targetPasswordInput.value.trim()) ? "Passwords do not match." : null;
+        }
+    },
+
     validateInput(inputElement) {
         const type = inputElement.dataset.validate;
         const val = inputElement.value.trim();
@@ -51,42 +69,13 @@ const Validation = {
             return true;
         }
 
-        if (type === "name" && !this.rules.name.test(val)) {
-            this.showError(inputElement, "Name must contain only letters and be at least 2 characters.");
-            return false;
-        }
-
-        if (type === "email" && !this.rules.email.test(val)) {
-            this.showError(inputElement, "Please enter a valid email address.");
-            return false;
-        }
-
-        if (type === "phone" && !this.rules.phone.test(val)) {
-            this.showError(inputElement, "Please enter a valid 10-digit mobile number.");
-            return false;
-        }
-
-        if (type === "pincode" && !this.rules.pincode.test(val)) {
-            this.showError(inputElement, "Pincode must be exactly 6 digits.");
-            return false;
-        }
-
-        if (type === "password" && val.length < 8) {
-            this.showError(inputElement, "Password must be at least 8 characters long.");
-            return false;
-        }
-
-        if (type === "confirmPassword") {
-            const passwordInput = document.querySelector('input[data-validate="password"]') || document.getElementById('password') || document.getElementById('newPassword');
-            if (passwordInput && val !== passwordInput.value.trim()) {
-                this.showError(inputElement, "Passwords do not match.");
+        const validator = this.validators[type];
+        if (validator) {
+            const error = validator(val, this.rules, inputElement);
+            if (error) {
+                this.showError(inputElement, error);
                 return false;
             }
-        }
-
-        if (type === "otp" && !this.rules.otp.test(val)) {
-            this.showError(inputElement, "OTP must be a valid 6-digit code.");
-            return false;
         }
 
         this.clearError(inputElement);

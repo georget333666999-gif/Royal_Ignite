@@ -448,22 +448,6 @@ body {
     gap: 8px;
 }
 
-.btn-pill-edit {
-    background: #F4F4F5;
-    color: #111111;
-    border: 1px solid var(--border-color);
-    padding: 8px 18px;
-    border-radius: 30px;
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.btn-pill-edit:hover {
-    background: #E4E4E7;
-}
 
 .btn-pill-block {
     background: #E7000B;
