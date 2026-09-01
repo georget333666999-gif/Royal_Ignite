@@ -128,25 +128,23 @@ app.use("/user", userRoutes);
 const User = require("./models/userModel");
 
 app.get("/", async (req, res) => {
-    let isUserLoggedIn = Boolean(req.session && req.session.isUserLoggedIn && req.session.userId);
-    let userId = req.session ? req.session.userId : null;
+    const userId = req.session?.userId || null;
+    const isUserLoggedIn = Boolean(req.session?.isUserLoggedIn && userId);
 
-    if (isUserLoggedIn && userId) {
+    if (isUserLoggedIn) {
         try {
             const user = await User.findById(userId);
             if (!user || user.isBlocked) {
-                req.session.destroy(() => {
-                    res.clearCookie("user.sid");
-                    return res.redirect("/user/login?error=" + encodeURIComponent("Your account has been blocked."));
-                });
-                return;
+                await new Promise((resolve) => req.session.destroy(resolve));
+                res.clearCookie("user.sid");
+                return res.redirect("/user/login?error=" + encodeURIComponent("Your account has been blocked."));
             }
         } catch (err) {
             console.error("Home route user check error:", err);
         }
     }
 
-    res.render("index", {
+    return res.render("index", {
         isUserLoggedIn,
         userId
     });
