@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../../models/userModel");
 const OTP = require("../../models/otpModel");
+const { sendOtpEmail } = require("../../utils/sendEmail");
 
 const loginAdmin = async (email, password) => {
     const admin = await User.findOne({
@@ -56,6 +57,8 @@ const sendResetOtp = async (email) => {
     console.log(`\n========================================`);
     console.log(`[ADMIN OTP] Sent to ${admin.email}: ${otpCode}`);
     console.log(`========================================\n`);
+
+    await sendOtpEmail(admin.email, otpCode, "admin_password_reset", admin.name || "Admin");
 
     return { admin, otpCode };
 };

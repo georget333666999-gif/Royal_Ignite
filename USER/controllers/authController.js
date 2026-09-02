@@ -1,4 +1,5 @@
 const userService = require("../services/userService");
+const { sendOtpEmail } = require("../../utils/sendEmail");
 
 // ========================================
 // Signup Page
@@ -43,26 +44,19 @@ const postSignup = async (req, res) => {
 
 
         // -------------------------------
-        // Generate OTP
+        // Generate OTP & Send Email
         // -------------------------------
 
         const otp = await userService.createOTP(
             user._id
         );
 
-
-        /*
-         * TEMPORARY:
-         * We will connect an email service later.
-         *
-         * For development, display the OTP
-         * in the terminal.
-         */
-
         console.log(
             `OTP for ${user.email}: ${otp.otpCode}`
         );
 
+        // Send OTP to user's real email
+        await sendOtpEmail(user.email, otp.otpCode, "signup", user.name);
 
         // Store user ID in session
         req.session.otpUserId = user._id.toString();

@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const User = require("../../models/userModel");
 const OTP = require("../../models/otpModel");
+const { sendOtpEmail } = require("../../utils/sendEmail");
 
 // ========================================
 // Helper Utilities
@@ -142,6 +143,7 @@ const resendOTP = async (userId) => {
 
     const otp = await createOTP(userId);
     console.log(`New OTP for ${user.email}: ${otp.otpCode}`);
+    await sendOtpEmail(user.email, otp.otpCode, "signup", user.name);
 
     return { success: true, otp };
 };
@@ -168,6 +170,7 @@ const forgotPassword = async (email) => {
 
     const otpDocument = await createOtpDocument(user._id, "reset-password", 5);
     console.log(`Password Reset OTP for ${user.email}: ${otpDocument.otpCode}`);
+    await sendOtpEmail(user.email, otpDocument.otpCode, "reset-password", user.name);
 
     return { success: true, userId: user._id };
 };
@@ -237,6 +240,7 @@ const requestEmailChange = async (userId, newEmail) => {
 
     const otpDocument = await createOtpDocument(userId, "email-change", 5);
     console.log(`Email Change OTP for ${formattedEmail}: ${otpDocument.otpCode}`);
+    await sendOtpEmail(formattedEmail, otpDocument.otpCode, "email-change", user.name);
 
     return { success: true, pendingNewEmail: formattedEmail };
 };
