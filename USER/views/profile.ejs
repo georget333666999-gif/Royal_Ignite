@@ -95,16 +95,6 @@
 
                 <!-- Content Area -->
                 <section class="content-area">
-
-                    <% if (typeof success !== 'undefined' && success) { %>
-                        <div class="alert-success-banner" style="background: rgba(46, 213, 115, 0.12); border: 1px solid rgba(46, 213, 115, 0.35); color: #2ed573; padding: 14px 20px; border-radius: 10px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                            <span><%= success %></span>
-                        </div>
-                    <% } %>
                     
                     <div class="section-header">
                         <div>
@@ -181,6 +171,30 @@
     </main>
 
     <%- include('partials/footer') %>
+
+    <!-- SweetAlert2 for clean pop-up messages -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <% if (typeof success !== 'undefined' && success) { %>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '<%= success %>',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    background: '#181b24',
+                    color: '#ffffff',
+                    iconColor: '#2ed573',
+                    customClass: {
+                        popup: 'swal2-toast-dark'
+                    }
+                });
+            });
+        </script>
+    <% } %>
 
 </body>
 
