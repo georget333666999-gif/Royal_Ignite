@@ -15,8 +15,10 @@ const getProfile = async (req, res) => {
         }
 
         const addresses = await addressService.getUserAddresses(req.session.userId);
+        const success = req.session.successMessage || null;
+        delete req.session.successMessage;
 
-        res.render("profile", { user, addresses });
+        res.render("profile", { user, addresses, success });
     } catch (error) {
         console.error("Profile error:", error);
         res.status(500).send("Something went wrong.");
@@ -127,6 +129,7 @@ const postChangePassword = async (req, res) => {
             });
         }
 
+        req.session.successMessage = "Password changed successfully!";
         res.redirect("/user/profile");
     } catch (error) {
         console.error("Change password error:", error);
