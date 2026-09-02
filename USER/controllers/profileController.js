@@ -127,10 +127,7 @@ const postChangePassword = async (req, res) => {
             });
         }
 
-        res.render("changePassword", {
-            error: null,
-            success: "Password changed successfully!"
-        });
+        res.redirect("/user/profile");
     } catch (error) {
         console.error("Change password error:", error);
         res.status(500).render("changePassword", {
