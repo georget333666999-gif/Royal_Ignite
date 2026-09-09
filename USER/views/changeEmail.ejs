@@ -20,11 +20,17 @@
                 Enter your new email address. We will send an OTP code to verify ownership.
             </p>
 
-            <% if (error) { %>
+            <% if (typeof currentEmail !== "undefined" && currentEmail) { %>
+                <div style="margin-bottom: 20px; font-size: 13px; color: #a8a196; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 10px 14px; border-radius: 8px;">
+                    Current Email: <strong style="color: #ede8e1;"><%= currentEmail %></strong>
+                </div>
+            <% } %>
+
+            <% if (typeof error !== "undefined" && error) { %>
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
-            <form action="/user/profile/change-email" method="POST">
+            <form action="/user/profile/change-email" method="POST" id="changeEmailForm" novalidate>
                 
                 <div class="form-group">
                     <label for="newEmail">New Email Address *</label>
@@ -34,6 +40,9 @@
                         name="newEmail"
                         class="form-input"
                         placeholder="e.g. new.email@example.com"
+                        value="<%= typeof newEmail !== 'undefined' ? newEmail : '' %>"
+                        data-validate="email"
+                        data-current-email="<%= typeof currentEmail !== 'undefined' ? currentEmail : '' %>"
                         required
                     />
                 </div>
@@ -52,6 +61,7 @@
     </main>
 
     <%- include('partials/footer') %>
+    <script src="/js/validation.js"></script>
 
 </body>
 

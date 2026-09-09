@@ -43,6 +43,20 @@ const getDashboard = async (req, res) => {
     }
 };
 
+// Admin Analytics GET
+const getAnalytics = async (req, res) => {
+    try {
+        const metrics = await adminService.getDashboardMetrics();
+        res.render("analytics", {
+            totalUsers: metrics.totalUsers
+        });
+    } catch (error) {
+        res.status(500).render("analytics", {
+            totalUsers: 0
+        });
+    }
+};
+
 // Logout POST
 const logout = (req, res) => {
     req.session.destroy(() => {
@@ -79,7 +93,7 @@ const getVerifyOtp = (req, res) => {
     if (!req.session.adminResetId) {
         return res.redirect("/admin/forgot-password");
     }
-    res.render("auth/verifyOtp", { error: null });
+    res.render("auth/verifyOtp", { error: null, success: null });
 };
 
 // Verify OTP POST
@@ -97,7 +111,7 @@ const postVerifyOtp = async (req, res) => {
 
         res.redirect("/admin/reset-password");
     } catch (error) {
-        res.render("auth/verifyOtp", { error: error.message });
+        res.render("auth/verifyOtp", { error: error.message, success: null });
     }
 };
 
@@ -110,9 +124,9 @@ const postResendOtp = async (req, res) => {
         }
 
         await adminService.sendResetOtp(email);
-        res.render("auth/verifyOtp", { error: "A new OTP code has been sent to your email." });
+        res.render("auth/verifyOtp", { error: null, success: "A fresh OTP code has been sent to your email." });
     } catch (error) {
-        res.render("auth/verifyOtp", { error: error.message });
+        res.render("auth/verifyOtp", { error: error.message, success: null });
     }
 };
 
@@ -155,6 +169,7 @@ module.exports = {
     showLoginPage,
     login,
     getDashboard,
+    getAnalytics,
     logout,
     getForgotPassword,
     postForgotPassword,

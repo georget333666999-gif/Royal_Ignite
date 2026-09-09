@@ -1,5 +1,36 @@
+const User = require("../models/userModel");
+
 // Email regex helper
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim() || "");
+const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(email?.trim() || "");
+
+// Common email provider typo detection
+const commonDomainTypos = {
+    "gmal.com": "gmail.com",
+    "gamil.com": "gmail.com",
+    "gmial.com": "gmail.com",
+    "gmaill.com": "gmail.com",
+    "gmai.com": "gmail.com",
+    "gml.com": "gmail.com",
+    "gmail.co": "gmail.com",
+    "gemail.com": "gmail.com",
+    "yaho.com": "yahoo.com",
+    "yahooo.com": "yahoo.com",
+    "yahu.com": "yahoo.com",
+    "hotmial.com": "hotmail.com",
+    "hotmai.com": "hotmail.com",
+    "outlok.com": "outlook.com",
+    "outluk.com": "outlook.com",
+    "iclud.com": "icloud.com",
+    "icld.com": "icloud.com"
+};
+
+const checkEmailTypo = (email) => {
+    const domain = (email || "").split("@")[1]?.toLowerCase().trim();
+    if (domain && commonDomainTypos[domain]) {
+        return `Did you mean @${commonDomainTypos[domain]}? Please check your email domain.`;
+    }
+    return null;
+};
 
 // ========================================
 // Signup Validation
@@ -18,6 +49,10 @@ const validateSignup = (req, res, next) => {
     }
     if (!isValidEmail(email)) {
         return res.status(400).render("signup", { error: "Please enter a valid email address.", formData: req.body });
+    }
+    const typoError = checkEmailTypo(email);
+    if (typoError) {
+        return res.status(400).render("signup", { error: typoError, formData: req.body });
     }
 
     next();
@@ -39,9 +74,36 @@ const validateLogin = (req, res, next) => {
 // ========================================
 const validateOTP = (req, res, next) => {
     const { otpCode } = req.body;
-    if (!otpCode) {
-        return res.status(400).render("verifyOtp", { error: "Please enter the OTP." });
+    const isEmailChange = req.originalUrl && req.originalUrl.includes("verify-email-otp");
+
+    if (!otpCode || !otpCode.trim()) {
+        if (isEmailChange) {
+            return res.status(400).render("verifyEmailOtp", {
+                pendingEmail: req.session.pendingNewEmail || "",
+                error: "Please enter the 6-digit OTP code."
+            });
+        }
+        return res.status(400).render("verifyOtp", {
+            error: "Please enter the 6-digit OTP code.",
+            remainingSeconds: 0,
+            isExpired: false
+        });
     }
+
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+        if (isEmailChange) {
+            return res.status(400).render("verifyEmailOtp", {
+                pendingEmail: req.session.pendingNewEmail || "",
+                error: "OTP must be exactly 6 digits."
+            });
+        }
+        return res.status(400).render("verifyOtp", {
+            error: "OTP must be exactly 6 digits.",
+            remainingSeconds: 0,
+            isExpired: false
+        });
+    }
+
     next();
 };
 
@@ -56,6 +118,10 @@ const validateForgotPassword = (req, res, next) => {
     if (!isValidEmail(email)) {
         return res.status(400).render("forgotPassword", { error: "Please enter a valid email address.", success: null });
     }
+    const typoError = checkEmailTypo(email);
+    if (typoError) {
+        return res.status(400).render("forgotPassword", { error: typoError, success: null });
+    }
     next();
 };
 
@@ -68,11 +134,14 @@ const validateResetPassword = (req, res, next) => {
     if (!otpCode || !newPassword || !confirmPassword) {
         return res.status(400).render("resetPassword", { error: "All fields are required." });
     }
+    if (newPassword !== confirmPassword) {
+        return res.status(400).render("resetPassword", { error: "Passwords do not match." });
+    }
     if (newPassword.length < 8) {
         return res.status(400).render("resetPassword", { error: "Password must be at least 8 characters." });
     }
-    if (newPassword !== confirmPassword) {
-        return res.status(400).render("resetPassword", { error: "Passwords do not match." });
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+        return res.status(400).render("resetPassword", { error: "OTP must be exactly 6 digits." });
     }
 
     next();
@@ -103,13 +172,44 @@ const validateChangePassword = (req, res, next) => {
 // ========================================
 // Change Email Validation
 // ========================================
-const validateChangeEmail = (req, res, next) => {
+const validateChangeEmail = async (req, res, next) => {
     const { newEmail } = req.body;
-    if (!newEmail) {
-        return res.status(400).render("changeEmail", { error: "Please enter your new email address." });
+    let currentEmail = "";
+    try {
+        if (req.session.userId) {
+            const user = await User.findById(req.session.userId).select("email");
+            if (user) currentEmail = user.email;
+        }
+    } catch (e) {}
+
+    if (!newEmail || !newEmail.trim()) {
+        return res.status(400).render("changeEmail", { 
+            error: "Please enter your new email address.",
+            currentEmail,
+            newEmail: ""
+        });
     }
     if (!isValidEmail(newEmail)) {
-        return res.status(400).render("changeEmail", { error: "Please enter a valid email address." });
+        return res.status(400).render("changeEmail", { 
+            error: "Please enter a valid email address (e.g., name@domain.com).",
+            currentEmail,
+            newEmail
+        });
+    }
+    const typoError = checkEmailTypo(newEmail);
+    if (typoError) {
+        return res.status(400).render("changeEmail", { 
+            error: typoError,
+            currentEmail,
+            newEmail
+        });
+    }
+    if (currentEmail && newEmail.trim().toLowerCase() === currentEmail.toLowerCase()) {
+        return res.status(400).render("changeEmail", {
+            error: "New email must be different from your current email.",
+            currentEmail,
+            newEmail
+        });
     }
     next();
 };

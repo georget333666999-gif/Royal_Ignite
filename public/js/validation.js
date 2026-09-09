@@ -6,10 +6,30 @@ const Validation = {
     // Utility regex rules
     rules: {
         name: /^[a-zA-Z\s]{2,50}$/,
-        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        email: /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/,
         phone: /^[6-9]\d{9}$/,
         pincode: /^\d{6}$/,
         otp: /^\d{6}$/
+    },
+
+    commonDomainTypos: {
+        "gmal.com": "gmail.com",
+        "gamil.com": "gmail.com",
+        "gmial.com": "gmail.com",
+        "gmaill.com": "gmail.com",
+        "gmai.com": "gmail.com",
+        "gml.com": "gmail.com",
+        "gmail.co": "gmail.com",
+        "gemail.com": "gmail.com",
+        "yaho.com": "yahoo.com",
+        "yahooo.com": "yahoo.com",
+        "yahu.com": "yahoo.com",
+        "hotmial.com": "hotmail.com",
+        "hotmai.com": "hotmail.com",
+        "outlok.com": "outlook.com",
+        "outluk.com": "outlook.com",
+        "iclud.com": "icloud.com",
+        "icld.com": "icloud.com"
     },
 
     showError(inputElement, message) {
@@ -19,10 +39,10 @@ const Validation = {
         const targetParent = inputElement.closest(".password-wrap") || inputElement.parentNode;
         const errorDiv = document.createElement("div");
         errorDiv.className = "js-error-message";
-        errorDiv.style.color = "#E7000B";
+        errorDiv.style.color = "#f87171";
         errorDiv.style.fontSize = "12px";
-        errorDiv.style.marginTop = "4px";
-        errorDiv.style.fontWeight = "500";
+        errorDiv.style.marginTop = "5px";
+        errorDiv.style.fontWeight = "400";
         errorDiv.innerText = message;
 
         targetParent.appendChild(errorDiv);
@@ -39,7 +59,20 @@ const Validation = {
 
     validators: {
         name: (val, rules) => !rules.name.test(val) ? "Name must contain only letters and be at least 2 characters." : null,
-        email: (val, rules) => !rules.email.test(val) ? "Please enter a valid email address." : null,
+        email: (val, rules, el) => {
+            if (!rules.email.test(val)) return "Please enter a valid email address (e.g., name@domain.com).";
+            
+            const domain = val.split("@")[1]?.toLowerCase();
+            if (domain && Validation.commonDomainTypos[domain]) {
+                return `Did you mean @${Validation.commonDomainTypos[domain]}? Please check your email domain.`;
+            }
+
+            const currentEmail = el?.dataset?.currentEmail;
+            if (currentEmail && val.toLowerCase() === currentEmail.trim().toLowerCase()) {
+                return "New email must be different from your current email.";
+            }
+            return null;
+        },
         phone: (val, rules) => !rules.phone.test(val) ? "Please enter a valid 10-digit mobile number." : null,
         pincode: (val, rules) => !rules.pincode.test(val) ? "Pincode must be exactly 6 digits." : null,
         otp: (val, rules) => !rules.otp.test(val) ? "OTP must be a valid 6-digit code." : null,
@@ -136,19 +169,19 @@ const Validation = {
             toggleBtn.className = 'toggle-password-btn';
             toggleBtn.setAttribute('aria-label', 'Toggle password visibility');
             toggleBtn.style.position = 'absolute';
-            toggleBtn.style.right = '12px';
-            toggleBtn.style.top = '12px';
+            toggleBtn.style.right = '14px';
+            toggleBtn.style.top = '15px';
             toggleBtn.style.background = 'none';
             toggleBtn.style.border = 'none';
             toggleBtn.style.cursor = 'pointer';
-            toggleBtn.style.color = '#71717A';
+            toggleBtn.style.color = '#8c857b';
             toggleBtn.style.display = 'flex';
             toggleBtn.style.alignItems = 'center';
             toggleBtn.style.justifyContent = 'center';
             toggleBtn.style.zIndex = '10';
             toggleBtn.innerHTML = this.eyeOpenIcon;
 
-            input.style.paddingRight = '42px';
+            input.style.paddingRight = '44px';
             wrapper.appendChild(toggleBtn);
 
             toggleBtn.addEventListener('click', (e) => {
@@ -158,7 +191,7 @@ const Validation = {
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
                 toggleBtn.innerHTML = isPassword ? this.eyeClosedIcon : this.eyeOpenIcon;
-                toggleBtn.style.color = isPassword ? '#111111' : '#71717A';
+                toggleBtn.style.color = isPassword ? '#d48833' : '#8c857b';
             });
         });
     }

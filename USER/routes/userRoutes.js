@@ -206,6 +206,12 @@ router.post(
     profileController.postVerifyEmailOTP
 );
 
+router.post(
+    "/profile/resend-email-otp",
+    userMiddleware,
+    profileController.resendEmailChangeOTP
+);
+
 
 // ========================================
 // Addresses

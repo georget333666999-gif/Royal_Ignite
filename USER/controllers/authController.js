@@ -8,7 +8,7 @@ const { sendOtpEmail } = require("../../utils/sendEmail");
 const getSignup = (req, res) => {
 
     res.render("signup", {
-        error: null,
+        error: req.query.error || null,
         formData: {}
     });
 
@@ -49,10 +49,6 @@ const postSignup = async (req, res) => {
 
         const otp = await userService.createOTP(
             user._id
-        );
-
-        console.log(
-            `OTP for ${user.email}: ${otp.otpCode}`
         );
 
         // Send OTP to user's real email
@@ -103,9 +99,14 @@ const postSignup = async (req, res) => {
 // ========================================
 
 const getLogin = (req, res) => {
+    let successMessage = null;
+    if (req.query.verified === "true") {
+        successMessage = "Account verified successfully! You can now log in.";
+    }
 
     res.render("login", {
         error: req.query.error || null,
+        success: successMessage,
         formData: {}
     });
 
@@ -139,6 +140,15 @@ const postLogin = async (req, res) => {
 
 
         if (!result.success) {
+
+            // If user is registered but unverified, send a fresh OTP and redirect to verify page!
+            if (result.isUnverified && result.userId) {
+                const otp = await userService.createOTP(result.userId);
+                await sendOtpEmail(result.userEmail, otp.otpCode, "signup", result.userName || "Customer");
+                req.session.otpUserId = result.userId.toString();
+                req.session.otpSuccessMessage = "Your account is not verified yet. A fresh verification code has been sent to your email.";
+                return res.redirect("/user/verify-otp");
+            }
 
             return res.status(401).render("login", {
 

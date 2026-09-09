@@ -5,20 +5,64 @@ const OTP = require("../../models/otpModel");
 const { sendOtpEmail } = require("../../utils/sendEmail");
 
 // ========================================
-// Helper Utilities
+// Helper Utilities & Terminal OTP Display
 // ========================================
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
-const createOtpDocument = async (userId, purpose, expiryMinutes = 5) => {
+const purposeLabelMap = {
+    "signup": "Signup",
+    "SIGNUP": "Signup",
+    "reset-password": "Password Reset",
+    "email-change": "Email Change",
+    "admin_password_reset": "Admin Password Reset"
+};
+
+/**
+ * Display the generated OTP concisely in the terminal
+ */
+const logOtpToTerminal = ({ otp, purpose = "signup", recipient = "" }) => {
+    const emailMatch = recipient.match(/<([^>]+)>/);
+    const targetEmail = emailMatch ? emailMatch[1] : recipient;
+    const label = purposeLabelMap[purpose] || "Verification";
+    console.log(`${label} OTP for ${targetEmail}: ${otp}`);
+};
+
+const createOtpDocument = async (userId, purpose, expiryMinutes = 1, overrideRecipient = null) => {
     await OTP.deleteMany({ userId, ...(purpose ? { purpose } : {}) });
     const otp = generateOTP();
     const expiredAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
-    return await OTP.create({ userId, otpCode: otp, expiredAt, ...(purpose ? { purpose } : {}) });
+    const otpDoc = await OTP.create({ userId, otpCode: otp, expiredAt, ...(purpose ? { purpose } : {}) });
+
+    let recipientStr = overrideRecipient;
+    if (!recipientStr) {
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                recipientStr = user.email ? `${user.name ? user.name + " " : ""}<${user.email}>` : `User ID: ${userId}`;
+            }
+        } catch (e) {}
+    }
+
+    // Show the generated OTP in the terminal
+    logOtpToTerminal({
+        otp,
+        purpose: purpose || "SIGNUP",
+        recipient: recipientStr || `User ID: ${userId}`,
+        expiryMinutes,
+        expiredAt
+    });
+
+    return otpDoc;
 };
 
 const checkOtpCooldown = async (userId, purpose, cooldownSeconds = 30) => {
     const existingOTP = await OTP.findOne({ userId, ...(purpose ? { purpose } : {}) });
     if (!existingOTP) return { onCooldown: false };
+
+    // If existing OTP has already expired, allow immediate resend
+    if (new Date() > new Date(existingOTP.expiredAt)) {
+        return { onCooldown: false };
+    }
 
     const cooldownTime = cooldownSeconds * 1000;
     const timeSinceCreation = Date.now() - new Date(existingOTP.createdAt).getTime();
@@ -35,14 +79,14 @@ const checkOtpCooldown = async (userId, purpose, cooldownSeconds = 30) => {
 const verifyAndDeleteOtp = async (query, enteredOTP) => {
     const otpDocument = await OTP.findOne(query);
     if (!otpDocument) {
-        return { success: false, message: "OTP expired or not found." };
+        return { success: false, isExpired: true, message: "OTP expired or not found. Please click 'Resend Code'." };
     }
-    if (otpDocument.expiredAt < new Date()) {
+    if (new Date() > new Date(otpDocument.expiredAt)) {
         await OTP.deleteOne({ _id: otpDocument._id });
-        return { success: false, message: "OTP has expired." };
+        return { success: false, isExpired: true, message: "OTP has expired. Please click 'Resend Code' to get a new code." };
     }
     if (otpDocument.otpCode !== enteredOTP) {
-        return { success: false, message: "Invalid OTP." };
+        return { success: false, isExpired: false, message: "Invalid OTP code. Please check and try again." };
     }
     await OTP.deleteOne({ _id: otpDocument._id });
     return { success: true };
@@ -52,11 +96,25 @@ const verifyAndDeleteOtp = async (query, enteredOTP) => {
 // Create User
 // ========================================
 const createUser = async ({ name, email, phone, password }) => {
+    const formattedEmail = email.trim().toLowerCase();
+    const formattedPhone = phone.trim();
+
     const existingUser = await User.findOne({
-        $or: [{ email }, { phone }]
+        $or: [{ email: formattedEmail }, { phone: formattedPhone }]
     });
 
     if (existingUser) {
+        // If user already signed up but never verified their OTP, allow updating and resending!
+        if (!existingUser.isVerified) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            existingUser.name = name.trim();
+            existingUser.email = formattedEmail;
+            existingUser.phone = formattedPhone;
+            existingUser.password = hashedPassword;
+            await existingUser.save();
+            return existingUser;
+        }
+
         const error = new Error("User already exists");
         error.code = 11000;
         throw error;
@@ -66,8 +124,8 @@ const createUser = async ({ name, email, phone, password }) => {
 
     return await User.create({
         name,
-        email,
-        phone,
+        email: formattedEmail,
+        phone: formattedPhone,
         password: hashedPassword,
         isAdmin: false,
         isBlocked: false,
@@ -76,7 +134,7 @@ const createUser = async ({ name, email, phone, password }) => {
 };
 
 // ========================================
-// Create OTP
+// Create OTP (1 Minute Validity for Signup)
 // ========================================
 const createOTP = async (userId) => {
     return await createOtpDocument(userId, "signup", 1);
@@ -86,7 +144,7 @@ const createOTP = async (userId) => {
 // Verify OTP
 // ========================================
 const verifyOTP = async (userId, enteredOTP) => {
-    const result = await verifyAndDeleteOtp({ userId }, enteredOTP);
+    const result = await verifyAndDeleteOtp({ userId, purpose: "signup" }, enteredOTP);
     if (!result.success) return result;
 
     await User.findByIdAndUpdate(userId, {
@@ -113,7 +171,14 @@ const loginUser = async (email, password) => {
     }
 
     if (!user.isVerified) {
-        return { success: false, message: "Please verify your account first." };
+        return {
+            success: false,
+            isUnverified: true,
+            userId: user._id,
+            userEmail: user.email,
+            userName: user.name,
+            message: "Please verify your account first."
+        };
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -136,13 +201,12 @@ const resendOTP = async (userId) => {
         return { success: false, message: "User is already verified." };
     }
 
-    const cooldown = await checkOtpCooldown(userId);
+    const cooldown = await checkOtpCooldown(userId, "signup", 30);
     if (cooldown.onCooldown) {
         return { success: false, message: cooldown.message };
     }
 
     const otp = await createOTP(userId);
-    console.log(`New OTP for ${user.email}: ${otp.otpCode}`);
     await sendOtpEmail(user.email, otp.otpCode, "signup", user.name);
 
     return { success: true, otp };
@@ -169,7 +233,6 @@ const forgotPassword = async (email) => {
     }
 
     const otpDocument = await createOtpDocument(user._id, "reset-password", 5);
-    console.log(`Password Reset OTP for ${user.email}: ${otpDocument.otpCode}`);
     await sendOtpEmail(user.email, otpDocument.otpCode, "reset-password", user.name);
 
     return { success: true, userId: user._id };
@@ -222,12 +285,18 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 // ========================================
 // Request Email Change (Send OTP)
 // ========================================
-const requestEmailChange = async (userId, newEmail) => {
+const requestEmailChange = async (userId, newEmail, isResend = false) => {
     const formattedEmail = newEmail.trim().toLowerCase();
     const user = await User.findById(userId);
 
     if (!user) {
         return { success: false, message: "User not found." };
+    }
+    if (user.googleId) {
+        return {
+            success: false,
+            message: "Email change is disabled for accounts registered with Google Sign-In."
+        };
     }
     if (user.email === formattedEmail) {
         return { success: false, message: "New email must be different from current email." };
@@ -238,11 +307,30 @@ const requestEmailChange = async (userId, newEmail) => {
         return { success: false, message: "This email address is already in use." };
     }
 
-    const otpDocument = await createOtpDocument(userId, "email-change", 5);
-    console.log(`Email Change OTP for ${formattedEmail}: ${otpDocument.otpCode}`);
+    // Cooldown only applies when resending to the same email address
+    if (isResend) {
+        const cooldown = await checkOtpCooldown(userId, "email-change", 30);
+        if (cooldown.onCooldown) {
+            return { success: false, message: cooldown.message };
+        }
+    }
+
+    const otpDocument = await createOtpDocument(
+        userId,
+        "email-change",
+        5,
+        `${user.name ? user.name + " " : ""}<${formattedEmail}>`
+    );
     await sendOtpEmail(formattedEmail, otpDocument.otpCode, "email-change", user.name);
 
     return { success: true, pendingNewEmail: formattedEmail };
+};
+
+// ========================================
+// Resend Email Change OTP
+// ========================================
+const resendEmailChangeOTP = async (userId, pendingNewEmail) => {
+    return await requestEmailChange(userId, pendingNewEmail, true);
 };
 
 // ========================================
@@ -262,6 +350,7 @@ const verifyEmailChange = async (userId, pendingNewEmail, enteredOTP) => {
 module.exports = {
     createUser,
     createOTP,
+    logOtpToTerminal,
     verifyOTP,
     loginUser,
     resendOTP,
@@ -269,6 +358,7 @@ module.exports = {
     resetPassword,
     changePassword,
     requestEmailChange,
+    resendEmailChangeOTP,
     verifyEmailChange
 };
 

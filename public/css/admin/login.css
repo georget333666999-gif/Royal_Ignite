@@ -1,16 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ========================================
-   ROYAL IGNITE - Admin Suite Styling
+   ROYAL IGNITE - Executive Admin Suite
+   Aesthetic: Refined Luxury White Theme
    ======================================== */
 
 :root {
-    --admin-bg: #F9F8F6;
-    --admin-card-bg: #FFFFFF;
-    --admin-text-dark: #1A1A1A;
-    --admin-text-muted: #71716A;
-    --admin-border: rgba(229, 228, 226, 0.6);
-    --admin-button-bg: #000000;
+    /* Palette Tokens */
+    --admin-bg-base: #F8F7F4;
+    --admin-bg-surface: #FFFFFF;
+    --admin-bg-subtle: #F4F3EF;
+    --admin-bg-input: #FCFBF9;
+    
+    /* Text Hierarchy */
+    --admin-text-primary: #171513;
+    --admin-text-secondary: #58544D;
+    --admin-text-muted: #847E74;
+    --admin-text-placeholder: #ABA59B;
+    
+    /* Accents & Gold Foil */
+    --gold-primary: #D48833;
+    --gold-light: #F6CF8B;
+    --gold-dark: #B87328;
+    --gold-glow: rgba(212, 136, 51, 0.12);
+    --gold-border: rgba(212, 136, 51, 0.25);
+    
+    /* Borders & Dividers */
+    --admin-border-subtle: #EBE7DF;
+    --admin-border-field: #E1DCD2;
+    --admin-border-focus: #D48833;
+    
+    /* Executive Obsidian CTA */
+    --btn-obsidian-bg: #141312;
+    --btn-obsidian-hover: #262421;
+    --btn-obsidian-active: #0A0A09;
+    
+    /* Shadows */
+    --shadow-card: 0 4px 6px -1px rgba(28, 25, 23, 0.02),
+                   0 20px 45px -10px rgba(28, 25, 23, 0.07),
+                   0 0 0 1px rgba(228, 223, 214, 0.65);
+    --shadow-card-hover: 0 8px 16px -2px rgba(28, 25, 23, 0.03),
+                         0 28px 56px -12px rgba(28, 25, 23, 0.10),
+                         0 0 0 1px rgba(228, 223, 214, 0.85);
+    --shadow-btn: 0 4px 12px rgba(20, 19, 18, 0.15),
+                  0 8px 24px -4px rgba(20, 19, 18, 0.22);
 }
 
 * {
@@ -20,253 +53,750 @@
 }
 
 body {
-    font-family: 'Instrument Sans', sans-serif;
-    background-color: var(--admin-bg);
-    color: var(--admin-text-dark);
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--admin-bg-base);
+    color: var(--admin-text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+    padding: 36px 20px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
+
+/* ========================================
+   Ambient Background Lighting & Aesthetics
+   ======================================== */
+
+.admin-ambient-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: 
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212, 136, 51, 0.08) 0%, transparent 70%),
+        radial-gradient(circle at 15% 30%, rgba(246, 207, 139, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(212, 136, 51, 0.04) 0%, transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.admin-pattern-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(rgba(180, 172, 158, 0.15) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.admin-page-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ========================================
+   Admin Header Branding & Insignia
+   ======================================== */
 
 .admin-header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.admin-logo-link {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-logo-link:hover {
+    transform: translateY(-1px);
+}
+
+.admin-emblem-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAF8F5 100%);
+    border: 1px solid var(--admin-border-subtle);
+    box-shadow: 0 4px 14px rgba(28, 25, 23, 0.06), 0 0 0 4px rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.admin-logo-link:hover .admin-emblem-badge {
+    border-color: var(--gold-border);
+    box-shadow: 0 6px 18px rgba(212, 136, 51, 0.18), 0 0 0 4px rgba(255, 255, 255, 0.9);
 }
 
 .admin-logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 30px;
-    letter-spacing: 4.5px;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 27px;
+    letter-spacing: 5px;
     text-transform: uppercase;
-    color: #000000;
-    text-decoration: none;
-    display: block;
-    margin-bottom: 8px;
+    color: var(--admin-text-primary);
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-badge-row {
+    margin-top: 10px;
 }
 
 .admin-badge {
-    display: inline-block;
-    background: rgba(245, 244, 242, 0.8);
-    border: 0.8px solid rgba(229, 228, 226, 0.5);
-    padding: 4px 14px;
-    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #FFFFFF;
+    border: 1px solid var(--admin-border-subtle);
+    padding: 5px 14px;
+    border-radius: 24px;
+    font-family: 'Inter', sans-serif;
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
-    color: #706F6C;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+    color: var(--admin-text-secondary);
+    box-shadow: 0 2px 6px rgba(28, 25, 23, 0.04);
 }
 
+.pulse-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #10B981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* ========================================
+   Main Admin Luxury Card
+   ======================================== */
+
 .admin-card {
-    background: var(--admin-card-bg);
+    background: var(--admin-bg-surface);
     width: 100%;
-    max-width: 540px;
-    padding: 48px 40px;
-    border-radius: 16px;
-    border: 0.8px solid var(--admin-border);
-    box-shadow: 0px 25px 50px -12px rgba(0, 0, 0, 0.05);
-    margin-bottom: 24px;
+    padding: 42px 38px 36px;
+    border-radius: 20px;
+    border: 1px solid var(--admin-border-subtle);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.admin-card:hover {
+    box-shadow: var(--shadow-card-hover);
+}
+
+/* Luxury top gold accent line */
+.card-accent-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold-primary) 30%, var(--gold-light) 50%, var(--gold-primary) 70%, transparent 100%);
+    opacity: 0.9;
+}
+
+.card-headings {
+    text-align: center;
+    margin-bottom: 28px;
 }
 
 .admin-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 36px;
-    line-height: 40px;
-    letter-spacing: -0.9px;
-    color: var(--admin-text-dark);
-    text-align: center;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.4px;
+    color: var(--admin-text-primary);
     margin-bottom: 8px;
 }
 
 .admin-subtitle {
     font-family: 'Instrument Sans', sans-serif;
-    font-size: 15px;
-    line-height: 24px;
-    color: var(--admin-text-muted);
-    text-align: center;
-    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--admin-text-secondary);
+    max-width: 390px;
+    margin: 0 auto;
 }
+
+/* ========================================
+   Form Groups & Form Controls
+   ======================================== */
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .form-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 7px;
 }
 
 .form-group label {
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: 12px;
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 1.2px;
+    letter-spacing: 1.3px;
     text-transform: uppercase;
+    color: var(--admin-text-secondary);
+    margin-bottom: 7px;
+}
+
+.input-wrapper,
+.password-wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.input-wrapper .field-icon,
+.password-wrap .field-icon {
+    position: absolute;
+    left: 15px;
+    top: 25px;
+    transform: translateY(-50%);
     color: var(--admin-text-muted);
+    pointer-events: none;
+    transition: color 0.2s ease;
+    z-index: 2;
 }
 
 .form-input {
     width: 100%;
-    height: 48px;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 0.8px solid var(--admin-border);
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-    border-radius: 6px;
+    height: 50px;
+    padding: 0 16px;
+    background: var(--admin-bg-input);
+    border: 1.2px solid var(--admin-border-field);
+    border-radius: 9px;
     font-family: 'Instrument Sans', sans-serif;
+    font-size: 14.5px;
+    color: var(--admin-text-primary);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-input.has-icon {
+    padding-left: 44px;
+}
+
+.form-input::placeholder {
+    color: var(--admin-text-placeholder);
     font-size: 14px;
-    color: var(--admin-text-dark);
-    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.form-input:hover {
+    border-color: #D2CBC0;
+    background: #FFFFFF;
 }
 
 .form-input:focus {
     outline: none;
     background: #FFFFFF;
-    border-color: var(--admin-text-dark);
+    border-color: var(--admin-border-focus);
+    box-shadow: 0 0 0 3.5px var(--gold-glow), 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+/* When input is focused, tint the icon with gold */
+.input-wrapper:focus-within .field-icon,
+.password-wrap:focus-within .field-icon {
+    color: var(--gold-primary);
+}
+
+/* Password Eye Toggle Container */
+.password-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrap .form-input {
+    padding-right: 44px;
+}
+
+.toggle-password-btn {
+    position: absolute !important;
+    right: 14px !important;
+    top: 25px !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    color: var(--admin-text-muted) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px !important;
+    z-index: 5 !important;
+    transition: color 0.2s ease !important;
+}
+
+.toggle-password-btn:hover {
+    color: var(--gold-primary) !important;
 }
 
 .forgot-link {
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 500;
     color: var(--admin-text-muted);
     text-decoration: none;
+    position: relative;
+    transition: color 0.2s ease;
 }
 
 .forgot-link:hover {
-    color: var(--admin-text-dark);
-    text-decoration: underline;
+    color: var(--gold-dark);
 }
+
+/* Input validation error styling */
+.form-input.input-error {
+    border-color: #EF4444 !important;
+    background: #FFFDFD !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.js-error-message {
+    color: #DC2626 !important;
+    font-size: 12px !important;
+    font-family: 'Instrument Sans', sans-serif !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* ========================================
+   Executive Primary Button
+   ======================================== */
 
 .primary-btn {
     width: 100%;
-    height: 56px;
-    background: var(--admin-button-bg);
+    height: 52px;
+    background: var(--btn-obsidian-bg);
     color: #FFFFFF;
     border: none;
-    border-radius: 6px;
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.35px;
+    border-radius: 9px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
-    margin-top: 12px;
-    box-shadow: 0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
-    transition: background 0.2s ease;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-btn);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    transition: 0.5s;
 }
 
 .primary-btn:hover {
-    background: #2b2b2b;
+    background: var(--btn-obsidian-hover);
+    transform: translateY(-1.5px);
+    box-shadow: 0 8px 20px rgba(20, 19, 18, 0.22), 0 16px 32px -6px rgba(20, 19, 18, 0.28);
 }
+
+.primary-btn:hover::before {
+    left: 100%;
+}
+
+.primary-btn:hover .btn-arrow {
+    transform: translateX(4px);
+}
+
+.primary-btn:active {
+    transform: translateY(0);
+    background: var(--btn-obsidian-active);
+    box-shadow: 0 4px 10px rgba(20, 19, 18, 0.2);
+}
+
+.btn-arrow {
+    transition: transform 0.22s ease;
+}
+
+/* ========================================
+   Divider & Alternate Sign-In
+   ======================================== */
 
 .divider-container {
     display: flex;
     align-items: center;
-    margin: 28px 0;
-    gap: 12px;
+    margin: 24px 0;
+    gap: 14px;
 }
 
 .divider-line {
     flex: 1;
     height: 1px;
-    background: #E5E5E0;
+    background: var(--admin-border-subtle);
 }
 
 .divider-text {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1.2px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
     color: var(--admin-text-muted);
 }
 
 .google-btn {
     width: 100%;
-    height: 52px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 0.8px solid var(--admin-border);
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-    border-radius: 6px;
+    height: 48px;
+    background: #FFFFFF;
+    border: 1.2px solid var(--admin-border-field);
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 11px;
     text-decoration: none;
+    font-family: 'Instrument Sans', sans-serif;
     font-size: 14px;
-    font-weight: 500;
-    color: var(--admin-text-dark);
-    transition: background 0.2s ease;
+    font-weight: 600;
+    color: var(--admin-text-primary);
+    box-shadow: 0 1px 3px rgba(28, 25, 23, 0.04);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .google-btn:hover {
-    background: #FFFFFF;
+    background: #FCFBF9;
+    border-color: #D2CBC0;
+    box-shadow: 0 4px 12px rgba(28, 25, 23, 0.07);
+    transform: translateY(-1px);
 }
 
-/* Security Note Box */
-.security-note-box {
-    background: rgba(241, 241, 239, 0.4);
-    border: 0.8px solid rgba(229, 229, 224, 0.6);
+.google-btn:active {
+    transform: translateY(0);
+}
+
+.google-svg {
+    flex-shrink: 0;
+}
+
+/* Security Badge in Card Footer */
+.card-security-footer {
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--admin-border-subtle);
+    display: flex;
+    justify-content: center;
+}
+
+.security-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--admin-text-muted);
+    background: var(--admin-bg-subtle);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(230, 226, 218, 0.6);
+}
+
+.security-chip svg {
+    color: var(--gold-primary);
+}
+
+/* ========================================
+   Server Error Alert Badge
+   ======================================== */
+
+.error-badge {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    padding: 11px 16px;
     border-radius: 8px;
-    padding: 20px 24px;
-    text-align: center;
-    max-width: 540px;
+    margin-bottom: 22px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    animation: fadeInSlide 0.3s ease;
+}
+
+.error-badge .error-icon {
+    flex-shrink: 0;
+    color: #DC2626;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Page Footer & Compliance Trust Box
+   ======================================== */
+
+.admin-page-footer {
     width: 100%;
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.security-note-box {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(28, 25, 23, 0.03);
 }
 
 .shield-badge {
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.05);
+    width: 34px;
+    height: 34px;
+    background: rgba(212, 136, 51, 0.1);
+    border: 1px solid rgba(212, 136, 51, 0.2);
     border-radius: 50%;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.security-note-content {
+    flex: 1;
 }
 
 .security-note-title {
-    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.3px;
-    color: var(--admin-text-dark);
-    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--admin-text-primary);
+    margin-bottom: 3px;
 }
 
 .security-note-desc {
     font-size: 12px;
-    line-height: 20px;
-    color: var(--admin-text-muted);
-}
-
-.error-badge {
-    background: #fee2e2;
-    border: 1px solid #f87171;
-    color: #991b1b;
-    padding: 10px 14px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    font-size: 13.5px;
-    text-align: center;
+    line-height: 1.45;
+    color: var(--admin-text-secondary);
 }
 
 .admin-footer-links {
-    margin-top: 24px;
+    margin-top: 20px;
+    font-family: 'Inter', sans-serif;
     font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: var(--admin-text-muted);
 }
 
 .admin-footer-links a {
     color: var(--admin-text-muted);
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .admin-footer-links a:hover {
-    color: var(--admin-text-dark);
+    color: var(--admin-text-primary);
     text-decoration: underline;
+}
+
+.bullet-sep {
+    color: #D2CBC0;
+    font-size: 14px;
+}
+
+.admin-copyright {
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--admin-text-muted);
+}
+
+/* ========================================
+   OTP & Password Reset Helpers (Shared)
+   ======================================== */
+
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.otp-box {
+    width: 52px;
+    height: 60px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    border: 1.2px solid var(--admin-border-field);
+    border-radius: 9px;
+    background: var(--admin-bg-input);
+    transition: all 0.2s ease;
+}
+
+.otp-box:focus {
+    outline: none;
+    border-color: var(--admin-border-focus);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.timer-badge {
+    text-align: center;
+    font-size: 13px;
+    color: var(--admin-text-secondary);
+    margin-bottom: 24px;
+}
+
+.timer-badge strong {
+    color: var(--admin-text-primary);
+}
+
+.req-box {
+    background: var(--admin-bg-subtle);
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 12.5px;
+    color: var(--admin-text-secondary);
+}
+
+.req-title {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--admin-text-primary);
+    margin-bottom: 10px;
+}
+
+.req-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.req-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.success-circle {
+    width: 74px;
+    height: 74px;
+    background: #ECFDF5;
+    border: 1px solid #D0FAE5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: #009966;
+}
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+
+@media (max-width: 540px) {
+    body {
+        padding: 24px 16px;
+    }
+
+    .admin-card {
+        padding: 32px 24px 28px;
+        border-radius: 16px;
+    }
+
+    .admin-title {
+        font-size: 27px;
+    }
+
+    .admin-subtitle {
+        font-size: 13.5px;
+    }
+
+    .admin-logo {
+        font-size: 23px;
+        letter-spacing: 4px;
+    }
+
+    .primary-btn {
+        height: 48px;
+        font-size: 12px;
+    }
 }

@@ -1,6 +1,7 @@
 const addressService = require("../services/addressService");
 const userService = require("../services/userService");
 const User = require("../../models/userModel");
+const OTP = require("../../models/otpModel");
 
 // ========================================
 // User Profile
@@ -16,9 +17,11 @@ const getProfile = async (req, res) => {
 
         const addresses = await addressService.getUserAddresses(req.session.userId);
         const success = req.session.successMessage || null;
+        const error = req.session.errorMessage || null;
         delete req.session.successMessage;
+        delete req.session.errorMessage;
 
-        res.render("profile", { user, addresses, success });
+        res.render("profile", { user, addresses, success, error });
     } catch (error) {
         console.error("Profile error:", error);
         res.status(500).send("Something went wrong.");
@@ -143,12 +146,40 @@ const postChangePassword = async (req, res) => {
 // ========================================
 // Change Email Page & Form
 // ========================================
-const getChangeEmail = (req, res) => {
-    res.render("changeEmail", { error: null });
+const getChangeEmail = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId).select("email googleId");
+        if (!user) {
+            return res.redirect("/user/login");
+        }
+
+        if (user.googleId) {
+            req.session.errorMessage = "Email change is disabled for accounts signed in with Google.";
+            return res.redirect("/user/profile");
+        }
+
+        res.render("changeEmail", {
+            error: null,
+            currentEmail: user.email,
+            newEmail: req.session.pendingNewEmail || ""
+        });
+    } catch (e) {
+        res.render("changeEmail", { error: null, currentEmail: "", newEmail: "" });
+    }
 };
 
 const postChangeEmail = async (req, res) => {
     try {
+        const user = await User.findById(req.session.userId).select("email googleId");
+        if (!user) {
+            return res.redirect("/user/login");
+        }
+
+        if (user.googleId) {
+            req.session.errorMessage = "Email change is disabled for accounts signed in with Google.";
+            return res.redirect("/user/profile");
+        }
+
         const { newEmail } = req.body;
         const result = await userService.requestEmailChange(
             req.session.userId,
@@ -157,7 +188,9 @@ const postChangeEmail = async (req, res) => {
 
         if (!result.success) {
             return res.status(400).render("changeEmail", {
-                error: result.message
+                error: result.message,
+                currentEmail: user.email,
+                newEmail: newEmail || ""
             });
         }
 
@@ -166,7 +199,9 @@ const postChangeEmail = async (req, res) => {
     } catch (error) {
         console.error("Request change email error:", error);
         res.status(500).render("changeEmail", {
-            error: "Something went wrong. Please try again."
+            error: "Something went wrong. Please try again.",
+            currentEmail: "",
+            newEmail: ""
         });
     }
 };
@@ -174,19 +209,54 @@ const postChangeEmail = async (req, res) => {
 // ========================================
 // Verify Email OTP Page & Form
 // ========================================
-const getVerifyEmailOTP = (req, res) => {
+const getVerifyEmailOTP = async (req, res) => {
+    const user = await User.findById(req.session.userId).select("googleId");
+    if (user && user.googleId) {
+        req.session.errorMessage = "Email change is disabled for accounts signed in with Google.";
+        return res.redirect("/user/profile");
+    }
+
     if (!req.session.pendingNewEmail) {
         return res.redirect("/user/profile/change-email");
     }
 
+    const otpDoc = await OTP.findOne({ userId: req.session.userId, purpose: "email-change" });
+    let remainingSeconds = 300;
+    let isExpired = false;
+
+    if (otpDoc) {
+        const diffMs = new Date(otpDoc.expiredAt).getTime() - Date.now();
+        if (diffMs > 0) {
+            remainingSeconds = Math.ceil(diffMs / 1000);
+        } else {
+            isExpired = true;
+            remainingSeconds = 0;
+        }
+    } else {
+        isExpired = true;
+        remainingSeconds = 0;
+    }
+
+    const success = req.session.emailOtpSuccess || null;
+    delete req.session.emailOtpSuccess;
+
     res.render("verifyEmailOtp", {
         pendingEmail: req.session.pendingNewEmail,
-        error: null
+        error: isExpired ? "OTP has expired. Please click 'Resend Code' below or re-enter your email." : null,
+        success,
+        remainingSeconds,
+        isExpired
     });
 };
 
 const postVerifyEmailOTP = async (req, res) => {
     try {
+        const user = await User.findById(req.session.userId).select("googleId");
+        if (user && user.googleId) {
+            req.session.errorMessage = "Email change is disabled for accounts signed in with Google.";
+            return res.redirect("/user/profile");
+        }
+
         const { otpCode } = req.body;
         const pendingNewEmail = req.session.pendingNewEmail;
 
@@ -201,19 +271,87 @@ const postVerifyEmailOTP = async (req, res) => {
         );
 
         if (!result.success) {
+            const otpDoc = await OTP.findOne({ userId: req.session.userId, purpose: "email-change" });
+            let remainingSeconds = 0;
+            let isExpired = true;
+            if (otpDoc) {
+                const diffMs = new Date(otpDoc.expiredAt).getTime() - Date.now();
+                if (diffMs > 0) {
+                    remainingSeconds = Math.ceil(diffMs / 1000);
+                    isExpired = false;
+                }
+            }
+
             return res.status(400).render("verifyEmailOtp", {
                 pendingEmail: pendingNewEmail,
-                error: result.message
+                error: result.message,
+                success: null,
+                remainingSeconds,
+                isExpired
             });
         }
 
         delete req.session.pendingNewEmail;
+        req.session.successMessage = "Your email address has been updated successfully.";
         res.redirect("/user/profile");
     } catch (error) {
         console.error("Verify email OTP error:", error);
         res.status(500).render("verifyEmailOtp", {
             pendingEmail: req.session.pendingNewEmail || "",
-            error: "Something went wrong. Please try again."
+            error: "Something went wrong. Please try again.",
+            success: null,
+            remainingSeconds: 0,
+            isExpired: true
+        });
+    }
+};
+
+const resendEmailChangeOTP = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const pendingNewEmail = req.session.pendingNewEmail;
+
+        const user = await User.findById(userId).select("googleId");
+        if (user && user.googleId) {
+            req.session.errorMessage = "Email change is disabled for accounts signed in with Google.";
+            return res.redirect("/user/profile");
+        }
+
+        if (!userId || !pendingNewEmail) {
+            return res.redirect("/user/profile/change-email");
+        }
+
+        const result = await userService.resendEmailChangeOTP(userId, pendingNewEmail);
+        if (!result.success) {
+            const otpDoc = await OTP.findOne({ userId, purpose: "email-change" });
+            let remainingSeconds = 0;
+            let isExpired = true;
+            if (otpDoc) {
+                const diffMs = new Date(otpDoc.expiredAt).getTime() - Date.now();
+                if (diffMs > 0) {
+                    remainingSeconds = Math.ceil(diffMs / 1000);
+                    isExpired = false;
+                }
+            }
+            return res.status(400).render("verifyEmailOtp", {
+                pendingEmail: pendingNewEmail,
+                error: result.message,
+                success: null,
+                remainingSeconds,
+                isExpired
+            });
+        }
+
+        req.session.emailOtpSuccess = "A fresh 6-digit verification code has been sent.";
+        res.redirect("/user/profile/verify-email-otp");
+    } catch (error) {
+        console.error("Resend email change OTP error:", error);
+        res.status(500).render("verifyEmailOtp", {
+            pendingEmail: req.session.pendingNewEmail || "",
+            error: "Unable to resend OTP. Please try again.",
+            success: null,
+            remainingSeconds: 0,
+            isExpired: true
         });
     }
 };
@@ -227,5 +365,6 @@ module.exports = {
     getChangeEmail,
     postChangeEmail,
     getVerifyEmailOTP,
-    postVerifyEmailOTP
+    postVerifyEmailOTP,
+    resendEmailChangeOTP
 };

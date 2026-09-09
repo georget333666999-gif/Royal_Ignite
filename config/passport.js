@@ -1,3 +1,4 @@
+require("dotenv").config();
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const crypto = require("crypto");
@@ -11,7 +12,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "http://localhost:5000/auth/google/callback"
+            callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback"
         },
         async (accessToken, refreshToken, profile, done) => {
 
@@ -56,14 +57,19 @@ passport.use(
                     10
                 );
 
+                const avatarUrl = profile.photos?.[0]?.value || null;
+
                 if (user) {
                     if (user.isBlocked) {
                         return done(null, false, { message: "Your account has been blocked." });
                     }
 
-                    // Existing email account
+                    // Link existing email account with Google
                     user.googleId = profile.id;
                     user.isVerified = true;
+                    if (!user.imgUrl && avatarUrl) {
+                        user.imgUrl = avatarUrl;
+                    }
 
                     await user.save();
 
@@ -83,6 +89,8 @@ passport.use(
                     password: hashedPassword,
 
                     googleId: profile.id,
+
+                    imgUrl: avatarUrl,
 
                     isVerified: true,
 

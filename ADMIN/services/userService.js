@@ -40,11 +40,74 @@ const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) 
     const currentPage = Math.min(Math.max(1, page), totalPages);
     const skip = (currentPage - 1) * limit;
 
-    const users = await User.find(filter)
-        .select("-password")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    let users;
+    if (trimmedSearch) {
+        const safeSearch = escapeRegex(trimmedSearch);
+        // Prioritize names starting with search letter/query, then emails starting with search, then contains
+        users = await User.aggregate([
+            { $match: filter },
+            {
+                $addFields: {
+                    searchPriority: {
+                        $switch: {
+                            branches: [
+                                // Priority 1: Name starts with the search letter/term
+                                {
+                                    case: {
+                                        $regexMatch: {
+                                            input: "$name",
+                                            regex: "^" + safeSearch,
+                                            options: "i"
+                                        }
+                                    },
+                                    then: 1
+                                },
+                                // Priority 2: Email starts with the search letter/term
+                                {
+                                    case: {
+                                        $regexMatch: {
+                                            input: "$email",
+                                            regex: "^" + safeSearch,
+                                            options: "i"
+                                        }
+                                    },
+                                    then: 2
+                                },
+                                // Priority 3: Name contains search term
+                                {
+                                    case: {
+                                        $regexMatch: {
+                                            input: "$name",
+                                            regex: safeSearch,
+                                            options: "i"
+                                        }
+                                    },
+                                    then: 3
+                                }
+                            ],
+                            default: 4
+                        }
+                    }
+                }
+            },
+            {
+                $sort: {
+                    searchPriority: 1,
+                    name: 1,
+                    createdAt: -1
+                }
+            },
+            { $project: { password: 0 } },
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+    } else {
+        users = await User.find(filter)
+            .select("-password")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+    }
 
     return {
         users,

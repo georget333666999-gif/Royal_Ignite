@@ -17,14 +17,28 @@
             
             <h1 class="auth-title">Verify New Email</h1>
             <p class="auth-subtitle">
-                Enter the 6-digit OTP sent to: <strong><%= pendingEmail %></strong>
+                Enter the 6-digit verification code sent to: <strong><%= pendingEmail %></strong>
             </p>
 
-            <% if (error) { %>
+            <% if (typeof success !== "undefined" && success) { %>
+                <div class="success-badge"><%= success %></div>
+            <% } %>
+
+            <% if (typeof error !== "undefined" && error) { %>
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
-            <form action="/user/profile/verify-email-otp" method="POST">
+            <div id="expiredNotice" class="error-badge" style="display: <%= typeof isExpired !== 'undefined' && isExpired ? 'block' : 'none' %>; margin-bottom: 16px;">
+                ⏱️ Your OTP has expired. Please click <strong>Resend Code</strong> below or re-enter your email.
+            </div>
+
+            <div id="otpMeta" 
+                data-remaining="<%= typeof remainingSeconds !== 'undefined' ? remainingSeconds : 300 %>"
+                data-expired="<%= typeof isExpired !== 'undefined' && isExpired ? 'true' : 'false' %>"
+                style="display: none;">
+            </div>
+
+            <form action="/user/profile/verify-email-otp" method="POST" novalidate>
                 
                 <div class="form-group" style="text-align: left;">
                     <input
@@ -35,25 +49,121 @@
                         placeholder="Enter 6-digit OTP"
                         maxlength="6"
                         minlength="6"
-                        style="text-align: center; font-size: 20px; letter-spacing: 6px; font-weight: bold;"
+                        pattern="[0-9]{6}"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        style="text-align: center; font-size: 22px; letter-spacing: 6px; font-weight: bold;"
+                        data-validate="otp"
                         required
+                        <%= typeof isExpired !== 'undefined' && isExpired ? 'disabled' : '' %>
                     />
                 </div>
 
-                <button type="submit" class="primary-btn">
+                <button type="submit" id="verifyBtn" class="primary-btn" <%= typeof isExpired !== 'undefined' && isExpired ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
                     CONFIRM & CHANGE EMAIL &rarr;
                 </button>
 
             </form>
 
-            <div class="auth-switch" style="margin-top: 24px;">
-                <a href="/user/profile/change-email">&larr; Re-enter Email</a>
+            <div class="auth-switch" style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                <div>
+                    Didn't receive the code?
+                    <form action="/user/profile/resend-email-otp" method="POST" id="resendForm" style="display: inline;">
+                        <button type="submit" id="resendButton" class="resend-btn">
+                            Resend Code
+                        </button>
+                    </form>
+                </div>
+                <a href="/user/profile/change-email" class="reenter-email-btn">
+                    &larr; Re-enter Email Address
+                </a>
+            </div>
+
+            <div id="timerContainer" class="otp-timer-container">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>EXPIRES IN <strong id="timer">05:00</strong></span>
             </div>
 
         </div>
     </main>
 
     <%- include('partials/footer') %>
+    <script src="/js/validation.js"></script>
+
+    <script>
+        const metaEl = document.getElementById("otpMeta");
+        let serverRemaining = parseInt(metaEl.getAttribute("data-remaining"), 10);
+        let isExpiredInitial = metaEl.getAttribute("data-expired") === "true";
+
+        let otpTimeLeft = isNaN(serverRemaining) ? 300 : serverRemaining;
+        const timerElement = document.getElementById("timer");
+        const resendButton = document.getElementById("resendButton");
+        const verifyBtn = document.getElementById("verifyBtn");
+        const otpInput = document.getElementById("otpCode");
+        const expiredNotice = document.getElementById("expiredNotice");
+
+        function markOtpExpired() {
+            timerElement.textContent = "00:00";
+            if (expiredNotice) expiredNotice.style.display = "block";
+            if (verifyBtn) {
+                verifyBtn.disabled = true;
+                verifyBtn.style.opacity = "0.5";
+                verifyBtn.style.cursor = "not-allowed";
+            }
+            if (otpInput) otpInput.disabled = true;
+            if (resendButton) {
+                resendButton.disabled = false;
+                resendButton.textContent = "Resend Code";
+            }
+        }
+
+        if (isExpiredInitial || otpTimeLeft <= 0) {
+            markOtpExpired();
+        } else {
+            function updateOtpTimer() {
+                const minutes = Math.floor(otpTimeLeft / 60);
+                const seconds = otpTimeLeft % 60;
+
+                timerElement.textContent =
+                    String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+
+                if (otpTimeLeft <= 0) {
+                    clearInterval(otpTimer);
+                    markOtpExpired();
+                    return;
+                }
+                otpTimeLeft--;
+            }
+
+            updateOtpTimer();
+            const otpTimer = setInterval(updateOtpTimer, 1000);
+
+            // Resend button cooldown (30 seconds or until expired)
+            let resendTimeLeft = Math.min(30, otpTimeLeft);
+
+            function updateResendTimer() {
+                if (otpTimeLeft <= 0 || resendTimeLeft <= 0) {
+                    clearInterval(resendTimer);
+                    if (resendButton) {
+                        resendButton.disabled = false;
+                        resendButton.textContent = "Resend Code";
+                    }
+                    return;
+                }
+                if (resendButton) {
+                    resendButton.disabled = true;
+                    resendButton.textContent = `Resend Code (${resendTimeLeft}s)`;
+                }
+                resendTimeLeft--;
+            }
+
+            updateResendTimer();
+            const resendTimer = setInterval(updateResendTimer, 1000);
+        }
+    </script>
 
 </body>
 

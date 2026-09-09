@@ -1,4 +1,5 @@
 const userService = require("../services/userService");
+const OTP = require("../../models/otpModel");
 
 // ========================================
 // Forgot Password Page
@@ -72,7 +73,7 @@ const postForgotPassword = async (req, res) => {
 // Reset Password Page
 // ========================================
 
-const getResetPassword = (req, res) => {
+const getResetPassword = async (req, res) => {
 
     if (!req.session.resetUserId) {
 
@@ -82,8 +83,27 @@ const getResetPassword = (req, res) => {
 
     }
 
+    const otpDoc = await OTP.findOne({ userId: req.session.resetUserId, purpose: "reset-password" });
+    let remainingSeconds = 300;
+    let isExpired = false;
+
+    if (otpDoc) {
+        const diffMs = new Date(otpDoc.expiredAt).getTime() - Date.now();
+        if (diffMs > 0) {
+            remainingSeconds = Math.ceil(diffMs / 1000);
+        } else {
+            isExpired = true;
+            remainingSeconds = 0;
+        }
+    } else {
+        isExpired = true;
+        remainingSeconds = 0;
+    }
+
     res.render("resetPassword", {
-        error: null
+        error: isExpired ? "Your password reset OTP has expired. Please request a new code." : null,
+        remainingSeconds,
+        isExpired
     });
 
 };
@@ -124,10 +144,23 @@ const postResetPassword = async (req, res) => {
 
         if (!result.success) {
 
+            const otpDoc = await OTP.findOne({ userId, purpose: "reset-password" });
+            let remainingSeconds = 0;
+            let isExpired = true;
+            if (otpDoc) {
+                const diffMs = new Date(otpDoc.expiredAt).getTime() - Date.now();
+                if (diffMs > 0) {
+                    remainingSeconds = Math.ceil(diffMs / 1000);
+                    isExpired = false;
+                }
+            }
+
             return res.status(400).render(
                 "resetPassword",
                 {
-                    error: result.message
+                    error: result.message,
+                    remainingSeconds,
+                    isExpired
                 }
             );
 
@@ -137,7 +170,7 @@ const postResetPassword = async (req, res) => {
         // Clean up session
         delete req.session.resetUserId;
 
-        res.redirect("/user/login");
+        res.redirect("/user/login?reset=true");
 
 
     } catch (error) {

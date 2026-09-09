@@ -141,7 +141,7 @@ const sendOtpEmail = async (to, otpCode, purpose = "Account Verification", userN
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL SENT] OTP delivered to ${to} (Message ID: ${info.messageId})`);
+        console.log(`[EMAIL SENT] OTP delivered to ${to}`);
         return { success: true, messageId: info.messageId };
     } catch (error) {
         console.error(`[EMAIL ERROR] Failed to send OTP to ${to}:`, error.message);

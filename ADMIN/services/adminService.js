@@ -54,9 +54,7 @@ const sendResetOtp = async (email) => {
         purpose: "admin_password_reset"
     });
 
-    console.log(`\n========================================`);
-    console.log(`[ADMIN OTP] Sent to ${admin.email}: ${otpCode}`);
-    console.log(`========================================\n`);
+    console.log(`Admin Password Reset OTP for ${admin.email}: ${otpCode}`);
 
     await sendOtpEmail(admin.email, otpCode, "admin_password_reset", admin.name || "Admin");
 

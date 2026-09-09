@@ -26,6 +26,24 @@ const getUserList = async (req, res) => {
             limit
         );
 
+        // Dynamic JSON response for live search and filter updates
+        if (req.query.format === "json" || req.xhr || req.headers.accept?.includes("application/json")) {
+            return res.json({
+                success: true,
+                users: result.users,
+                search,
+                statusFilter,
+                limit: result.limit,
+                currentPage: result.currentPage,
+                totalPages: result.totalPages,
+                totalUsers: result.totalUsers,
+                totalCustomers: result.totalCustomers,
+                activeUsers: result.activeUsers,
+                blockedUsers: result.blockedUsers,
+                inactiveUsers: result.inactiveUsers
+            });
+        }
+
         res.render("users/userList", {
             users: result.users,
             search,
@@ -43,6 +61,9 @@ const getUserList = async (req, res) => {
         });
     } catch (error) {
         console.error("Error loading users:", error);
+        if (req.query.format === "json" || req.xhr || req.headers.accept?.includes("application/json")) {
+            return res.status(500).json({ success: false, message: "Unable to load users" });
+        }
         res.status(500).send("Unable to load users");
     }
 };

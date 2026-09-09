@@ -11,8 +11,9 @@ router.post("/login", redirectIfAdminLoggedIn, adminController.login);
 router.get("/logout", adminController.logout);
 router.post("/logout", adminController.logout);
 
-// Admin Dashboard
+// Admin Dashboard & Analytics
 router.get("/dashboard", adminMiddleware, adminController.getDashboard);
+router.get("/analytics", adminMiddleware, adminController.getAnalytics);
 
 // Admin Forgot Password Flow
 router.get("/forgot-password", redirectIfAdminLoggedIn, adminController.getForgotPassword);

@@ -1,20 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
 /* ========================================
-   ROYAL IGNITE - Luxury Black & Gold Theme
+   ROYAL IGNITE - Luxury Dark & Amber Theme
    ======================================== */
 
 :root {
-    --bg-main: #050505;
-    --card-gold: #EAAB14;
-    --logo-gold: #C8923D;
-    --text-dark: #050505;
-    --text-muted: #6B7280;
+    --bg-main: #070706;
+    --bg-card: rgba(18, 17, 16, 0.88);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-border-glow: rgba(212, 136, 51, 0.15);
+    --gold-primary: #d48833;
+    --gold-light: #f5ab50;
+    --gold-dark: #b86e20;
+    --gold-gradient: linear-gradient(180deg, #d88931 0%, #b86e20 100%);
+    --gold-hover: linear-gradient(180deg, #e5963c 0%, #c97c27 100%);
+    --text-title: #f5f0ea;
+    --text-sub: #8e877c;
+    --text-label: #8a8377;
     --text-light: #F0F0F0;
     --text-subtle: #A0A0A0;
-    --input-bg: rgba(217, 217, 217, 0.3);
-    --input-border: rgba(0, 0, 0, 0.2);
-    --button-black: #050505;
+    --input-bg: #141312;
+    --input-border: rgba(255, 255, 255, 0.09);
+    --input-focus-border: #d48833;
+    --input-text: #f0ece6;
+    --input-placeholder: #58534b;
     --button-hover: #1f1f1f;
 }
 
@@ -25,13 +34,14 @@
 }
 
 body {
-    font-family: 'Instrument Sans', 'Inter', sans-serif;
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-light);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* ========================================
@@ -39,9 +49,10 @@ body {
    ======================================== */
 
 .royal-header {
-    background: rgba(5, 5, 5, 0.9);
-    border-bottom: 1px solid rgba(160, 160, 160, 0.2);
-    backdrop-filter: blur(8px);
+    background: rgba(8, 7, 6, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 16px 48px;
     position: sticky;
     top: 0;
@@ -57,13 +68,18 @@ body {
 }
 
 .brand-logo {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 24px;
-    letter-spacing: 2.4px;
+    font-family: 'Cinzel', 'Bodoni Moda', serif;
+    font-size: 20px;
+    letter-spacing: 4px;
     text-transform: uppercase;
-    color: var(--logo-gold);
+    color: #ede8e1;
     text-decoration: none;
-    font-weight: 400;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.brand-logo:hover {
+    color: var(--gold-primary);
 }
 
 .header-actions {
@@ -73,20 +89,21 @@ body {
 }
 
 .header-icon {
-    color: #F0F0F0;
+    color: #a69f95;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
+    transition: color 0.2s ease, opacity 0.2s ease;
 }
 
 .header-icon:hover {
-    opacity: 0.8;
+    color: var(--gold-primary);
+    opacity: 1;
 }
 
 /* ========================================
-   Auth Content Layout
+   Auth Content Layout & Background
    ======================================== */
 
 .auth-wrapper {
@@ -95,36 +112,120 @@ body {
     justify-content: center;
     align-items: center;
     padding: 60px 20px;
-    background: var(--bg-main);
+    position: relative;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(14, 13, 12, 0.72) 0%, rgba(6, 6, 5, 0.94) 85%),
+        url('/images/auth-bg.jpg') center center / cover no-repeat fixed;
 }
+
+/* Distinct luxury background for Login Page with branded Royal Ignite collection */
+.login-page .auth-wrapper {
+    padding: 30px 20px;
+    background: 
+        radial-gradient(circle at 50% 35%, rgba(12, 11, 10, 0.52) 0%, rgba(6, 6, 5, 0.90) 88%),
+        url('/images/login-bg.jpg') center center / cover no-repeat fixed;
+}
+
+/* Atmospheric subtle vignette behind the card */
+.auth-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(212, 136, 51, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* ========================================
+   Luxury Glassmorphism Auth Card
+   ======================================== */
 
 .gold-card {
-    background-color: var(--card-gold);
+    background: var(--bg-card);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     width: 100%;
-    max-width: 540px;
-    padding: 50px 48px;
-    border-radius: 4px;
-    box-shadow: 0px 8px 40px -12px rgba(0, 0, 0, 0.3);
-    color: var(--text-dark);
+    max-width: 480px;
+    padding: 44px 40px;
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+    box-shadow:
+        0 30px 70px -15px rgba(0, 0, 0, 0.85),
+        0 0 0 1px var(--card-border-glow);
+    color: #f0ece6;
+    position: relative;
+    z-index: 10;
 }
 
-.auth-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 44px;
-    line-height: 1.1;
+/* Brand Emblem Badge at Card Top */
+.card-brand-header {
     text-align: center;
-    letter-spacing: -1.1px;
-    color: var(--text-dark);
+    margin-bottom: 20px;
+}
+
+.brand-emblem-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46, 35, 23, 0.95) 0%, rgba(18, 15, 12, 0.95) 100%);
+    border: 1px solid rgba(212, 136, 51, 0.35);
+    box-shadow: 0 0 18px rgba(212, 136, 51, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.brand-emblem-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 24px rgba(212, 136, 51, 0.35);
+}
+
+.emblem-flame-icon {
+    display: block;
+}
+
+.card-brand-name {
+    font-family: 'Cinzel', 'Bodoni Moda', serif;
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 5.5px;
+    color: #ede8e1;
+    text-transform: uppercase;
     margin-bottom: 12px;
 }
 
-.auth-subtitle {
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: 15px;
-    line-height: 24px;
+.card-brand-divider {
+    width: 72px;
+    height: 1px;
+    background: radial-gradient(circle, rgba(212, 136, 51, 0.85) 0%, rgba(212, 136, 51, 0.1) 80%, transparent 100%);
+    margin: 0 auto;
+}
+
+/* Auth Headings */
+.auth-title {
+    font-family: 'Cormorant Garamond', 'Cinzel', 'Bodoni Moda', serif;
+    font-size: 27px;
+    line-height: 1.2;
+    font-weight: 500;
     text-align: center;
-    color: #333333;
-    margin-bottom: 32px;
+    letter-spacing: 0.3px;
+    color: var(--text-title);
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--text-sub);
+    max-width: 320px;
+    margin: 0 auto 26px;
+    font-weight: 400;
 }
 
 /* ========================================
@@ -132,177 +233,498 @@ body {
    ======================================== */
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     position: relative;
 }
 
 .form-group label {
     display: block;
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: var(--text-dark);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--text-label);
+    margin-bottom: 7px;
 }
 
 .form-input {
     width: 100%;
     height: 48px;
-    padding: 12px 16px;
+    padding: 0 16px;
     background: var(--input-bg);
-    border: none;
-    border-bottom: 1px solid var(--input-border);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
     font-family: 'Inter', sans-serif;
     font-size: 14px;
-    color: var(--text-dark);
-    border-radius: 2px;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    color: var(--input-text);
+    transition: all 0.2s ease;
 }
 
 .form-input:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.45);
-    border-bottom: 1.5px solid var(--text-dark);
+    background: #171615;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 1px var(--input-focus-border), 0 0 16px rgba(212, 136, 51, 0.25);
 }
 
 .form-input::placeholder {
-    color: rgba(5, 5, 5, 0.6);
+    color: var(--input-placeholder);
+    font-size: 13.5px;
 }
 
+/* Password eye toggle wrap */
+.password-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.password-wrap .form-input {
+    padding-right: 44px;
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8c857b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    z-index: 5;
+    transition: color 0.2s ease;
+}
+
+.toggle-password-btn:hover {
+    color: var(--gold-primary);
+}
+
+/* ========================================
+   Form Utilities Row (Remember Me & Forgot Password)
+   ======================================== */
+
+.form-utilities-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0 20px;
+    font-size: 12.5px;
+}
+
+.custom-checkbox-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-checkbox-wrap input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.custom-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 4px;
+    background: #141312;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.custom-checkbox-wrap:hover .custom-checkbox {
+    border-color: var(--gold-primary);
+}
+
+.custom-checkbox-wrap input[type="checkbox"]:checked+.custom-checkbox {
+    background: var(--gold-primary);
+    border-color: var(--gold-primary);
+}
+
+.custom-checkbox-wrap input[type="checkbox"]:checked+.custom-checkbox::after {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border: solid #141312;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+}
+
+.checkbox-label {
+    color: #8c857b;
+    font-size: 12.5px;
+    transition: color 0.2s ease;
+}
+
+.custom-checkbox-wrap:hover .checkbox-label {
+    color: #cfc8bd;
+}
+
+/* Forgot Password Link */
 .forgot-link {
-    display: block;
-    text-align: right;
-    font-size: 13px;
-    color: #4b5563;
+    display: inline-block;
+    font-size: 12.5px;
+    color: #8c857b;
     text-decoration: none;
-    margin-top: 6px;
     transition: color 0.2s;
 }
 
 .forgot-link:hover {
-    color: var(--text-dark);
+    color: var(--gold-primary);
     text-decoration: underline;
 }
 
+/* ========================================
+   Referral Code Accordion
+   ======================================== */
+
+.referral-accordion {
+    margin: 8px 0 16px;
+}
+
+.referral-toggle-btn {
+    background: none;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #8c857b;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.referral-toggle-btn:hover {
+    color: var(--gold-primary);
+}
+
+.referral-chevron {
+    transition: transform 0.25s ease;
+}
+
+.referral-toggle-btn.active .referral-chevron {
+    transform: rotate(180deg);
+    stroke: var(--gold-primary);
+}
+
+.referral-content {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.25s ease;
+}
+
+.referral-content.is-open {
+    max-height: 70px;
+    opacity: 1;
+    margin-top: 10px;
+}
+
+.referral-input-group {
+    margin-bottom: 0;
+}
+
+/* ========================================
+   Buttons & Actions
+   ======================================== */
+
 .primary-btn {
     width: 100%;
-    height: 52px;
-    background: var(--button-black);
-    color: #FFFFFF;
+    height: 50px;
+    background: var(--gold-gradient);
+    color: #1a1105;
     border: none;
-    font-family: 'Manrope', sans-serif;
-    font-size: 15px;
+    border-radius: 8px;
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 13.5px;
     font-weight: 700;
-    letter-spacing: 1.6px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
     cursor: pointer;
-    margin-top: 10px;
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    box-shadow: 0 4px 18px rgba(184, 110, 32, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition: all 0.25s ease;
 }
 
 .primary-btn:hover {
-    background: var(--button-hover);
+    background: var(--gold-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(216, 137, 49, 0.45);
+    color: #120b02;
 }
 
+.primary-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(184, 110, 32, 0.3);
+}
+
+/* Divider */
 .divider-container {
     display: flex;
     align-items: center;
-    margin: 28px 0;
+    margin: 22px 0;
     gap: 12px;
 }
 
 .divider-line {
     flex: 1;
     height: 1px;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .divider-text {
-    font-family: 'Instrument Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 10px;
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
-    color: var(--text-dark);
-    font-weight: 500;
+    color: #6e675e;
+    font-weight: 600;
 }
 
+/* Google OAuth Button */
 .google-btn {
     width: 100%;
-    height: 52px;
-    background: rgba(217, 217, 217, 0.3);
-    border: 0.8px solid var(--text-dark);
+    height: 48px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
     text-decoration: none;
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
     font-weight: 500;
-    letter-spacing: 0.35px;
-    color: var(--text-dark);
-    transition: background 0.2s ease;
+    color: #d6cfc5;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
 }
 
 .google-btn:hover {
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(212, 136, 51, 0.35);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
+.google-btn:active {
+    transform: scale(0.99);
+}
+
+/* Switch & Terms */
 .auth-switch {
     text-align: center;
     margin-top: 20px;
-    font-size: 14px;
-    color: #4b5563;
+    font-size: 13.5px;
+    color: #8c857b;
 }
 
 .auth-switch a {
-    color: var(--text-dark);
+    color: var(--gold-primary);
     font-weight: 600;
     text-decoration: none;
+    margin-left: 4px;
+    transition: color 0.2s ease;
 }
 
 .auth-switch a:hover {
+    color: var(--gold-light);
     text-decoration: underline;
 }
 
 .terms-notice {
-    margin-top: 24px;
     text-align: center;
-    font-size: 12px;
-    color: #333333;
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: #6e675e;
     line-height: 1.5;
 }
 
 .terms-notice a {
-    color: var(--text-dark);
+    color: #a69f95;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.terms-notice a:hover {
+    color: var(--gold-light);
+}
+
+/* Compact Login Card Fit */
+.login-card {
+    padding: 32px 34px;
+}
+
+.login-card .auth-subtitle {
+    margin: 0 auto 18px;
+}
+
+.login-card .divider-container {
+    margin: 16px 0;
+}
+
+.login-card .auth-switch {
+    margin-top: 15px;
+}
+
+/* Resend OTP Button & Timer Container */
+.resend-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 4px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--gold-primary);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease, opacity 0.2s ease, text-shadow 0.2s ease;
+    display: inline-block;
+}
+
+.resend-btn:hover:not(:disabled) {
+    color: var(--gold-light);
+    text-shadow: 0 0 10px rgba(212, 136, 51, 0.4);
+}
+
+.resend-btn:disabled {
+    color: #78716c !important;
+    cursor: not-allowed !important;
+    text-decoration: none;
+    opacity: 0.7;
+    text-shadow: none;
+}
+
+/* Re-enter Email Link / Button */
+.reenter-email-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: #e5dfd5;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 7px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.reenter-email-btn:hover {
+    color: var(--gold-light);
+    border-color: rgba(212, 136, 51, 0.45);
+    background: rgba(212, 136, 51, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.otp-timer-container {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(212, 136, 51, 0.08);
+    border: 1px solid rgba(212, 136, 51, 0.22);
+    padding: 7px 18px;
+    border-radius: 24px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #a8a196;
+    letter-spacing: 0.5px;
+}
+
+.otp-timer-container svg {
+    color: var(--gold-primary);
+    flex-shrink: 0;
+}
+
+.otp-timer-container strong {
+    color: var(--gold-light);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.terms-notice {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 11.5px;
+    color: #6e675e;
+    line-height: 1.5;
+}
+
+.terms-notice a {
+    color: #8c857b;
     text-decoration: underline;
 }
 
+.terms-notice a:hover {
+    color: var(--gold-primary);
+}
+
+/* ========================================
+   Error & Status Badges (Luxury Theme)
+   ======================================== */
+
 .error-badge {
-    background: #fee2e2;
-    border: 1px solid #f87171;
-    color: #991b1b;
-    padding: 10px 14px;
-    border-radius: 4px;
+    background: rgba(220, 38, 38, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    padding: 11px 16px;
+    border-radius: 8px;
     margin-bottom: 20px;
-    font-size: 13.5px;
+    font-size: 13px;
     text-align: center;
+    font-weight: 400;
 }
 
 .success-badge {
-    background: #dcfce7;
-    border: 1px solid #4ade80;
-    color: #166534;
-    padding: 10px 14px;
-    border-radius: 4px;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+    padding: 11px 16px;
+    border-radius: 8px;
     margin-bottom: 20px;
-    font-size: 13.5px;
+    font-size: 13px;
     text-align: center;
+}
+
+.input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444, 0 0 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+.js-error-message {
+    color: #f87171 !important;
+    font-size: 11.5px !important;
+    margin-top: 5px !important;
+    font-weight: 400 !important;
 }
 
 /* ========================================
@@ -310,8 +732,10 @@ body {
    ======================================== */
 
 .royal-footer {
-    background: var(--bg-main);
-    border-top: 1px solid rgba(160, 160, 160, 0.2);
+    background: rgba(8, 7, 6, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 48px 48px 32px;
     margin-top: auto;
 }
@@ -326,11 +750,11 @@ body {
 }
 
 .footer-brand {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 20px;
-    letter-spacing: 2px;
+    font-family: 'Cinzel', 'Bodoni Moda', serif;
+    font-size: 18px;
+    letter-spacing: 3px;
     text-transform: uppercase;
-    color: var(--logo-gold);
+    color: #ede8e1;
     margin-bottom: 14px;
 }
 
@@ -344,9 +768,9 @@ body {
 
 .footer-title {
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.7px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: #F0F0F0;
     margin-bottom: 16px;
@@ -379,8 +803,9 @@ body {
 .newsletter-input {
     flex: 1;
     height: 38px;
-    background: transparent;
-    border: 1px solid rgba(160, 160, 160, 0.5);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(160, 160, 160, 0.3);
+    border-radius: 4px;
     padding: 0 12px;
     color: #FFFFFF;
     font-size: 13px;
@@ -388,16 +813,16 @@ body {
 
 .newsletter-input:focus {
     outline: none;
-    border-color: var(--logo-gold);
+    border-color: var(--gold-primary);
 }
 
 .newsletter-btn {
     background: transparent;
     border: none;
-    color: var(--logo-gold);
+    color: var(--gold-primary);
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12.5px;
+    font-weight: 600;
     letter-spacing: 0.7px;
     text-transform: uppercase;
     cursor: pointer;
@@ -413,7 +838,7 @@ body {
     max-width: 1280px;
     margin: 0 auto;
     padding-top: 24px;
-    border-top: 1px solid rgba(160, 160, 160, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -445,22 +870,32 @@ body {
 
 @media (max-width: 600px) {
     .royal-header {
-        padding: 16px 20px;
+        padding: 14px 20px;
     }
+
+    .auth-wrapper {
+        padding: 40px 16px;
+    }
+
     .gold-card {
-        padding: 32px 20px;
+        padding: 34px 22px;
+        border-radius: 14px;
     }
+
     .auth-title {
-        font-size: 34px;
+        font-size: 24px;
     }
+
     .footer-grid {
         grid-template-columns: 1fr;
     }
+
     .footer-bottom {
         flex-direction: column;
         gap: 12px;
         text-align: center;
     }
+
     .footer-legal a {
         margin: 0 8px;
     }

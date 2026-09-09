@@ -8,16 +8,33 @@
     <link rel="stylesheet" href="/css/user/auth.css" />
 </head>
 
-<body>
+<body class="auth-page login-page">
 
     <%- include('partials/header') %>
 
     <main class="auth-wrapper">
-        <div class="gold-card">
+        <div class="gold-card login-card">
             
+            <!-- Brand Emblem & Identity -->
+            <div class="card-brand-header">
+                <div class="brand-emblem-badge" title="Royal Ignite">
+                    <svg class="emblem-flame-icon" viewBox="0 0 24 24" width="20" height="20">
+                        <defs>
+                            <linearGradient id="loginFlameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#fbc275" />
+                                <stop offset="100%" stop-color="#d48833" />
+                            </linearGradient>
+                        </defs>
+                        <path fill="url(#loginFlameGrad)" d="M12 2.5C11.2 5.8 8.5 8.3 8.5 11.8C8.5 14.2 9.9 16.1 11.2 17C10.7 15.3 11.3 13.8 12.3 12.7C13.2 14.2 14.8 15.4 14.8 17.5C14.8 19.4 13.5 21 12 21.8C16.8 21.2 19.5 17.2 19.5 13.2C19.5 7.8 14.2 4.8 12 2.5Z"/>
+                    </svg>
+                </div>
+                <div class="card-brand-name">ROYAL IGNITE</div>
+                <div class="card-brand-divider"></div>
+            </div>
+
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">
-                Crafted beyond utility. Designed to be remembered.
+                Sign in to continue to your Royal Ignite account.
             </p>
 
             <% if (error) { %>
@@ -27,13 +44,13 @@
             <form action="/user/login" method="POST" id="loginForm" novalidate>
                 
                 <div class="form-group">
-                    <label for="email">Email Address *</label>
+                    <label for="email">EMAIL ADDRESS</label>
                     <input
                         type="email"
                         id="email"
                         name="email"
                         class="form-input"
-                        placeholder="e.g. john@example.com"
+                        placeholder="Enter your email address"
                         value="<%= formData.email || '' %>"
                         data-validate="email"
                         required
@@ -41,27 +58,38 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password *</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        class="form-input"
-                        placeholder="Enter your password"
-                        data-validate="password"
-                        required
-                    />
+                    <label for="password">PASSWORD</label>
+                    <div class="password-wrap">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="Enter your password"
+                            data-validate="password"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Utilities Row: Remember Me + Forgot Password -->
+                <div class="form-utilities-row">
+                    <label class="custom-checkbox-wrap" for="remember">
+                        <input type="checkbox" name="remember" id="remember" />
+                        <span class="custom-checkbox"></span>
+                        <span class="checkbox-label">Remember me</span>
+                    </label>
                     <a href="/user/forgot-password" class="forgot-link">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="primary-btn">
-                    LOG IN &rarr;
+                    SIGN IN
                 </button>
 
             </form>
 
             <div class="auth-switch">
-                Don't have an account? <a href="/user/signup">Create New Account</a>
+                Don't have an account? <a href="/user/signup">Create Account</a>
             </div>
 
             <div class="divider-container">

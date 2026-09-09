@@ -8,13 +8,30 @@
     <link rel="stylesheet" href="/css/admin/dashboard.css" />
 </head>
 
-<body>
+<body class="admin-dashboard-page">
 
-    <!-- Left Sidebar Navigation -->
+    <!-- Left Sidebar Navigation (Preserving all sections with quiet luxury styling) -->
     <aside class="sidebar">
-        <div>
+        <div class="sidebar-top">
+            <!-- Brand Identity -->
             <div class="sidebar-header">
-                <a href="/admin/dashboard" class="sidebar-logo">ROYAL IGNITE</a>
+                <a href="/admin/dashboard" class="sidebar-brand">
+                    <div class="brand-emblem-badge">
+                        <svg class="emblem-flame-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="sidebarFlameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#fbc275" />
+                                    <stop offset="100%" stop-color="#d48833" />
+                                </linearGradient>
+                            </defs>
+                            <path fill="url(#sidebarFlameGrad)" d="M12 2.5C11.2 5.8 8.5 8.3 8.5 11.8C8.5 14.2 9.9 16.1 11.2 17C10.7 15.3 11.3 13.8 12.3 12.7C13.2 14.2 14.8 15.4 14.8 17.5C14.8 19.4 13.5 21 12 21.8C16.8 21.2 19.5 17.2 19.5 13.2C19.5 7.8 14.2 4.8 12 2.5Z"/>
+                        </svg>
+                    </div>
+                    <div class="brand-text-col">
+                        <span class="sidebar-logo">ROYAL IGNITE</span>
+                        <span class="sidebar-suite-tag">ADMINISTRATION</span>
+                    </div>
+                </a>
             </div>
 
             <!-- Overview Section -->
@@ -23,23 +40,23 @@
                 <ul class="nav-links">
                     <li>
                         <a href="/admin/dashboard" class="nav-link active">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                                <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                                <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                                <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
                             </svg>
-                            Dashboard
+                            <span class="nav-text">Dashboard</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <a href="/admin/analytics" class="nav-link">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <line x1="18" y1="20" x2="18" y2="10"></line>
                                 <line x1="12" y1="20" x2="12" y2="4"></line>
                                 <line x1="6" y1="20" x2="6" y2="14"></line>
                             </svg>
-                            Analytics
+                            <span class="nav-text">Analytics</span>
                         </a>
                     </li>
                 </ul>
@@ -51,91 +68,106 @@
                 <ul class="nav-links">
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            Categories
+                            <span class="nav-text">Categories</span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                             </svg>
-                            Subcategories
+                            <span class="nav-text">Subcategories</span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                             </svg>
-                            Products
+                            <span class="nav-text">Products</span>
+                            <span class="badge-count">248</span>
                         </a>
                     </li>
                     <li>
                         <a href="/admin/users" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
-                            Customers
+                            <span class="nav-text">Customers</span>
+                            <span class="badge-count"><%= totalUsers || '15' %></span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                             </svg>
-                            Orders
+                            <span class="nav-text">Orders</span>
+                            <span class="badge-quiet">48</span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
-                            Offers
+                            <span class="nav-text">Offers</span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                                 <line x1="7" y1="7" x2="7.01" y2="7"></line>
                             </svg>
-                            Coupons
+                            <span class="nav-text">Coupons</span>
                         </a>
                     </li>
                     <li>
                         <a href="#" class="nav-link">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                 <polyline points="21 15 16 10 5 21"></polyline>
                             </svg>
-                            Banner
+                            <span class="nav-text">Banner</span>
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <form action="/admin/logout" method="POST">
-            <button type="submit" class="btn-logout">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Logout
-            </button>
-        </form>
+        <!-- Sidebar Bottom Footer -->
+        <div class="sidebar-bottom">
+            <div class="admin-profile-card">
+                <div class="admin-avatar-box">
+                    <span class="avatar-letter">A</span>
+                    <span class="status-pulse-dot" title="Active"></span>
+                </div>
+                <div class="admin-meta">
+                    <div class="admin-name">Administrator</div>
+                    <div class="admin-role">Store Operations</div>
+                </div>
+            </div>
+
+            <form action="/admin/logout" method="POST" class="logout-form">
+                <button type="submit" class="btn-logout" title="Log out">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Log Out</span>
+                </button>
+            </form>
+        </div>
     </aside>
 
     <!-- Main Wrapper Area -->
@@ -143,345 +175,359 @@
         
         <!-- Top Navbar Header -->
         <header class="top-navbar">
-            <div class="top-navbar-title">Admin Dashboard</div>
-            <div class="top-navbar-right">
+            <div class="navbar-left">
+                <div class="breadcrumb-trail">
+                    <span class="crumb-dim">Portal</span>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-active">Dashboard</span>
+                </div>
+            </div>
+
+            <div class="navbar-right">
                 <div class="search-box">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" placeholder="Search dashboard..." />
+                    <input type="text" placeholder="Search orders, customers..." />
+                    <span class="kbd-badge">⌘K</span>
                 </div>
-                <div class="user-profile-badge">
-                    <div class="avatar-circle">A</div>
+
+                <a href="/" target="_blank" class="nav-action-btn" title="Open Storefront">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Store</span>
+                </a>
+
+                <button class="nav-action-btn notification-btn" title="Notifications" aria-label="Notifications">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="unread-dot"></span>
+                </button>
+
+                <div class="user-pill-badge">
+                    <div class="avatar-circle-sm">A</div>
+                    <span class="user-pill-name">Admin</span>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
+        <!-- Main Content Canvas -->
         <main class="content-padding">
             
-            <!-- Banner Header -->
-            <div class="dashboard-banner">
+            <!-- Calm Executive Header -->
+            <section class="page-title-row">
                 <div>
-                    <span class="admin-tag-badge">ROYAL IGNITE ADMIN</span>
-                    <h1 class="banner-title">Luxury Lighter<br>Store Insights</h1>
-                    <p class="banner-subtitle">
-                        Monitor your ecommerce performance, orders, customers, and revenue from one elegant, centralized dashboard.
-                    </p>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-desc">Overview of today's store activity and order dispatch.</p>
                 </div>
-                <a href="#" class="btn-export">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Export Report
-                </a>
-            </div>
 
-            <!-- Top Row Metric Cards -->
-            <div class="metrics-grid">
+                <div class="title-actions">
+                    <a href="/admin/analytics" class="link-analytics-quiet">
+                        <span>Analytics Hub</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                    <a href="#" class="btn-primary-obsidian">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Add Product</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- 4 Clean, Airy Hero Vital Signs -->
+            <section class="serene-kpi-grid">
                 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-label">Total Revenue</span>
-                        <div class="metric-icon-box">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                                <line x1="2" y1="10" x2="22" y2="10"></line>
-                            </svg>
-                        </div>
+                <div class="serene-card">
+                    <div class="serene-card-label">TODAY'S REVENUE</div>
+                    <div class="serene-card-value">
+                        <span class="currency">₹</span>42,850
                     </div>
-                    <div>
-                        <div class="metric-value">₹12,48,500</div>
-                        <div class="metric-trend">
-                            <span class="badge-green">+14.5%</span>
-                            <span class="trend-text">vs last month</span>
-                        </div>
+                    <div class="serene-card-trend">
+                        <span class="trend-green">+18.2%</span>
+                        <span class="trend-sub">vs yesterday</span>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-label">Total Orders</span>
-                        <div class="metric-icon-box">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <path d="M16 10a4 4 0 0 1-8 0"></path>
-                            </svg>
-                        </div>
+                <div class="serene-card">
+                    <div class="serene-card-label">ORDERS TODAY</div>
+                    <div class="serene-card-value">
+                        38 <span class="unit">orders</span>
                     </div>
-                    <div>
-                        <div class="metric-value">1,248</div>
-                        <div class="metric-trend">
-                            <span class="badge-green">+8.2%</span>
-                            <span class="trend-text">vs last month</span>
-                        </div>
+                    <div class="serene-card-trend">
+                        <span class="trend-neutral">12 shipped</span>
+                        <span class="trend-sub">26 in queue</span>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-label">Total Customers</span>
-                        <div class="metric-icon-box">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                            </svg>
-                        </div>
+                <div class="serene-card">
+                    <div class="serene-card-label">PENDING DISPATCH</div>
+                    <div class="serene-card-value">
+                        14 <span class="unit">orders</span>
                     </div>
-                    <div>
-                        <div class="metric-value"><%= totalUsers || '2,480' %></div>
-                        <div class="metric-trend">
-                            <span class="badge-green">+12.1%</span>
-                            <span class="trend-text">vs last month</span>
-                        </div>
+                    <div class="serene-card-trend">
+                        <span class="trend-amber">Awaiting fulfillment</span>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <span class="metric-label">Total Products</span>
-                        <div class="metric-icon-box">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            </svg>
-                        </div>
+                <div class="serene-card">
+                    <div class="serene-card-label">TOTAL CUSTOMERS</div>
+                    <div class="serene-card-value">
+                        <%= totalUsers || '15' %> <span class="unit">users</span>
                     </div>
-                    <div>
-                        <div class="metric-value">248</div>
-                        <div class="metric-trend">
-                            <span class="badge-grey">+0.0%</span>
-                            <span class="trend-text">vs last month</span>
-                        </div>
+                    <div class="serene-card-trend">
+                        <span class="trend-green">+3 new</span>
+                        <span class="trend-sub">this week</span>
                     </div>
                 </div>
 
-            </div>
+            </section>
 
-            <!-- Second Row Mini Cards -->
-            <div class="mini-grid">
+            <!-- Calm 2-Column Primary Workspace -->
+            <div class="dashboard-split-layout">
                 
-                <div class="mini-card">
-                    <div class="mini-icon-circle icon-pending">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="mini-title">Pending Orders</div>
-                        <div class="mini-num">48</div>
-                    </div>
-                </div>
-
-                <div class="mini-card">
-                    <div class="mini-icon-circle icon-offers">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="mini-title">Active Offers</div>
-                        <div class="mini-num">12</div>
-                    </div>
-                </div>
-
-                <div class="mini-card">
-                    <div class="mini-icon-circle icon-coupons">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="mini-title">Active Coupons</div>
-                        <div class="mini-num">15</div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Analytics Row (Sales Overview + Order Status) -->
-            <div class="analytics-grid">
-                
-                <!-- Sales Overview Chart -->
-                <div class="chart-card">
-                    <div class="card-title-flex">
-                        <div>
-                            <h3 class="card-title">Sales Overview</h3>
-                            <p class="card-subtitle">Monthly sales performance</p>
-                        </div>
-                        <select class="dropdown-select">
-                            <option>Last 3 months</option>
-                            <option>Last 6 months</option>
-                            <option>Last year</option>
-                        </select>
-                    </div>
-
-                    <!-- Clean Vector Line Chart Canvas -->
-                    <div style="height: 240px; position: relative; margin-top: 10px;">
-                        <svg width="100%" height="100%" viewBox="0 0 600 200" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#000000" stop-opacity="0.15"/>
-                                    <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
-                                </linearGradient>
-                            </defs>
-                            <!-- Grid lines -->
-                            <line x1="0" y1="40" x2="600" y2="40" stroke="#f0f0f0" stroke-dasharray="4"/>
-                            <line x1="0" y1="90" x2="600" y2="90" stroke="#f0f0f0" stroke-dasharray="4"/>
-                            <line x1="0" y1="140" x2="600" y2="140" stroke="#f0f0f0" stroke-dasharray="4"/>
-
-                            <!-- Area & Line -->
-                            <path d="M0,130 Q80,140 160,100 T320,110 T480,70 T600,50 L600,190 L0,190 Z" fill="url(#chartGradient)" />
-                            <path d="M0,130 Q80,140 160,100 T320,110 T480,70 T600,50" fill="none" stroke="#000000" stroke-width="3" />
-                        </svg>
-
-                        <!-- Month Labels -->
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #71717A; margin-top: 12px; padding: 0 10px;">
-                            <span>Jan</span>
-                            <span>Feb</span>
-                            <span>Mar</span>
-                            <span>Apr</span>
-                            <span>May</span>
-                            <span>Jun</span>
-                            <span>Jul</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Fulfillment Progress Card -->
-                <div class="chart-card">
-                    <div class="card-title-flex">
-                        <div>
-                            <h3 class="card-title">Order Status</h3>
-                            <p class="card-subtitle">Current order fulfillment progress</p>
-                        </div>
-                    </div>
-
-                    <div class="status-list">
-                        <div class="status-item">
-                            <div class="status-row-header">
-                                <span style="display: inline-flex; align-items: center; gap: 6px;">
-                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #00BC7D;"></span>
-                                    Delivered
-                                </span>
-                                <span>85% <small style="color: #71717A;">(342 Orders)</small></span>
+                <!-- Left Area: Recent Orders (68%) -->
+                <div class="split-main">
+                    <div class="serene-box">
+                        <div class="box-header">
+                            <div>
+                                <h2 class="box-title">Recent Orders</h2>
+                                <p class="box-sub">Latest customer transactions and dispatch queue</p>
                             </div>
-                            <div class="progress-track"><div class="progress-bar bar-delivered"></div></div>
-                        </div>
 
-                        <div class="status-item">
-                            <div class="status-row-header">
-                                <span style="display: inline-flex; align-items: center; gap: 6px;">
-                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #FE9A00;"></span>
-                                    Pending
-                                </span>
-                                <span>12% <small style="color: #71717A;">(48 Orders)</small></span>
+                            <div class="filter-pills-quiet">
+                                <button class="fpill active" type="button">All</button>
+                                <button class="fpill" type="button">Pending</button>
+                                <button class="fpill" type="button">Delivered</button>
                             </div>
-                            <div class="progress-track"><div class="progress-bar bar-pending"></div></div>
                         </div>
 
-                        <div class="status-item">
-                            <div class="status-row-header">
-                                <span style="display: inline-flex; align-items: center; gap: 6px;">
-                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #FB2C36;"></span>
-                                    Cancelled
-                                </span>
-                                <span>3% <small style="color: #71717A;">(12 Orders)</small></span>
-                            </div>
-                            <div class="progress-track"><div class="progress-bar bar-cancelled"></div></div>
-                        </div>
-                    </div>
+                        <div class="table-wrap-clean">
+                            <table class="clean-table">
+                                <thead>
+                                    <tr>
+                                        <th>ORDER</th>
+                                        <th>CUSTOMER</th>
+                                        <th>PRODUCT</th>
+                                        <th>TOTAL</th>
+                                        <th>STATUS</th>
+                                        <th class="text-right">ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="order-cell">#ORD-3291</td>
+                                        <td>
+                                            <div class="cust-flex">
+                                                <span class="cust-avatar-sm">JD</span>
+                                                <span class="cust-name-text">Jane Doe</span>
+                                            </div>
+                                        </td>
+                                        <td class="prod-text">The Monarch Gold</td>
+                                        <td class="amount-text">₹29,000</td>
+                                        <td>
+                                            <span class="dot-status-pill status-green">
+                                                <span class="dot"></span>
+                                                Delivered
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn-quiet-action">Invoice</button>
+                                        </td>
+                                    </tr>
 
-                    <div class="insight-box">
-                        <strong>ⓘ Insight:</strong> Pending orders have decreased by 5% compared to last week due to faster processing.
+                                    <tr>
+                                        <td class="order-cell">#ORD-3290</td>
+                                        <td>
+                                            <div class="cust-flex">
+                                                <span class="cust-avatar-sm">MS</span>
+                                                <span class="cust-name-text">Michael Smith</span>
+                                            </div>
+                                        </td>
+                                        <td class="prod-text">Obsidian Halo Jet</td>
+                                        <td class="amount-text">₹9,500</td>
+                                        <td>
+                                            <span class="dot-status-pill status-amber">
+                                                <span class="dot"></span>
+                                                Pending
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn-quiet-action primary">Ship</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="order-cell">#ORD-3289</td>
+                                        <td>
+                                            <div class="cust-flex">
+                                                <span class="cust-avatar-sm">SJ</span>
+                                                <span class="cust-name-text">Sarah Johnson</span>
+                                            </div>
+                                        </td>
+                                        <td class="prod-text">The Aather Imperial</td>
+                                        <td class="amount-text">₹17,950</td>
+                                        <td>
+                                            <span class="dot-status-pill status-amber">
+                                                <span class="dot"></span>
+                                                Pending
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn-quiet-action primary">Ship</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="order-cell">#ORD-3288</td>
+                                        <td>
+                                            <div class="cust-flex">
+                                                <span class="cust-avatar-sm">RB</span>
+                                                <span class="cust-name-text">Robert Brown</span>
+                                            </div>
+                                        </td>
+                                        <td class="prod-text">Signature Twin Jet</td>
+                                        <td class="amount-text">₹8,500</td>
+                                        <td>
+                                            <span class="dot-status-pill status-rose">
+                                                <span class="dot"></span>
+                                                Cancelled
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn-quiet-action">Invoice</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="order-cell">#ORD-3287</td>
+                                        <td>
+                                            <div class="cust-flex">
+                                                <span class="cust-avatar-sm">EL</span>
+                                                <span class="cust-name-text">Emily Lewis</span>
+                                            </div>
+                                        </td>
+                                        <td class="prod-text">The Nova Dual Arc</td>
+                                        <td class="amount-text">₹14,500</td>
+                                        <td>
+                                            <span class="dot-status-pill status-green">
+                                                <span class="dot"></span>
+                                                Delivered
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn-quiet-action">Invoice</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="box-footer-link">
+                            <a href="/admin/users" class="text-link-quiet">View all customers & registry &rarr;</a>
+                        </div>
                     </div>
                 </div>
 
-            </div>
+                <!-- Right Area: Quiet Operational Pulse & Tasks (32%) -->
+                <div class="split-side">
+                    
+                    <!-- Attention Required Card -->
+                    <div class="serene-box">
+                        <div class="box-header-compact">
+                            <h3 class="box-subtitle">Attention Required</h3>
+                            <span class="badge-mini">2 items</span>
+                        </div>
 
-            <!-- Recent Orders Table -->
-            <div class="table-card">
-                <div class="card-title-flex">
-                    <div>
-                        <h3 class="card-title">Recent Orders</h3>
-                        <p class="card-subtitle">Latest transactions from your store</p>
+                        <div class="task-list-quiet">
+                            <a href="#orders" class="task-item">
+                                <div class="task-dot amber"></div>
+                                <div class="task-content">
+                                    <span class="task-name">14 Orders Awaiting Dispatch</span>
+                                    <span class="task-meta">Awaiting fulfillment & tracking assignment</span>
+                                </div>
+                                <span class="task-arrow">&rarr;</span>
+                            </a>
+
+                            <a href="#" class="task-item">
+                                <div class="task-dot rose"></div>
+                                <div class="task-content">
+                                    <span class="task-name">3 Models Low on Stock</span>
+                                    <span class="task-meta">The Royal Monarch Gold (4 units remaining)</span>
+                                </div>
+                                <span class="task-arrow">&rarr;</span>
+                            </a>
+                        </div>
                     </div>
-                    <a href="/admin/users" class="btn-view-all">View All &rarr;</a>
+
+                    <!-- Quick Tools -->
+                    <div class="serene-box">
+                        <div class="box-header-compact">
+                            <h3 class="box-subtitle">Quick Actions</h3>
+                        </div>
+
+                        <div class="shortcuts-list">
+                            <a href="#" class="shortcut-link">
+                                <span class="shortcut-name">+ Add New Product</span>
+                                <span class="shortcut-tag">Catalog</span>
+                            </a>
+                            <a href="#" class="shortcut-link">
+                                <span class="shortcut-name">Create Discount Coupon</span>
+                                <span class="shortcut-tag">Marketing</span>
+                            </a>
+                            <a href="/admin/users" class="shortcut-link">
+                                <span class="shortcut-name">Customer Directory</span>
+                                <span class="shortcut-tag">Users</span>
+                            </a>
+                            <a href="/admin/analytics" class="shortcut-link highlight">
+                                <span class="shortcut-name">View Analytics & Reports</span>
+                                <span class="shortcut-tag">Insights &rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Infrastructure Status Pill -->
+                    <div class="serene-box system-status-card">
+                        <div class="status-indicator-flex">
+                            <span class="live-dot-green"></span>
+                            <span class="status-msg">All store services operational</span>
+                        </div>
+                        <div class="status-sub">Gateway, database, and notifications online</div>
+                    </div>
+
                 </div>
 
-                <table class="recent-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Product</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD-3291</td>
-                            <td class="customer-cell">
-                                <div class="mini-avatar" style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">JD</div>
-                                Jane Doe
-                            </td>
-                            <td>The Monarch</td>
-                            <td style="font-weight:600;">$29.00</td>
-                            <td><span class="badge-order-status status-del">Delivered</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-3290</td>
-                            <td class="customer-cell">
-                                <div class="mini-avatar" style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">MS</div>
-                                Michael Smith
-                            </td>
-                            <td>The Halo</td>
-                            <td style="font-weight:600;">$95.00</td>
-                            <td><span class="badge-order-status status-pen">Pending</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-3289</td>
-                            <td class="customer-cell">
-                                <div class="mini-avatar" style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">SJ</div>
-                                Sarah Johnson
-                            </td>
-                            <td>The Aather</td>
-                            <td style="font-weight:600;">$79.50</td>
-                            <td><span class="badge-order-status status-del">Delivered</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-3288</td>
-                            <td class="customer-cell">
-                                <div class="mini-avatar" style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">RB</div>
-                                Robert Brown
-                            </td>
-                            <td>The Signature</td>
-                            <td style="font-weight:600;">$58.00</td>
-                            <td><span class="badge-order-status status-can">Cancelled</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-3287</td>
-                            <td class="customer-cell">
-                                <div class="mini-avatar" style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">EL</div>
-                                Emily Lewis
-                            </td>
-                            <td>The Nova</td>
-                            <td style="font-weight:600;">$95.00</td>
-                            <td><span class="badge-order-status status-del">Delivered</span></td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
 
         </main>
 
+        <!-- Minimalist Footer -->
+        <footer class="serene-footer">
+            <span>ROYAL IGNITE &bull; Admin Operations</span>
+            <a href="/admin/analytics">Analytics & Business Intelligence &rarr;</a>
+        </footer>
+
     </div>
+
+    <script>
+        // Table filter tab interaction
+        document.querySelectorAll('.fpill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
 
 </body>
 
