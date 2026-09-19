@@ -169,6 +169,14 @@ router.get(
     profileController.getChangePassword
 );
 
+router.get("/changepassword", (req, res) => {
+    res.redirect("/user/profile/change-password");
+});
+
+router.get("/change-password", (req, res) => {
+    res.redirect("/user/profile/change-password");
+});
+
 router.post(
     "/profile/change-password",
     userMiddleware,

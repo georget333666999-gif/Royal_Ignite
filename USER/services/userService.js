@@ -226,6 +226,12 @@ const forgotPassword = async (email) => {
     if (user.isBlocked) {
         return { success: false, message: "Your account has been blocked." };
     }
+    if (user.googleId) {
+        return {
+            success: false,
+            message: "This account is registered with Google Sign-In. Please sign in directly using Google."
+        };
+    }
 
     const cooldown = await checkOtpCooldown(user._id, "reset-password");
     if (cooldown.onCooldown) {
@@ -262,10 +268,17 @@ const changePassword = async (userId, currentPassword, newPassword) => {
         return { success: false, message: "User not found." };
     }
 
+    if (user.googleId) {
+        return {
+            success: false,
+            message: "Password change is disabled for accounts authenticated with Google Sign-In."
+        };
+    }
+
     if (!user.password) {
         return {
             success: false,
-            message: "This account does not have a local password set (e.g. Google Sign-In)."
+            message: "This account does not have a local password set."
         };
     }
 

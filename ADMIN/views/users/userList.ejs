@@ -6,6 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Customer Management - ROYAL IGNITE Admin</title>
     <link rel="stylesheet" href="/css/admin/userList.css" />
+    <!-- SweetAlert2 for Quiet Luxury Confirmations & Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(212, 136, 51, 0.28) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
+            color: #f0ece6 !important;
+            font-family: 'Instrument Sans', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'DM Serif Display', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.4px !important;
+            padding: 10px 22px !important;
+            box-shadow: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.4px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            box-shadow: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -345,7 +389,7 @@
                                         <td style="text-align: right;">
                                             <div class="action-buttons-group">
                                                 <% if (user.isBlocked) { %>
-                                                    <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock <%= user.name %>?');">
+                                                    <form action="/admin/users/<%= user._id %>/unblock" method="POST" style="display: inline;" class="user-action-form" data-action="unblock" data-username="<%= user.name %>">
                                                         <input type="hidden" name="search" value="<%= search || '' %>">
                                                         <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
                                                         <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
@@ -353,7 +397,7 @@
                                                         <button type="submit" class="btn-pill-unblock">Unblock</button>
                                                     </form>
                                                 <% } else { %>
-                                                    <form action="/admin/users/<%= user._id %>/block" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to block <%= user.name %>?');">
+                                                    <form action="/admin/users/<%= user._id %>/block" method="POST" style="display: inline;" class="user-action-form" data-action="block" data-username="<%= user.name %>">
                                                         <input type="hidden" name="search" value="<%= search || '' %>">
                                                         <input type="hidden" name="status" value="<%= typeof statusFilter !== 'undefined' ? statusFilter : 'all' %>">
                                                         <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 4 %>">
@@ -543,7 +587,7 @@
                 }
 
                 const actionForm = user.isBlocked ? `
-                    <form action="/admin/users/${user._id}/unblock" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unblock ${escapeHtml(user.name)}?');">
+                    <form action="/admin/users/${user._id}/unblock" method="POST" style="display: inline;" class="user-action-form" data-action="unblock" data-username="${escapeHtml(user.name)}">
                         <input type="hidden" name="search" value="${escapeHtml(data.search || '')}">
                         <input type="hidden" name="status" value="${escapeHtml(data.statusFilter || 'all')}">
                         <input type="hidden" name="limit" value="${data.limit}">
@@ -551,7 +595,7 @@
                         <button type="submit" class="btn-pill-unblock">Unblock</button>
                     </form>
                 ` : `
-                    <form action="/admin/users/${user._id}/block" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to block ${escapeHtml(user.name)}?');">
+                    <form action="/admin/users/${user._id}/block" method="POST" style="display: inline;" class="user-action-form" data-action="block" data-username="${escapeHtml(user.name)}">
                         <input type="hidden" name="search" value="${escapeHtml(data.search || '')}">
                         <input type="hidden" name="status" value="${escapeHtml(data.statusFilter || 'all')}">
                         <input type="hidden" name="limit" value="${data.limit}">
@@ -683,6 +727,59 @@
                 fetchUsers(1);
             });
         }
+
+        // Luxury SweetAlert2 confirmation for blocking & unblocking users
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (!form.classList || !form.classList.contains('user-action-form')) return;
+            if (form.dataset.confirmed === 'true') return;
+
+            e.preventDefault();
+            const action = form.dataset.action;
+            const userName = form.dataset.username || 'this user';
+            const isBlock = action === 'block';
+
+            Swal.fire({
+                title: isBlock ? 'Block Customer?' : 'Unblock Customer?',
+                html: isBlock
+                    ? `Are you sure you want to block <strong>${escapeHtml(userName)}</strong>?<br><span style="font-size: 13px; color: #a1a1aa; display: block; margin-top: 8px;">They will be immediately prevented from logging into Royal Ignite.</span>`
+                    : `Are you sure you want to unblock <strong>${escapeHtml(userName)}</strong>?<br><span style="font-size: 13px; color: #a1a1aa; display: block; margin-top: 8px;">Account access and ordering privileges will be restored.</span>`,
+                icon: isBlock ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonColor: isBlock ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#27272a',
+                confirmButtonText: isBlock ? 'Yes, Block User' : 'Yes, Unblock User',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            });
+        });
+
+        // Flash message toast notification
+        <% if (typeof success !== 'undefined' && success) { %>
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: '<%= success %>',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: '#141312',
+                color: '#f0ece6',
+                iconColor: '#d48833'
+            });
+        <% } %>
     </script>
 </body>
 

@@ -89,7 +89,16 @@ const verifyOtp = async (adminId, otpCode) => {
 // Reset Admin Password
 const resetPassword = async (adminId, newPassword) => {
     if (!newPassword || newPassword.length < 8) {
-        throw new Error("Password must be at least 8 characters long");
+        throw new Error("Password must be at least 8 characters.");
+    }
+    if (!/[a-zA-Z]/.test(newPassword)) {
+        throw new Error("Password must contain at least one letter.");
+    }
+    if (!/\d/.test(newPassword)) {
+        throw new Error("Password must contain at least one number.");
+    }
+    if (/^[^a-zA-Z0-9]+$/.test(newPassword)) {
+        throw new Error("Password cannot consist only of symbols.");
     }
 
     const admin = await User.findById(adminId);

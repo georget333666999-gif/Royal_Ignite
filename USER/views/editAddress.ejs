@@ -62,6 +62,7 @@
                             name="addressLine"
                             class="form-input"
                             style="height: 70px; resize: none;"
+                            data-validate="addressLine"
                             required
                         ><%= address.addressLine %></textarea>
                     </div>
@@ -74,6 +75,7 @@
                             name="city"
                             class="form-input"
                             value="<%= address.city %>"
+                            data-validate="city"
                             required
                         />
                     </div>
@@ -86,6 +88,7 @@
                             name="state"
                             class="form-input"
                             value="<%= address.state %>"
+                            data-validate="state"
                             required
                         />
                     </div>
@@ -108,7 +111,7 @@
 
                     <div class="form-group">
                         <label for="addressType">Address Type *</label>
-                        <select id="addressType" name="addressType" class="form-input" required>
+                        <select id="addressType" name="addressType" class="form-input" data-validate="addressType" required>
                             <option value="Home" <%= address.addressType === 'Home' ? 'selected' : '' %>>Home</option>
                             <option value="Work" <%= address.addressType === 'Work' ? 'selected' : '' %>>Work</option>
                             <option value="Other" <%= address.addressType === 'Other' ? 'selected' : '' %>>Other</option>

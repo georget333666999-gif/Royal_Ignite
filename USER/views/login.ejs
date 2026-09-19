@@ -37,7 +37,11 @@
                 Sign in to continue to your Royal Ignite account.
             </p>
 
-            <% if (error) { %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="success-badge"><%= success %></div>
+            <% } %>
+
+            <% if (typeof error !== 'undefined' && error) { %>
                 <div class="error-badge"><%= error %></div>
             <% } %>
 
@@ -117,6 +121,26 @@
 
     <%- include('partials/footer') %>
     <script src="/js/validation.js"></script>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: <%- JSON.stringify(success) %>,
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                background: '#141312',
+                color: '#f0ece6',
+                iconColor: '#d48833'
+            });
+        });
+    </script>
+    <% } %>
 
 </body>
 

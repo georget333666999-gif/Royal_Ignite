@@ -13,6 +13,7 @@ const createAddress = async ({
     state,
     pincode,
     country,
+    addressType,
     isDefault
 }) => {
 
@@ -68,7 +69,9 @@ const createAddress = async ({
 
         pincode: pincode.trim(),
 
-        country: country.trim(),
+        country: (country || "India").trim(),
+
+        addressType: addressType || "Home",
 
         isDefault: shouldBeDefault
 
@@ -121,6 +124,7 @@ const updateAddress = async (
         state,
         pincode,
         country,
+        addressType,
         isDefault
     }
 ) => {
@@ -161,7 +165,10 @@ const updateAddress = async (
     address.city = city.trim();
     address.state = state.trim();
     address.pincode = pincode.trim();
-    address.country = country.trim();
+    address.country = (country || "India").trim();
+    if (addressType) {
+        address.addressType = addressType;
+    }
     address.isDefault = isDefault;
 
     await address.save();

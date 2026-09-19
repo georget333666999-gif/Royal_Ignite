@@ -54,11 +54,16 @@ const postSignup = async (req, res) => {
         // Send OTP to user's real email
         await sendOtpEmail(user.email, otp.otpCode, "signup", user.name);
 
-        // Store user ID in session
+        // Store user ID and success message in session
         req.session.otpUserId = user._id.toString();
+        req.session.otpSuccessMessage = "Account created successfully! A 6-digit verification code has been sent to your email.";
 
-
-        res.redirect("/user/verify-otp");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error during signup:", saveErr);
+            }
+            res.redirect("/user/verify-otp");
+        });
 
 
     } catch (error) {
@@ -102,6 +107,8 @@ const getLogin = (req, res) => {
     let successMessage = null;
     if (req.query.verified === "true") {
         successMessage = "Account verified successfully! You can now log in.";
+    } else if (req.query.reset === "true") {
+        successMessage = "Password reset successfully! You can now log in with your new password.";
     }
 
     res.render("login", {
@@ -147,7 +154,12 @@ const postLogin = async (req, res) => {
                 await sendOtpEmail(result.userEmail, otp.otpCode, "signup", result.userName || "Customer");
                 req.session.otpUserId = result.userId.toString();
                 req.session.otpSuccessMessage = "Your account is not verified yet. A fresh verification code has been sent to your email.";
-                return res.redirect("/user/verify-otp");
+                return req.session.save((saveErr) => {
+                    if (saveErr) {
+                        console.error("Session save error for unverified user:", saveErr);
+                    }
+                    res.redirect("/user/verify-otp");
+                });
             }
 
             return res.status(401).render("login", {
@@ -174,10 +186,15 @@ const postLogin = async (req, res) => {
 
 
         // -------------------------------
-        // Redirect
+        // Redirect (Wait for session save before redirect to prevent race condition)
         // -------------------------------
 
-        res.redirect("/");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error during login:", saveErr);
+            }
+            res.redirect("/");
+        });
 
 
     } catch (error) {
@@ -208,26 +225,28 @@ const postLogin = async (req, res) => {
 // ========================================
 
 const logout = (req, res) => {
+    const finishLogout = () => {
+        req.session.destroy((error) => {
+            if (error) {
+                console.error("Logout error:", error);
+                return res.status(500).send("Unable to logout.");
+            }
 
-    req.session.destroy((error) => {
+            res.clearCookie("user.sid", { path: "/" });
+            return res.redirect("/user/login");
+        });
+    };
 
-        if (error) {
-
-            console.error(
-                "Logout error:",
-                error
-            );
-
-            return res.status(500).send(
-                "Unable to logout."
-            );
-        }
-
-        res.clearCookie("user.sid");
-
-        res.redirect("/user/login");
-
-    });
+    if (typeof req.logout === "function") {
+        req.logout((err) => {
+            if (err) {
+                console.error("Passport logout error:", err);
+            }
+            finishLogout();
+        });
+    } else {
+        finishLogout();
+    }
 };
 
 

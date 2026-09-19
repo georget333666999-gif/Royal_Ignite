@@ -32,6 +32,23 @@ const checkEmailTypo = (email) => {
     return null;
 };
 
+// Universal Password Strength Validator
+const validatePasswordStrength = (password) => {
+    if (!password || password.length < 8) {
+        return "Password must be at least 8 characters.";
+    }
+    if (!/[a-zA-Z]/.test(password)) {
+        return "Password must contain at least one letter.";
+    }
+    if (!/\d/.test(password)) {
+        return "Password must contain at least one number.";
+    }
+    if (/^[^a-zA-Z0-9]+$/.test(password)) {
+        return "Password cannot consist only of symbols or underscores.";
+    }
+    return null;
+};
+
 // ========================================
 // Signup Validation
 // ========================================
@@ -41,11 +58,12 @@ const validateSignup = (req, res, next) => {
     if (!name || !email || !phone || !password || !confirmPassword) {
         return res.status(400).render("signup", { error: "All fields are required.", formData: req.body });
     }
+    const pwdError = validatePasswordStrength(password);
+    if (pwdError) {
+        return res.status(400).render("signup", { error: pwdError, formData: req.body });
+    }
     if (password !== confirmPassword) {
         return res.status(400).render("signup", { error: "Passwords do not match.", formData: req.body });
-    }
-    if (password.length < 8) {
-        return res.status(400).render("signup", { error: "Password must be at least 8 characters.", formData: req.body });
     }
     if (!isValidEmail(email)) {
         return res.status(400).render("signup", { error: "Please enter a valid email address.", formData: req.body });
@@ -134,14 +152,15 @@ const validateResetPassword = (req, res, next) => {
     if (!otpCode || !newPassword || !confirmPassword) {
         return res.status(400).render("resetPassword", { error: "All fields are required." });
     }
-    if (newPassword !== confirmPassword) {
-        return res.status(400).render("resetPassword", { error: "Passwords do not match." });
-    }
-    if (newPassword.length < 8) {
-        return res.status(400).render("resetPassword", { error: "Password must be at least 8 characters." });
-    }
     if (!/^\d{6}$/.test(otpCode.trim())) {
         return res.status(400).render("resetPassword", { error: "OTP must be exactly 6 digits." });
+    }
+    const pwdError = validatePasswordStrength(newPassword);
+    if (pwdError) {
+        return res.status(400).render("resetPassword", { error: pwdError });
+    }
+    if (newPassword !== confirmPassword) {
+        return res.status(400).render("resetPassword", { error: "Passwords do not match." });
     }
 
     next();
@@ -152,18 +171,20 @@ const validateResetPassword = (req, res, next) => {
 // ========================================
 const validateChangePassword = (req, res, next) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
+    const user = req.user || null;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-        return res.status(400).render("changePassword", { error: "All fields are required.", success: null });
+        return res.status(400).render("changePassword", { user, error: "All fields are required.", success: null });
     }
-    if (newPassword.length < 8) {
-        return res.status(400).render("changePassword", { error: "New password must be at least 8 characters.", success: null });
+    const pwdError = validatePasswordStrength(newPassword);
+    if (pwdError) {
+        return res.status(400).render("changePassword", { user, error: pwdError, success: null });
     }
     if (newPassword !== confirmPassword) {
-        return res.status(400).render("changePassword", { error: "New passwords do not match.", success: null });
+        return res.status(400).render("changePassword", { user, error: "Passwords do not match.", success: null });
     }
     if (currentPassword === newPassword) {
-        return res.status(400).render("changePassword", { error: "New password must be different from the current password.", success: null });
+        return res.status(400).render("changePassword", { user, error: "New password must be different from the current password.", success: null });
     }
 
     next();

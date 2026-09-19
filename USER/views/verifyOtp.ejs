@@ -41,7 +41,7 @@
                 style="display: none;">
             </div>
 
-            <form action="/user/verify-otp" method="POST" id="verifyOtpForm">
+            <form action="/user/verify-otp" method="POST" id="verifyOtpForm" novalidate>
                 
                 <div class="form-group" style="text-align: left;">
                     <input
@@ -56,6 +56,7 @@
                         inputmode="numeric"
                         autocomplete="one-time-code"
                         style="text-align: center; font-size: 22px; letter-spacing: 6px; font-weight: bold;"
+                        data-validate="otp"
                         required
                         <%= typeof isExpired !== 'undefined' && isExpired ? 'disabled' : '' %>
                     />
@@ -88,6 +89,27 @@
     </main>
 
     <%- include('partials/footer') %>
+    <script src="/js/validation.js"></script>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: <%- JSON.stringify(success) %>,
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                background: '#141312',
+                color: '#f0ece6',
+                iconColor: '#d48833'
+            });
+        });
+    </script>
+    <% } %>
 
     <script>
         const metaEl = document.getElementById("otpMeta");

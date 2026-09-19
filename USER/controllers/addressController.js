@@ -1,4 +1,5 @@
 const addressService = require("../services/addressService");
+const User = require("../../models/userModel");
 
 // ========================================
 // Add Address Page
@@ -29,6 +30,7 @@ const postAddAddress = async (req, res) => {
             state,
             pincode,
             country,
+            addressType,
             isDefault
         } = req.body;
 
@@ -54,6 +56,8 @@ const postAddAddress = async (req, res) => {
 
             country,
 
+            addressType,
+
             isDefault:
                 isDefault === "true" ||
                 isDefault === "on"
@@ -64,6 +68,7 @@ const postAddAddress = async (req, res) => {
         // Redirect
         // --------------------------------
 
+        req.session.successMessage = "New address added successfully.";
         res.redirect("/user/addresses");
 
     } catch (error) {
@@ -100,8 +105,14 @@ const getAddresses = async (req, res) => {
                 req.session.userId
             );
 
+        const user = await User.findById(req.session.userId).select("googleId");
+        const success = req.session.successMessage || null;
+        delete req.session.successMessage;
+
         res.render("addresses", {
-            addresses
+            addresses,
+            user,
+            success
         });
 
     } catch (error) {
@@ -177,6 +188,7 @@ const postEditAddress = async (req, res) => {
             state,
             pincode,
             country,
+            addressType,
             isDefault
         } = req.body;
 
@@ -192,6 +204,7 @@ const postEditAddress = async (req, res) => {
                     state,
                     pincode,
                     country,
+                    addressType,
                     isDefault:
                         isDefault === "true" ||
                         isDefault === "on"
@@ -206,6 +219,7 @@ const postEditAddress = async (req, res) => {
 
         }
 
+        req.session.successMessage = "Address updated successfully.";
         res.redirect("/user/addresses");
 
     } catch (error) {
@@ -245,6 +259,7 @@ const deleteAddress = async (req, res) => {
 
         }
 
+        req.session.successMessage = "Address deleted successfully.";
         res.redirect("/user/addresses");
 
     } catch (error) {
@@ -284,6 +299,7 @@ const setDefaultAddress = async (req, res) => {
 
         }
 
+        req.session.successMessage = "Default address updated successfully.";
         res.redirect("/user/addresses");
 
     } catch (error) {

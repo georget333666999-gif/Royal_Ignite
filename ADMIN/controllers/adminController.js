@@ -148,8 +148,20 @@ const postResetPassword = async (req, res) => {
             return res.redirect("/admin/forgot-password");
         }
 
+        if (!newPassword || newPassword.length < 8) {
+            return res.render("auth/resetPassword", { error: "Password must be at least 8 characters." });
+        }
+        if (!/[a-zA-Z]/.test(newPassword)) {
+            return res.render("auth/resetPassword", { error: "Password must contain at least one letter." });
+        }
+        if (!/\d/.test(newPassword)) {
+            return res.render("auth/resetPassword", { error: "Password must contain at least one number." });
+        }
+        if (/^[^a-zA-Z0-9]+$/.test(newPassword)) {
+            return res.render("auth/resetPassword", { error: "Password cannot consist only of symbols." });
+        }
         if (newPassword !== confirmPassword) {
-            return res.render("auth/resetPassword", { error: "Passwords do not match" });
+            return res.render("auth/resetPassword", { error: "Passwords do not match." });
         }
 
         await adminService.resetPassword(adminId, newPassword);

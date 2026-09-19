@@ -113,11 +113,34 @@ const postEditProfile = async (req, res) => {
 // Change Password Page & Form
 // ========================================
 const getChangePassword = async (req, res) => {
-    res.render("changePassword", { error: null, success: null });
+    try {
+        const user = await User.findById(req.session.userId).select("googleId name email");
+        if (!user) {
+            return res.redirect("/user/login");
+        }
+        res.render("changePassword", { user, error: null, success: null });
+    } catch (error) {
+        console.error("Get change password error:", error);
+        res.redirect("/user/profile");
+    }
 };
 
 const postChangePassword = async (req, res) => {
     try {
+        const user = await User.findById(req.session.userId).select("googleId name email");
+        if (!user) {
+            return res.redirect("/user/login");
+        }
+
+        // Prevent Google OAuth users from setting or altering passwords
+        if (user.googleId) {
+            return res.status(403).render("changePassword", {
+                user,
+                error: "Password change is disabled for accounts registered with Google Sign-In.",
+                success: null
+            });
+        }
+
         const { currentPassword, newPassword } = req.body;
         const result = await userService.changePassword(
             req.session.userId,
@@ -127,6 +150,7 @@ const postChangePassword = async (req, res) => {
 
         if (!result.success) {
             return res.status(400).render("changePassword", {
+                user,
                 error: result.message,
                 success: null
             });
@@ -136,7 +160,9 @@ const postChangePassword = async (req, res) => {
         res.redirect("/user/profile");
     } catch (error) {
         console.error("Change password error:", error);
+        const user = await User.findById(req.session.userId).select("googleId name email");
         res.status(500).render("changePassword", {
+            user,
             error: "Something went wrong. Please try again.",
             success: null
         });
@@ -195,7 +221,12 @@ const postChangeEmail = async (req, res) => {
         }
 
         req.session.pendingNewEmail = result.pendingNewEmail;
-        res.redirect("/user/profile/verify-email-otp");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error during request email change:", saveErr);
+            }
+            res.redirect("/user/profile/verify-email-otp");
+        });
     } catch (error) {
         console.error("Request change email error:", error);
         res.status(500).render("changeEmail", {
@@ -293,7 +324,12 @@ const postVerifyEmailOTP = async (req, res) => {
 
         delete req.session.pendingNewEmail;
         req.session.successMessage = "Your email address has been updated successfully.";
-        res.redirect("/user/profile");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error after verify email OTP:", saveErr);
+            }
+            res.redirect("/user/profile");
+        });
     } catch (error) {
         console.error("Verify email OTP error:", error);
         res.status(500).render("verifyEmailOtp", {
@@ -343,7 +379,12 @@ const resendEmailChangeOTP = async (req, res) => {
         }
 
         req.session.emailOtpSuccess = "A fresh 6-digit verification code has been sent.";
-        res.redirect("/user/profile/verify-email-otp");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error after resend email OTP:", saveErr);
+            }
+            res.redirect("/user/profile/verify-email-otp");
+        });
     } catch (error) {
         console.error("Resend email change OTP error:", error);
         res.status(500).render("verifyEmailOtp", {

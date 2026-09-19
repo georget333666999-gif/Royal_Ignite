@@ -78,7 +78,12 @@ const postVerifyOTP = async (req, res) => {
 
         // OTP verified successfully
         delete req.session.otpUserId;
-        res.redirect("/user/login?verified=true");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error after OTP verify:", saveErr);
+            }
+            res.redirect("/user/login?verified=true");
+        });
 
     } catch (error) {
         console.error("OTP verification error:", error);
@@ -121,7 +126,12 @@ const resendOTP = async (req, res) => {
         }
 
         req.session.otpSuccessMessage = "A fresh 6-digit verification code has been generated and sent.";
-        res.redirect("/user/verify-otp");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error after OTP resend:", saveErr);
+            }
+            res.redirect("/user/verify-otp");
+        });
 
     } catch (error) {
         console.error("Resend OTP error:", error);

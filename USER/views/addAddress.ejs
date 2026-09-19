@@ -65,6 +65,7 @@
                             class="form-input"
                             style="height: 70px; resize: none;"
                             placeholder="Building name, street, area"
+                            data-validate="addressLine"
                             required
                         ><%= formData.addressLine || '' %></textarea>
                     </div>
@@ -78,6 +79,7 @@
                             class="form-input"
                             placeholder="e.g. Kochi"
                             value="<%= formData.city || '' %>"
+                            data-validate="city"
                             required
                         />
                     </div>
@@ -91,6 +93,7 @@
                             class="form-input"
                             placeholder="e.g. Kerala"
                             value="<%= formData.state || '' %>"
+                            data-validate="state"
                             required
                         />
                     </div>
@@ -114,7 +117,7 @@
 
                     <div class="form-group">
                         <label for="addressType">Address Type *</label>
-                        <select id="addressType" name="addressType" class="form-input" required>
+                        <select id="addressType" name="addressType" class="form-input" data-validate="addressType" required>
                             <option value="Home" <%= formData.addressType === 'Home' ? 'selected' : '' %>>Home</option>
                             <option value="Work" <%= formData.addressType === 'Work' ? 'selected' : '' %>>Work</option>
                             <option value="Other" <%= formData.addressType === 'Other' ? 'selected' : '' %>>Other</option>

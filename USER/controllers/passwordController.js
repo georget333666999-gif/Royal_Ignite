@@ -45,7 +45,12 @@ const postForgotPassword = async (req, res) => {
         req.session.resetUserId =
             result.userId.toString();
 
-        res.redirect("/user/reset-password");
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                console.error("Session save error during forgot password:", saveErr);
+            }
+            res.redirect("/user/reset-password");
+        });
 
 
     } catch (error) {

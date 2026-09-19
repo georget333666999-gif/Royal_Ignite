@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 const userService = require("../services/userService");
 
 // Helper to construct query string preserving search, status, limit & page
-const buildRedirectQuery = (body = {}) => {
+const buildRedirectQuery = (body = {}, extraParams = {}) => {
     const query = new URLSearchParams();
     if (body.search) query.set("search", body.search);
     if (body.status) query.set("status", body.status);
     if (body.limit) query.set("limit", body.limit);
     query.set("page", body.page || 1);
+    for (const [key, value] of Object.entries(extraParams)) {
+        if (value) query.set(key, value);
+    }
     return query.toString();
 };
 
@@ -81,7 +84,7 @@ const blockUser = async (req, res) => {
             return res.status(404).send("User not found");
         }
 
-        res.redirect(`/admin/users?${buildRedirectQuery(req.body)}`);
+        res.redirect(`/admin/users?${buildRedirectQuery(req.body, { success: `Customer "${user.name}" has been blocked successfully.` })}`);
     } catch (error) {
         console.error("Error blocking user:", error);
         res.status(500).send("Unable to block user");
@@ -101,7 +104,7 @@ const unblockUser = async (req, res) => {
             return res.status(404).send("User not found");
         }
 
-        res.redirect(`/admin/users?${buildRedirectQuery(req.body)}`);
+        res.redirect(`/admin/users?${buildRedirectQuery(req.body, { success: `Customer "${user.name}" has been unblocked successfully.` })}`);
     } catch (error) {
         console.error("Error unblocking user:", error);
         res.status(500).send("Unable to unblock user");

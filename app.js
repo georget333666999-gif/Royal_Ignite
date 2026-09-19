@@ -75,7 +75,8 @@ const userSession = session({
     }),
     cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24,
+        sameSite: "lax"
     }
 });
 
@@ -90,7 +91,8 @@ const adminSession = session({
     }),
     cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24,
+        sameSite: "lax"
     }
 });
 
@@ -122,6 +124,14 @@ app.use("/admin", adminRoutes);
 
 app.use("/user", userRoutes);
 
+app.get(["/changepassword", "/change-password"], (req, res) => {
+    res.redirect("/user/profile/change-password");
+});
+
+app.all("/logout", (req, res) => {
+    res.redirect("/user/logout");
+});
+
 // ========================================
 // Home / Index Landing Route
 // ========================================
@@ -129,15 +139,15 @@ app.use("/user", userRoutes);
 const User = require("./models/userModel");
 
 app.get("/", async (req, res) => {
-    const userId = req.session?.userId || null;
-    const isUserLoggedIn = Boolean(req.session?.isUserLoggedIn && userId);
+    const userId = req.session?.userId || (req.user ? req.user._id.toString() : null);
+    const isUserLoggedIn = Boolean((req.session?.isUserLoggedIn || (typeof req.isAuthenticated === "function" && req.isAuthenticated())) && userId);
 
     if (isUserLoggedIn) {
         try {
             const user = await User.findById(userId);
             if (!user || user.isBlocked) {
                 await new Promise((resolve) => req.session.destroy(resolve));
-                res.clearCookie("user.sid");
+                res.clearCookie("user.sid", { path: "/" });
                 return res.redirect("/user/login?error=" + encodeURIComponent("Your account has been blocked."));
             }
         } catch (err) {

@@ -308,8 +308,8 @@
                     </div>
 
                     <div class="newsletter-form-wrap">
-                        <form onsubmit="event.preventDefault(); alert('Thank you for joining The Royal Circle.');" class="newsletter-input-group">
-                            <input type="email" placeholder="your@address.com" class="newsletter-input" required />
+                        <form id="newsletterForm" class="newsletter-input-group">
+                            <input type="email" id="newsletterEmail" placeholder="your@address.com" class="newsletter-input" required />
                             <button type="submit" class="btn-subscribe">SUBSCRIBE</button>
                         </form>
                     </div>
@@ -378,6 +378,29 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const newsletterForm = document.getElementById('newsletterForm');
+        if (newsletterForm) {
+            newsletterForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('newsletterEmail');
+                if (emailInput) emailInput.value = '';
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Thank you for joining The Royal Circle.',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#f0ece6',
+                    iconColor: '#d48833'
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>
