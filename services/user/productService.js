@@ -1,0 +1,394 @@
+import mongoose from "mongoose";
+import Product from "../../models/productModel.js";
+import Category from "../../models/categoryModel.js";
+import { RESPONSE_MESSAGES } from "../../constants/index.js";
+
+/**
+ * Escapes regex special characters to prevent regex injection
+ */
+const escapeRegex = (value = "") => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+/**
+ * Fetch all publicly active categories with count of listed products
+ */
+export const getActiveCategoriesWithCounts = async () => {
+    try {
+        // 1. Find all listed & non-deleted categories
+        const categories = await Category.find({ isListed: true, isDeleted: false })
+            .sort({ name: 1 })
+            .lean();
+
+        const categoryIds = categories.map((c) => c._id);
+
+        // 2. Count active, listed products per active category
+        const counts = await Product.aggregate([
+            {
+                $match: {
+                    isListed: true,
+                    isDeleted: false,
+                    category: { $in: categoryIds }
+                }
+            },
+            {
+                $group: {
+                    _id: "$category",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const countMap = {};
+        counts.forEach((item) => {
+            countMap[item._id.toString()] = item.count;
+        });
+
+        const totalActiveProducts = counts.reduce((acc, curr) => acc + curr.count, 0);
+
+        return {
+            categories: categories.map((cat) => ({
+                ...cat,
+                productCount: countMap[cat._id.toString()] || 0
+            })),
+            totalActiveProducts
+        };
+    } catch (error) {
+        console.error("getActiveCategoriesWithCounts error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Get paginated, filtered, searched, and sorted products for public catalog
+ */
+export const getShopProducts = async ({
+    search = "",
+    category = "",
+    minPrice,
+    maxPrice,
+    sort = "newest",
+    inStockOnly = false,
+    page = 1,
+    limit = 9
+} = {}) => {
+    try {
+        // 1. Determine active categories first (hiding any unlisted or soft-deleted categories)
+    const activeCategories = await Category.find({ isListed: true, isDeleted: false })
+        .select("_id name")
+        .lean();
+    const activeCategoryIds = activeCategories.map((c) => c._id);
+
+    // If no active categories exist, return empty list
+    if (activeCategoryIds.length === 0) {
+        return {
+            products: [],
+            totalProducts: 0,
+            totalPages: 1,
+            currentPage: 1,
+            limit,
+            categories: [],
+            totalActiveProducts: 0
+        };
+    }
+
+    // 2. Base Match Filter: Listed, not deleted, belonging to active categories
+    const matchFilter = {
+        isListed: true,
+        isDeleted: false,
+        category: { $in: activeCategoryIds }
+    };
+
+    // Category filter: supports ObjectId OR friendly category name
+    let selectedCategoryId = "";
+    if (category) {
+        if (mongoose.Types.ObjectId.isValid(category)) {
+            const catObjectId = new mongoose.Types.ObjectId(category);
+            const isCatActive = activeCategoryIds.some((id) => id.equals(catObjectId));
+            if (isCatActive) {
+                matchFilter.category = catObjectId;
+                selectedCategoryId = catObjectId.toString();
+            } else {
+                matchFilter.category = null;
+            }
+        } else {
+            const cleanQuery = category.toLowerCase().replace(/[^a-z0-9]/g, "");
+            const foundCat = activeCategories.find((c) => {
+                const cleanName = c.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+                return cleanName === cleanQuery || cleanName.includes(cleanQuery) || cleanQuery.includes(cleanName);
+            });
+            if (foundCat) {
+                matchFilter.category = foundCat._id;
+                selectedCategoryId = foundCat._id.toString();
+            }
+        }
+    }
+
+    // In-stock filter
+    if (inStockOnly === true || inStockOnly === "true") {
+        matchFilter.stock = { $gt: 0 };
+    }
+
+    // Search filter across product name, description, or matching category name
+    const trimmedSearch = (search || "").trim();
+    if (trimmedSearch) {
+        const safeSearch = escapeRegex(trimmedSearch);
+        const searchRegex = new RegExp(safeSearch, "i");
+
+        // Find active categories matching the search term
+        const matchingCategoryIds = activeCategories
+            .filter((c) => searchRegex.test(c.name))
+            .map((c) => c._id);
+
+        matchFilter.$or = [
+            { name: searchRegex },
+            { description: searchRegex },
+            { category: { $in: matchingCategoryIds } }
+        ];
+    }
+
+    // 3. Build Aggregation Pipeline
+    const pipeline = [
+        { $match: matchFilter },
+        // Calculate effective price: salePrice if present and valid (< regularPrice and > 0), else regularPrice
+        {
+            $addFields: {
+                effectivePrice: {
+                    $cond: [
+                        {
+                            $and: [
+                                { $ne: ["$salePrice", null] },
+                                { $gt: ["$salePrice", 0] },
+                                { $lt: ["$salePrice", "$regularPrice"] }
+                            ]
+                        },
+                        "$salePrice",
+                        "$regularPrice"
+                    ]
+                }
+            }
+        }
+    ];
+
+    // Price range filter
+    const parsedMinPrice = minPrice !== undefined && minPrice !== "" ? Number(minPrice) : null;
+    const parsedMaxPrice = maxPrice !== undefined && maxPrice !== "" ? Number(maxPrice) : null;
+
+    if ((parsedMinPrice !== null && !isNaN(parsedMinPrice)) || (parsedMaxPrice !== null && !isNaN(parsedMaxPrice))) {
+        const priceFilter = {};
+        if (parsedMinPrice !== null && !isNaN(parsedMinPrice) && parsedMinPrice >= 0) {
+            priceFilter.$gte = parsedMinPrice;
+        }
+        if (parsedMaxPrice !== null && !isNaN(parsedMaxPrice) && parsedMaxPrice >= 0) {
+            priceFilter.$lte = parsedMaxPrice;
+        }
+        pipeline.push({
+            $match: {
+                effectivePrice: priceFilter
+            }
+        });
+    }
+
+    // 4. Determine Sorting
+    let sortStage = {};
+    let collation = null;
+
+    switch (sort) {
+        case "price_asc":
+            sortStage = { effectivePrice: 1, createdAt: -1 };
+            break;
+        case "price_desc":
+            sortStage = { effectivePrice: -1, createdAt: -1 };
+            break;
+        case "name_asc":
+            sortStage = { name: 1 };
+            collation = { locale: "en", strength: 2 };
+            break;
+        case "name_desc":
+            sortStage = { name: -1 };
+            collation = { locale: "en", strength: 2 };
+            break;
+        case "newest":
+        default:
+            sortStage = { createdAt: -1 };
+            break;
+    }
+
+    pipeline.push({ $sort: sortStage });
+
+    // 5. Populate Category details
+    pipeline.push(
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                as: "categoryDoc"
+            }
+        },
+        {
+            $unwind: {
+                path: "$categoryDoc",
+                preserveNullAndEmptyArrays: false
+            }
+        }
+    );
+
+    // 6. Facet for total count and paginated items
+    const parsedLimit = Math.max(1, Math.min(Number(limit) || 9, 36));
+    const parsedPage = Math.max(1, Number(page) || 1);
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const facetStage = {
+        $facet: {
+            metadata: [{ $count: "total" }],
+            products: [{ $skip: skip }, { $limit: parsedLimit }]
+        }
+    };
+
+    pipeline.push(facetStage);
+
+    // Execute aggregation
+    const aggregateOptions = collation ? { collation } : {};
+    const [result] = await Product.aggregate(pipeline, aggregateOptions);
+
+    const totalProducts = result?.metadata?.[0]?.total || 0;
+    const products = result?.products || [];
+    const totalPages = Math.ceil(totalProducts / parsedLimit) || 1;
+    const currentPage = Math.min(parsedPage, totalPages);
+
+    // Fetch active categories and counts for filter sidebar
+    const { categories: categoryListWithCounts, totalActiveProducts } = await getActiveCategoriesWithCounts();
+
+    return {
+        products,
+        totalProducts,
+        totalPages,
+        currentPage,
+        limit: parsedLimit,
+        categories: categoryListWithCounts,
+        totalActiveProducts,
+        selectedCategoryId
+    };
+    } catch (error) {
+        console.error("getShopProducts error:", error);
+        throw error;
+    }
+};
+
+// Fetch product details by ID, strictly verifying that product and its category are listed and not deleted
+export const getProductDetailsById = async (productId) => {
+    try {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.INVALID_ID };
+        }
+
+        const product = await Product.findById(productId).populate("category");
+        if (!product) {
+            return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.DOES_NOT_EXIST };
+        }
+
+        // Check if product is soft deleted or unlisted
+        if (product.isDeleted || !product.isListed) {
+            return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.UNAVAILABLE };
+        }
+
+        // Check if category is soft deleted or unlisted
+        if (!product.category || product.category.isDeleted || !product.category.isListed) {
+            return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.CATEGORY_UNAVAILABLE };
+        }
+
+        // Calculate effective price & discount
+        const hasDiscount = Boolean(product.salePrice && product.salePrice > 0 && product.salePrice < product.regularPrice);
+        const effectivePrice = hasDiscount ? product.salePrice : product.regularPrice;
+        const discountAmount = hasDiscount ? product.regularPrice - product.salePrice : 0;
+        const discountPercent = hasDiscount ? Math.round((discountAmount / product.regularPrice) * 100) : 0;
+
+        return {
+            product: {
+                ...product.toObject(),
+                effectivePrice,
+                hasDiscount,
+                discountAmount,
+                discountPercent
+            },
+            unavailable: false
+        };
+    } catch (error) {
+        console.error("getProductDetailsById error:", error);
+        return { product: null, unavailable: true, reason: "Error retrieving product details" };
+    }
+};
+
+// Fetch related products from the same category (or active catalog fallback)
+export const getRelatedProducts = async (currentProductId, categoryId, limit = 4) => {
+    try {
+        if (!currentProductId || !mongoose.Types.ObjectId.isValid(currentProductId)) {
+            return [];
+        }
+
+        const activeCategories = await Category.find({ isListed: true, isDeleted: false }).select("_id");
+        const activeCategoryIds = activeCategories.map((c) => c._id);
+
+        const baseFilter = {
+            _id: { $ne: new mongoose.Types.ObjectId(currentProductId) },
+            category: { $in: activeCategoryIds },
+            isListed: true,
+            isDeleted: false
+        };
+
+        // First try finding in same category
+        let related = [];
+        if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+            related = await Product.find({
+                ...baseFilter,
+                category: new mongoose.Types.ObjectId(categoryId)
+            })
+                .populate("category", "name")
+                .limit(limit)
+                .lean();
+        }
+
+        // If fewer than limit, supplement with other active products
+        if (related.length < limit) {
+            const remainingNeeded = limit - related.length;
+            const existingIds = [
+                new mongoose.Types.ObjectId(currentProductId),
+                ...related.map((p) => p._id)
+            ];
+
+            const additional = await Product.find({
+                _id: { $nin: existingIds },
+                category: { $in: activeCategoryIds },
+                isListed: true,
+                isDeleted: false
+            })
+                .populate("category", "name")
+                .sort({ createdAt: -1 })
+                .limit(remainingNeeded)
+                .lean();
+
+            related = [...related, ...additional];
+        }
+
+        return related.map((p) => {
+            const hasDiscount = Boolean(p.salePrice && p.salePrice > 0 && p.salePrice < p.regularPrice);
+            return {
+                ...p,
+                effectivePrice: hasDiscount ? p.salePrice : p.regularPrice,
+                hasDiscount,
+                discountPercent: hasDiscount ? Math.round(((p.regularPrice - p.salePrice) / p.regularPrice) * 100) : 0
+            };
+        });
+    } catch (error) {
+        console.error("getRelatedProducts error:", error);
+        return [];
+    }
+};
+
+export default {
+    getActiveCategoriesWithCounts,
+    getShopProducts,
+    getProductDetailsById,
+    getRelatedProducts
+};

@@ -31,6 +31,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    caret-color: transparent;
 }
 
 body {
@@ -42,6 +43,16 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+    caret-color: var(--gold-primary) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    cursor: text !important;
 }
 
 /* ========================================
@@ -49,31 +60,35 @@ body {
    ======================================== */
 
 .royal-header {
-    background: rgba(8, 7, 6, 0.85);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 16px 48px;
     position: sticky;
     top: 0;
-    z-index: 100;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: rgba(7, 7, 7, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1000;
 }
 
 .header-container {
     max-width: 1280px;
     margin: 0 auto;
+    height: 100%;
+    padding: 0 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .brand-logo {
-    font-family: 'Cinzel', 'Bodoni Moda', serif;
-    font-size: 20px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: #ede8e1;
+    font-family: 'Bodoni Moda', serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: #FFFFFF;
     text-decoration: none;
+    text-transform: uppercase;
     font-weight: 500;
     transition: color 0.2s ease;
 }
@@ -82,14 +97,35 @@ body {
     color: var(--gold-primary);
 }
 
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.header-nav a {
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #d6cfc7;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.header-nav a:hover {
+    color: var(--gold-primary);
+}
+
 .header-actions {
     display: flex;
-    gap: 20px;
     align-items: center;
+    gap: 16px;
 }
 
 .header-icon {
-    color: #a69f95;
+    color: #d6cfc7;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -100,6 +136,75 @@ body {
 .header-icon:hover {
     color: var(--gold-primary);
     opacity: 1;
+}
+
+.auth-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 8px;
+}
+
+.btn-header-login {
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #f0ece6;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.btn-header-login:hover {
+    color: var(--gold-primary);
+    border-color: var(--gold-primary);
+    background: rgba(246, 189, 100, 0.05);
+}
+
+.btn-header-signup {
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #0b0a09;
+    background: var(--gold-primary);
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-header-signup:hover {
+    background: #e29c4b;
+    transform: translateY(-1px);
+}
+
+.btn-header-logout {
+    font-family: 'Inter', 'Instrument Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(212, 196, 178, 0.7);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(80, 69, 55, 0.3);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-header-logout:hover {
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.4);
+    background: rgba(255, 107, 107, 0.08);
 }
 
 /* ========================================

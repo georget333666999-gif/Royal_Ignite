@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle || "The Electric Collection — Pure Resonance & Dual-Arc Plasma | ROYAL IGNITE" %></title>
+    <meta name="description" content="Explore The Electric Collection by Royal Ignite: six flameless dual-arc plasma and induction instruments engineered from aerospace grade 5 titanium and solid-state high-frequency cells.">
+    <link rel="stylesheet" href="/css/user/style.css">
+    <link rel="stylesheet" href="/css/user/electricLighters.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="elec-body">
+
+    <!-- 1. NAVIGATION HEADER -->
+    <header class="elec-header">
+        <div class="elec-container elec-header-inner">
+            <a href="/" class="elec-brand">
+                <svg class="elec-brand-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2ZM12 16C10.3431 16 9 14.6569 9 13C9 10.5 11 7 12 5.5C13 7 15 10.5 15 13C15 14.6569 13.6569 16 12 16Z"/>
+                </svg>
+                <span class="elec-brand-name">ROYAL IGNITE</span>
+            </a>
+
+            <nav class="elec-nav">
+                <a href="/fuel-lighters" class="elec-nav-link">Fuel Lighters</a>
+                <a href="/gas-lighters" class="elec-nav-link">Gas Lighters</a>
+                <a href="/electric-lighters" class="elec-nav-link active">Electric Lighters</a>
+                <a href="/refills-and-care" class="elec-nav-link">Refills & Care</a>
+            </nav>
+
+            <div class="elec-nav-actions">
+                <a href="/products" class="elec-icon-btn" title="Search Catalogue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <a href="/wishlist" class="elec-icon-btn" title="Wishlist Vault" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="elec-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+                <a href="/cart" class="elec-icon-btn" title="Shopping Bag" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 2. BREADCRUMB & HERO HEADER -->
+        <section class="elec-hero-section">
+            <div class="elec-container">
+                <nav class="elec-breadcrumb" aria-label="Breadcrumb">
+                    <a href="/">Home</a>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">Electric Lighters</span>
+                </nav>
+
+                <div class="elec-hero-grid">
+                    <div>
+                        <span class="kicker">Aerospace Engineering • Dual-Arc Plasma</span>
+                        <h1 class="elec-hero-title">The <span class="italic-gold">Electric</span> Collection</h1>
+                        <h2 class="elec-hero-subheadline">Solid-State Plasma Resonance & Flameless Titanium Ignition</h2>
+                        <p class="elec-hero-desc">
+                            Six flameless instruments sculpted from grade 5 titanium and aircraft aluminum. Twin micro-transformers pulse at 42,000 Hz, creating a cross-arc plasma field completely impervious to severe wind, rain, and high altitudes.
+                        </p>
+                    </div>
+
+                    <!-- Integrated Sorting Toolbar -->
+                    <div class="elec-hero-actions">
+                        <div class="elec-sort-bar">
+                            <label for="elecSortSelect" class="elec-sort-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                                    <line x1="10" y1="18" x2="14" y2="18"></line>
+                                </svg>
+                                Sort By
+                            </label>
+                            <select id="elecSortSelect" class="elec-sort-select" onchange="handleSortChange(this.value)">
+                                <option value="curated" <%= (typeof activeSort !== 'undefined' && activeSort === 'curated') ? 'selected' : '' %>>Curated Atelier Sequence</option>
+                                <option value="price_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_asc') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price_desc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_desc') ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="name_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'name_asc') ? 'selected' : '' %>>Name: A — Z</option>
+                                <option value="newest" <%= (typeof activeSort !== 'undefined' && activeSort === 'newest') ? 'selected' : '' %>>Newest Editions</option>
+                            </select>
+                        </div>
+                        <div class="elec-hero-badge">
+                            <span class="elec-live-pulse"></span>
+                            <span>6 PLASMA EDITIONS</span> &nbsp;|&nbsp; 100% FLAMELESS
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmarks Ribbon -->
+                <div class="elec-metrics-strip">
+                    <div class="elec-metric-item">
+                        <span class="elec-metric-num">42 kHz</span>
+                        <span class="elec-metric-label">Pulse Frequency</span>
+                        <span class="elec-metric-sub">Harmonic Dual Arc</span>
+                    </div>
+                    <div class="elec-metric-item">
+                        <span class="elec-metric-num">Gr. 5</span>
+                        <span class="elec-metric-label">Aerospace Titanium</span>
+                        <span class="elec-metric-sub">Monolithic Billet Chassis</span>
+                    </div>
+                    <div class="elec-metric-item">
+                        <span class="elec-metric-num">100%</span>
+                        <span class="elec-metric-label">Windproof Plasma</span>
+                        <span class="elec-metric-sub">Sub-Zero & High Altitude</span>
+                    </div>
+                    <div class="elec-metric-item">
+                        <span class="elec-metric-num">USB-C</span>
+                        <span class="elec-metric-label">Rapid Induction Cell</span>
+                        <span class="elec-metric-sub">300 Ignitions per Charge</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CURATED 6-PIECE ATELIER SHOWCASE -->
+        <section class="elec-collection-section" id="models">
+            <div class="elec-container">
+                <div class="elec-section-header">
+                    <div>
+                        <span class="kicker">Electric Masterpieces</span>
+                        <h2 class="elec-section-title">The Plasma <span class="italic-gold">Editions</span></h2>
+                    </div>
+                    <p class="elec-section-subtext">
+                        Select any creation to inspect its dual-angle photography, solid-state architecture, and technical parameters.
+                    </p>
+                </div>
+
+                <!-- Structured 3-Column Luxury Grid -->
+                <div class="elec-cards-grid">
+                    <% products.forEach(function(product, index) { 
+                        const frontImg = (product.images && product.images[0]) || '/uploads/monarch_lighter.png';
+                        const editionNum = `0${index + 1} / 06`;
+                    %>
+                        <article class="elec-card" data-id="<%= product._id %>" data-price="<%= product.effectivePrice %>">
+                            <!-- Top Card Meta Bar -->
+                            <div class="elec-card-header">
+                                <span class="elec-card-badge">
+                                    <span class="elec-dot-indicator"></span>
+                                    <%= product.editionTag || `EDITION 0${index + 1}` %>
+                                </span>
+                                <span class="elec-card-edition-num"><%= editionNum %></span>
+                            </div>
+
+                            <!-- Controlled Image Stage (Well-Proportioned) -->
+                            <div class="elec-card-stage">
+                                <a href="/products/<%= product._id %>" class="elec-card-link" title="Inspect <%= product.name %>">
+                                    <img src="<%= frontImg %>" alt="<%= product.name %>" class="elec-card-img" loading="lazy" onerror="this.src='/uploads/monarch_lighter.png';" />
+                                </a>
+                                <div class="elec-card-plasma-glow"></div>
+                            </div>
+
+                            <!-- Card Body Information -->
+                            <div class="elec-card-body">
+                                <span class="elec-card-kicker"><%= product.subTag || 'PLASMA ARC RESONANCE' %></span>
+                                <h3 class="elec-card-title">
+                                    <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="elec-card-desc"><%= product.description %></p>
+
+                                <div class="elec-card-specs">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                    </svg>
+                                    <span><%= product.specs || 'TITANIUM BILLET / 42,000 HZ DUAL ARC' %></span>
+                                </div>
+
+                                <div class="elec-card-footer">
+                                    <div class="elec-pricing-col">
+                                        <span class="elec-price-kicker">Atelier Price</span>
+                                        <div class="elec-price-values">
+                                            <span class="elec-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                            <% if (product.salePrice && product.regularPrice > product.salePrice) { %>
+                                                <span class="elec-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="elec-card-actions">
+                                        <a href="/products/<%= product._id %>" class="elec-acquire-btn">Acquire Edition →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    <% }); %>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ATELIER SOLID-STATE ARCHITECTURE SECTION -->
+        <section class="elec-blueprint-section">
+            <div class="elec-container">
+                <div class="elec-blueprint-grid">
+                    <div class="elec-blueprint-content">
+                        <span class="kicker">Physics of Plasma</span>
+                        <h2 class="elec-blueprint-title">Fire without chemical <span class="italic-gold">fuel</span>.</h2>
+                        <p class="elec-blueprint-lead">
+                            By supercharging atmospheric air into a concentrated 1,100°C plasma beam, Royal Ignite electric lighters generate intense thermal ignition with zero carbon emissions and zero fuel replenishment.
+                        </p>
+
+                        <div class="elec-anatomy-list">
+                            <div class="elec-anatomy-item">
+                                <div class="elec-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Twin Dual-Arc Plasma Transformers</h4>
+                                    <p>Solid-state micro-coils pulse at 42,000 cycles per second, creating an electric cross-arc that cannot be extinguished by 80 km/h wind.</p>
+                                </div>
+                            </div>
+
+                            <div class="elec-anatomy-item">
+                                <div class="elec-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 6v6l4 2"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Capacitive Touch Ignition & Haptics</h4>
+                                    <p>Subtle biometric touch sensor fires instantaneously upon human contact with a tactile micro-vibration confirmation pulse.</p>
+                                </div>
+                            </div>
+
+                            <div class="elec-anatomy-item">
+                                <div class="elec-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>High-Density Solid-State Battery</h4>
+                                    <p>Lithium-titanate electrochemical core engineered for 10,000 charge cycles, providing 300 ignitions from a 25-minute USB-C charge.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="elec-blueprint-visual">
+                        <div class="elec-spec-card">
+                            <span class="elec-spec-card-badge">SOLID-STATE SPECIFICATION</span>
+                            <h3 class="elec-spec-card-title">Aerospace Module</h3>
+                            <ul class="elec-spec-checklist">
+                                <li><strong>Chassis Metallurgy:</strong> Grade 5 Aerospace Titanium (Ti-6Al-4V)</li>
+                                <li><strong>Arc Voltage:</strong> 3.7V Step-Up to 15,000V High-Frequency Arc</li>
+                                <li><strong>Electrode Terminals:</strong> Tungsten-Rhenium Alloy with Ceramic Guard</li>
+                                <li><strong>Charging Interface:</strong> USB-C Rapid Delivery (25 min to 100%)</li>
+                                <li><strong>Safety Interlock:</strong> 7-Second Automatic Auto-Cutoff Protocol</li>
+                            </ul>
+                            <div class="elec-spec-card-footer">
+                                <span>Certificate of Authenticity with each serial edition</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PROTOCOLS OF CHARGING & LONGEVITY -->
+        <section class="elec-rituals-section">
+            <div class="elec-container">
+                <div class="elec-rituals-header">
+                    <span class="kicker">Electric Protocols</span>
+                    <h2 class="elec-rituals-title">The Standard of <span class="italic-gold">Excellence</span></h2>
+                    <p class="elec-rituals-desc">
+                        Engineered for a lifetime of flameless mastery. Three protocols to ensure optimal plasma arc performance.
+                    </p>
+                </div>
+
+                <div class="elec-rituals-grid">
+                    <div class="elec-ritual-card">
+                        <span class="elec-ritual-step">01</span>
+                        <h3>USB-C Rapid Replenishment</h3>
+                        <p>Connect using the included braided atelier gold USB-C cable. The indicator pulse turns solid amber once full saturation is achieved in 25 minutes.</p>
+                        <a href="/refills-and-care" class="elec-ritual-link">View Charging Cable →</a>
+                    </div>
+                    <div class="elec-ritual-card">
+                        <span class="elec-ritual-step">02</span>
+                        <h3>Electrode Micro-Care</h3>
+                        <p>Use the atelier ceramic brush to gently clear any ash deposits from between the tungsten terminals to maintain uninterrupted 42 kHz resonance.</p>
+                        <a href="/refills-and-care" class="elec-ritual-link">View Care Instruments →</a>
+                    </div>
+                    <div class="elec-ritual-card">
+                        <span class="elec-ritual-step">03</span>
+                        <h3>Extreme Environment Ready</h3>
+                        <p>Impervious to thin alpine air above 5,000 meters and sub-zero temperatures where butane fuels depressurize and fail to vaporize.</p>
+                        <a href="/products" class="elec-ritual-link">Explore Capabilities →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 6. FOOTER -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Sorting & Wishlist Handler Scripts -->
+    <script>
+        function handleSortChange(sortValue) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortValue);
+            window.location.href = url.toString();
+        }
+
+        async function handleCategoryWishlistToggle(event, productId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const btn = event.currentTarget || event.target.closest('.cat-wishlist-btn');
+            if (!btn) return;
+            const svg = btn.querySelector('svg');
+
+            try {
+                const response = await fetch('/wishlist/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || data.redirect) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sign In Required',
+                            text: 'Please sign in to save creations to your wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64',
+                            confirmButtonText: 'Sign In'
+                        }).then(() => {
+                            window.location.href = data.redirect || `/user/login?redirect=/electric-lighters`;
+                        });
+                    } else {
+                        window.location.href = data.redirect || `/user/login?redirect=/electric-lighters`;
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    if (data.inWishlist) {
+                        btn.classList.add('active');
+                        btn.setAttribute('title', 'Remove from Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', '#E5A93C');
+                            svg.setAttribute('stroke', '#E5A93C');
+                        }
+                    } else {
+                        btn.classList.remove('active');
+                        btn.setAttribute('title', 'Add to Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    const headerBadge = document.querySelector('.wishlist-badge-count');
+                    if (headerBadge) {
+                        if (data.count > 0) {
+                            headerBadge.textContent = data.count;
+                            headerBadge.style.display = 'inline-block';
+                        } else {
+                            headerBadge.style.display = 'none';
+                        }
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2400,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#F6BD64'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Category wishlist error:", err);
+            }
+        }
+
+        // Fetch Wishlist Counter on load
+        <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+        (function() {
+            fetch('/wishlist/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.wishlist-badge-count');
+                    if (data && data.success && data.count > 0) {
+                        badges.forEach(b => {
+                            b.textContent = data.count;
+                            b.style.display = 'inline-block';
+                        });
+                    } else {
+                        badges.forEach(b => {
+                            b.style.display = 'none';
+                        });
+                    }
+                })
+                .catch(() => {});
+        })();
+        <% } %>
+    </script>
+</body>
+</html>

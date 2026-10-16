@@ -1,0 +1,99 @@
+<header class="royal-header">
+    <div class="header-container">
+        <a href="/" class="brand-logo">ROYAL IGNITE</a>
+
+        <% if (typeof hideNav === 'undefined' || !hideNav) { %>
+        <nav class="header-nav">
+            <a href="/fuel-lighters">Fuel Lighters</a>
+            <a href="/gas-lighters">Gas Lighters</a>
+            <a href="/electric-lighters">Electric Lighters</a>
+            <a href="/refills-and-care">Refills & Care</a>
+        </nav>
+        <% } %>
+        
+        <div class="header-actions">
+            <!-- Search Icon -->
+            <a href="/products" class="header-icon" title="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </a>
+
+            <!-- Wishlist Icon -->
+            <a href="/wishlist" class="header-icon header-wishlist-icon" title="Wishlist">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span class="header-badge-count wishlist-badge-count" style="display: none;">0</span>
+            </a>
+
+            <!-- Shopping Bag Icon -->
+            <a href="/cart" class="header-icon" title="Cart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+            </a>
+
+            <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+                <!-- Profile / Account Icon -->
+                <a href="/user/profile" class="header-icon" title="My Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+
+                <!-- Logout Button -->
+                <div class="auth-nav-group">
+                    <a href="/user/logout" class="btn-header-logout" title="Sign Out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            <% } else if (typeof hideNav === 'undefined' || !hideNav) { %>
+                <!-- Guest Navigation (Login & Register) -->
+                <div class="auth-nav-group">
+                    <a href="/user/login" class="btn-header-login">Sign In</a>
+                    <a href="/user/signup" class="btn-header-signup">Join</a>
+                </div>
+            <% } else { %>
+                <!-- Auth page fallback without nav -->
+                <a href="/user/profile" class="header-icon" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+            <% } %>
+        </div>
+    </div>
+<% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+<script>
+    (function() {
+        fetch('/wishlist/count')
+            .then(res => res.json())
+            .then(data => {
+                const badges = document.querySelectorAll('.wishlist-badge-count');
+                if (data && data.success && data.count > 0) {
+                    badges.forEach(b => {
+                        b.textContent = data.count;
+                        b.style.display = 'inline-block';
+                    });
+                } else {
+                    badges.forEach(b => {
+                        b.style.display = 'none';
+                    });
+                }
+            })
+            .catch(() => {});
+    })();
+</script>
+<% } %>
+</header>

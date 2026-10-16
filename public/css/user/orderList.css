@@ -1,0 +1,522 @@
+/* ==========================================================================
+   ROYAL IGNITE — Order Listing Stylesheet
+   Luxury Aesthetic: Obsidian (#000000), Slate Surfaces (#0E0E12), Gold (#F6BD64)
+   ========================================================================== */
+
+:root {
+    --ol-bg: #000000;
+    --ol-surface: #0E0E12;
+    --ol-surface-hover: #15151B;
+    --ol-border: rgba(255, 255, 255, 0.08);
+    --ol-gold: #F6BD64;
+    --ol-gold-hover: #E5A93C;
+    --ol-gold-glow: rgba(246, 189, 100, 0.22);
+    --ol-text-main: #FFFFFF;
+    --ol-text-muted: #9E9EA8;
+    --ol-text-subtle: #686873;
+    
+    /* Status Colors */
+    --status-placed: #F6BD64;
+    --status-processing: #38bdf8;
+    --status-shipped: #a855f7;
+    --status-delivered: #10b981;
+    --status-cancelled: #ef4444;
+    --status-returned: #f97316;
+}
+
+body.orders-body {
+    background-color: var(--ol-bg) !important;
+    color: var(--ol-text-main);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.orders-main {
+    flex: 1;
+    padding: 44px 0 96px;
+    background-color: #000000;
+}
+
+.orders-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Header & Breadcrumbs */
+.orders-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--ol-border);
+}
+
+.orders-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ol-text-subtle);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.orders-breadcrumbs a {
+    color: var(--ol-text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.orders-breadcrumbs a:hover {
+    color: var(--ol-gold);
+}
+
+.orders-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 8px;
+}
+
+.orders-title .italic-gold {
+    font-style: italic;
+    color: var(--ol-gold);
+}
+
+.orders-subtitle {
+    font-size: 15px;
+    color: var(--ol-text-muted);
+    margin: 0;
+}
+
+/* Search & Filter Toolbar (c.vii) */
+.orders-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.order-search-form {
+    display: flex;
+    align-items: center;
+    background: var(--ol-surface);
+    border: 1px solid var(--ol-border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    width: 360px;
+    max-width: 100%;
+    transition: border-color 0.2s ease;
+}
+
+.order-search-form:focus-within {
+    border-color: var(--ol-gold);
+    box-shadow: 0 0 12px var(--ol-gold-glow);
+}
+
+.order-search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #FFFFFF;
+    font-size: 13.5px;
+    width: 100%;
+    padding-left: 10px;
+}
+
+.order-search-icon {
+    color: var(--ol-text-muted);
+    flex-shrink: 0;
+}
+
+.order-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-pill {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--ol-border);
+    color: var(--ol-text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filter-pill.active {
+    background: rgba(246, 189, 100, 0.12);
+    border-color: var(--ol-gold);
+    color: var(--ol-gold);
+}
+
+/* Orders Cards List */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.order-card {
+    background: var(--ol-surface);
+    border: 1px solid var(--ol-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 30px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.order-card:hover {
+    border-color: rgba(246, 189, 100, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Order Card Top Bar */
+.order-card-header {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--ol-border);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.order-id-group {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.order-id-val {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ol-gold);
+    letter-spacing: 0.5px;
+}
+
+.order-date-text {
+    font-size: 13px;
+    color: var(--ol-text-muted);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.status-badge.placed {
+    background: rgba(246, 189, 100, 0.12);
+    color: var(--status-placed);
+    border-color: rgba(246, 189, 100, 0.3);
+}
+
+.status-badge.processing {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--status-processing);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.status-badge.shipped {
+    background: rgba(168, 85, 247, 0.12);
+    color: var(--status-shipped);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.status-badge.delivered {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--status-delivered);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.cancelled {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--status-cancelled);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.returned {
+    background: rgba(249, 115, 22, 0.12);
+    color: var(--status-returned);
+    border-color: rgba(249, 115, 22, 0.3);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Order Items Preview */
+.order-card-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.order-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.order-item-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.order-item-thumb {
+    width: 58px;
+    height: 58px;
+    border-radius: 8px;
+    background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    flex-shrink: 0;
+}
+
+.order-item-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.order-item-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.order-item-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.order-item-sub {
+    font-size: 12.5px;
+    color: var(--ol-text-muted);
+}
+
+.order-item-right {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+/* Order Card Footer */
+.order-card-footer {
+    background: rgba(255, 255, 255, 0.015);
+    border-top: 1px solid var(--ol-border);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.order-total-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.order-total-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ol-text-subtle);
+}
+
+.order-total-amount {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ol-gold);
+}
+
+.order-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-order-view {
+    padding: 8px 18px;
+    background: var(--ol-gold);
+    color: #0E0E12;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-order-view:hover {
+    background: var(--ol-gold-hover);
+    box-shadow: 0 4px 14px var(--ol-gold-glow);
+}
+
+.btn-order-invoice {
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--ol-border);
+    color: var(--ol-text-muted);
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-order-invoice:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-order-cancel {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #ef4444;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-order-cancel:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+}
+
+.btn-order-return {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    color: #f97316;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-order-return:hover {
+    background: rgba(249, 115, 22, 0.12);
+    border-color: #f97316;
+}
+
+/* Empty State */
+.orders-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--ol-surface);
+    border: 1px solid var(--ol-border);
+    border-radius: 16px;
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+.orders-empty-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(246, 189, 100, 0.15) 0%, rgba(14, 14, 18, 0.9) 70%);
+    border: 1px solid rgba(246, 189, 100, 0.3);
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ol-gold);
+}
+
+.orders-empty-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 26px;
+    color: #FFFFFF;
+    margin: 0 0 10px;
+}
+
+.orders-empty-desc {
+    font-size: 14px;
+    color: var(--ol-text-muted);
+    margin: 0 0 28px;
+    line-height: 1.6;
+}
+
+/* Pagination */
+.orders-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+}
+
+.page-btn {
+    padding: 8px 16px;
+    background: var(--ol-surface);
+    border: 1px solid var(--ol-border);
+    border-radius: 6px;
+    color: var(--ol-text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+    border-color: var(--ol-gold);
+    color: var(--ol-gold);
+}
+
+.page-btn.active {
+    background: var(--ol-gold);
+    color: #0E0E12;
+    font-weight: 700;
+    border-color: var(--ol-gold);
+}

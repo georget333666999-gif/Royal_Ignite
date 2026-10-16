@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle || "Preserve The Flame — Refills & Atelier Care | ROYAL IGNITE" %></title>
+    <meta name="description" content="Explore Refills & Care by Royal Ignite: factory-formulated zero-impurity butane fuels, Japanese organic wicks, high-spark flints, and handcrafted mahogany preservation kits.">
+    <link rel="stylesheet" href="/css/user/style.css">
+    <link rel="stylesheet" href="/css/user/refillsAndCare.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="care-body">
+
+    <!-- 1. NAVIGATION HEADER -->
+    <header class="care-header">
+        <div class="care-container care-header-inner">
+            <a href="/" class="care-brand">
+                <svg class="care-brand-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2ZM12 16C10.3431 16 9 14.6569 9 13C9 10.5 11 7 12 5.5C13 7 15 10.5 15 13C15 14.6569 13.6569 16 12 16Z"/>
+                </svg>
+                <span class="care-brand-name">ROYAL IGNITE</span>
+            </a>
+
+            <nav class="care-nav">
+                <a href="/fuel-lighters" class="care-nav-link">Fuel Lighters</a>
+                <a href="/gas-lighters" class="care-nav-link">Gas Lighters</a>
+                <a href="/electric-lighters" class="care-nav-link">Electric Lighters</a>
+                <a href="/refills-and-care" class="care-nav-link active">Refills & Care</a>
+            </nav>
+
+            <div class="care-nav-actions">
+                <a href="/products" class="care-icon-btn" title="Search Catalogue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <a href="/wishlist" class="care-icon-btn" title="Wishlist Vault" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="care-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+                <a href="/cart" class="care-icon-btn" title="Shopping Bag" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 2. BREADCRUMB & HERO HEADER -->
+        <section class="care-hero-section">
+            <div class="care-container">
+                <nav class="care-breadcrumb" aria-label="Breadcrumb">
+                    <a href="/">Home</a>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">Refills & Care</span>
+                </nav>
+
+                <div class="care-hero-grid">
+                    <div>
+                        <span class="kicker">Consumables & Restoration • Atelier Maintenance</span>
+                        <h1 class="care-hero-title">Preserve <span class="italic-gold">The Flame</span></h1>
+                        <h2 class="care-hero-subheadline">Zero-Impurity Butane, Precision Flints & Archival Care</h2>
+                        <p class="care-hero-desc">
+                            Engineered to the same tolerances as our heirloom lighters. Zero-impurity fuels protect micro-injectors, while archival care instruments maintain chassis luster across generations.
+                        </p>
+                    </div>
+
+                    <!-- Integrated Sorting Toolbar -->
+                    <div class="care-hero-actions">
+                        <div class="care-sort-bar">
+                            <label for="careSortSelect" class="care-sort-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                                    <line x1="10" y1="18" x2="14" y2="18"></line>
+                                </svg>
+                                Sort By
+                            </label>
+                            <select id="careSortSelect" class="care-sort-select" onchange="handleSortChange(this.value)">
+                                <option value="curated" <%= (typeof activeSort !== 'undefined' && activeSort === 'curated') ? 'selected' : '' %>>Curated Atelier Sequence</option>
+                                <option value="price_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_asc') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price_desc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_desc') ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="name_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'name_asc') ? 'selected' : '' %>>Name: A — Z</option>
+                                <option value="newest" <%= (typeof activeSort !== 'undefined' && activeSort === 'newest') ? 'selected' : '' %>>Newest Editions</option>
+                            </select>
+                        </div>
+                        <div class="care-hero-badge">
+                            <span class="care-live-pulse"></span>
+                            <span><%= products.length %> ATELIER ESSENTIALS</span> &nbsp;|&nbsp; LIFETIME PRESERVATION
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmarks Ribbon -->
+                <div class="care-metrics-strip">
+                    <div class="care-metric-item">
+                        <span class="care-metric-num">14X</span>
+                        <span class="care-metric-label">Cold Filtrations</span>
+                        <span class="care-metric-sub">Zero-Carbon Residual</span>
+                    </div>
+                    <div class="care-metric-item">
+                        <span class="care-metric-num">99.999%</span>
+                        <span class="care-metric-label">Isobutane Purity</span>
+                        <span class="care-metric-sub">Protects Micro Nozzles</span>
+                    </div>
+                    <div class="care-metric-item">
+                        <span class="care-metric-num">100%</span>
+                        <span class="care-metric-label">Japanese Cotton</span>
+                        <span class="care-metric-sub">Unbleached Organic Wicks</span>
+                    </div>
+                    <div class="care-metric-item">
+                        <span class="care-metric-num">Horology</span>
+                        <span class="care-metric-label">Archival Grade</span>
+                        <span class="care-metric-sub">Mahogany & Walnut Vaults</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CURATED ATELIER SHOWCASE GRID -->
+        <section class="care-collection-section" id="models">
+            <div class="care-container">
+                <div class="care-section-header">
+                    <div>
+                        <span class="kicker">The Essential Protocol</span>
+                        <h2 class="care-section-title">Atelier Refills & <span class="italic-gold">Care</span></h2>
+                    </div>
+                    <p class="care-section-subtext">
+                        Preserve the performance, acoustic chime, and finish of your heirloom with factory-formulated consumables and archival instruments.
+                    </p>
+                </div>
+
+                <!-- Structured 3-Column Luxury Grid (Well-Proportioned) -->
+                <div class="care-cards-grid">
+                    <% products.forEach(function(product, index) { 
+                        const frontImg = (product.images && product.images[0]) || '/uploads/care/collector_care_kit.jpg';
+                        const totalCount = products.length < 10 ? `0${products.length}` : products.length;
+                        const currentNum = index < 9 ? `0${index + 1}` : `${index + 1}`;
+                        const editionNum = `${currentNum} / ${totalCount}`;
+                    %>
+                        <article class="care-card" data-id="<%= product._id %>" data-price="<%= product.effectivePrice %>">
+                            <!-- Top Card Meta Bar -->
+                            <div class="care-card-header">
+                                <span class="care-card-badge">
+                                    <span class="care-dot-indicator"></span>
+                                    <%= product.editionTag || `ESSENTIAL 0${index + 1}` %>
+                                </span>
+                                <span class="care-card-edition-num"><%= editionNum %></span>
+                            </div>
+
+                            <!-- Controlled Image Stage (Well-Proportioned) -->
+                            <div class="care-card-stage">
+                                <a href="/products/<%= product._id %>" class="care-card-link" title="Inspect <%= product.name %>">
+                                    <img src="<%= frontImg %>" alt="<%= product.name %>" class="care-card-img" loading="lazy" onerror="this.src='/uploads/care/collector_care_kit.jpg';" />
+                                </a>
+                                <div class="care-card-amber-glow"></div>
+                            </div>
+
+                            <!-- Card Body Information -->
+                            <div class="care-card-body">
+                                <span class="care-card-kicker"><%= product.subTag || 'ATELIER CARE & PRESERVATION' %></span>
+                                <h3 class="care-card-title">
+                                    <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="care-card-desc"><%= product.description %></p>
+
+                                <div class="care-card-specs">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2Z"></path>
+                                    </svg>
+                                    <span><%= product.specs || 'FACTORY-FORMULATED / GENUINE ATELIER ACCESSORY' %></span>
+                                </div>
+
+                                <div class="care-card-footer">
+                                    <div class="care-pricing-col">
+                                        <span class="care-price-kicker">Atelier Price</span>
+                                        <div class="care-price-values">
+                                            <span class="care-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                            <% if (product.salePrice && product.regularPrice > product.salePrice) { %>
+                                                <span class="care-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="care-card-actions">
+                                        <a href="/products/<%= product._id %>" class="care-acquire-btn">Acquire Essential →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    <% }); %>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ATELIER CHEMISTRY & METALLURGY BLUEPRINT SECTION -->
+        <section class="care-blueprint-section">
+            <div class="care-container">
+                <div class="care-blueprint-grid">
+                    <div class="care-blueprint-content">
+                        <span class="kicker">Chemistry of Pure Combustion</span>
+                        <h2 class="care-blueprint-title">The science of zero <span class="italic-gold">impurities</span>.</h2>
+                        <p class="care-blueprint-lead">
+                            Standard commercial fuels carry oil lubricants and sulfur fractions that foul 38-micron burner jets within weeks. Royal Ignite atelier consumables are subjected to 14 cold fractional distillations, guaranteeing pure vaporization with zero carbon residues.
+                        </p>
+
+                        <div class="care-anatomy-list">
+                            <div class="care-anatomy-item">
+                                <div class="care-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2Z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>14-Stage Cold Fractional Distillation</h4>
+                                    <p>Proprietary molecular filtering separates heavy paraffin oils, delivering 99.999% pure isobutane that eliminates flame spitting and valve blockage.</p>
+                                </div>
+                            </div>
+
+                            <div class="care-anatomy-item">
+                                <div class="care-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Ferromanganese Non-Corrosive Flints</h4>
+                                    <p>Formulated with calibrated metallurgy to produce intense 1,650°C spark clusters without abrading or jamming the strike wheel teeth.</p>
+                                </div>
+                            </div>
+
+                            <div class="care-anatomy-item">
+                                <div class="care-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Unbleached Japanese Organic Cotton</h4>
+                                    <p>High-density parallel-spun fibers deliver uninterrupted capillary suction, preventing wick dry-burn and carbon charring.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Spec Sheet Card -->
+                    <div class="care-blueprint-graphic">
+                        <div class="care-spec-card">
+                            <div class="care-spec-card-header">
+                                <span class="care-spec-card-badge">TECHNICAL DOSSIER</span>
+                                <h3>Atelier Consumables Matrix</h3>
+                            </div>
+                            <ul class="care-spec-checklist">
+                                <li><strong>Fuel Purity:</strong> 99.999% Isobutane via 14x Cold Fractional Distillation</li>
+                                <li><strong>Flint Metallurgy:</strong> Pyrophoric Ferromanganese Low-Debris Alloy</li>
+                                <li><strong>Wick Composition:</strong> 100% Unbleached Japanese Long-Staple Cotton</li>
+                                <li><strong>Finishing Compound:</strong> Micro-Abrasive Jewelers Rouge (24K Gold & 925 Silver Safe)</li>
+                                <li><strong>Restoration Storage:</strong> Solid Honduran Mahogany & American Black Walnut</li>
+                                <li><strong>Atelier Guarantee:</strong> Serialized Chemical Certification of Authenticity</li>
+                            </ul>
+                            <div class="care-spec-card-footer">
+                                <span>Certified factory specification for Royal Ignite mechanical instruments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PROTOCOLS OF LONGEVITY & ATELIER CARE -->
+        <section class="care-rituals-section">
+            <div class="care-container">
+                <div class="care-rituals-header">
+                    <span class="kicker">Atelier Rituals</span>
+                    <h2 class="care-rituals-title">Protocols of <span class="italic-gold">Longevity</span></h2>
+                    <p class="care-rituals-desc">
+                        A fine lighter is a mechanical timepiece engineered for decades of service. Three essential rituals preserve peak performance and acoustic purity.
+                    </p>
+                </div>
+
+                <div class="care-rituals-grid">
+                    <div class="care-ritual-card">
+                        <span class="care-ritual-step">01</span>
+                        <h3>The Tank Bleed & Purge</h3>
+                        <p>Before every butane replenishment, depress the intake valve with the brass stylus to exhaust trapped atmospheric air and restore maximum liquid volume.</p>
+                        <a href="/products" class="care-ritual-link">Examine Purging Protocol →</a>
+                    </div>
+                    <div class="care-ritual-card">
+                        <span class="care-ritual-step">02</span>
+                        <h3>Spark Channel Maintenance</h3>
+                        <p>Periodically extract spent flint residue from the knurled strike-wheel channel with the natural badger-hair brush to maintain crisp first-strike ignition.</p>
+                        <a href="/products" class="care-ritual-link">View Maintenance Essentials →</a>
+                    </div>
+                    <div class="care-ritual-card">
+                        <span class="care-ritual-step">03</span>
+                        <h3>Precious Metallurgy Polish</h3>
+                        <p>Gently buff 24K gold plate, sterling silver, and naval brass with jewelers rouge and split-fiber microfiber to eliminate patina marks and micro-abrasions.</p>
+                        <a href="/products" class="care-ritual-link">View Polishing Suites →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. EXPLORE THE MAISON -->
+        <section class="care-maison-section">
+            <div class="care-container">
+                <h2 class="care-maison-title">Explore the <span class="italic-gold">Maison</span></h2>
+
+                <div class="care-maison-grid">
+                    <a href="/fuel-lighters" class="care-maison-card">
+                        <div>
+                            <span class="care-maison-card-subtitle">Vintage Mechanical Fluid</span>
+                            <h3 class="care-maison-card-title">Fuel Lighters</h3>
+                        </div>
+                        <div class="care-maison-card-arrow">→</div>
+                    </a>
+
+                    <a href="/gas-lighters" class="care-maison-card">
+                        <div>
+                            <span class="care-maison-card-subtitle">Precision Dual-Jet Butane</span>
+                            <h3 class="care-maison-card-title">Gas Lighters</h3>
+                        </div>
+                        <div class="care-maison-card-arrow">→</div>
+                    </a>
+
+                    <a href="/electric-lighters" class="care-maison-card">
+                        <div>
+                            <span class="care-maison-card-subtitle">Dual-Arc Plasma Rechargeable</span>
+                            <h3 class="care-maison-card-title">Electric Lighters</h3>
+                        </div>
+                        <div class="care-maison-card-arrow">→</div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 7. FOOTER -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- Sorting Handler Script -->
+    <script>
+        function handleSortChange(sortValue) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortValue);
+            window.location.href = url.toString();
+        }
+
+        // Fetch Wishlist Counter on load
+        <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+        (function() {
+            fetch('/wishlist/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.wishlist-badge-count');
+                    if (data && data.success && data.count > 0) {
+                        badges.forEach(b => {
+                            b.textContent = data.count;
+                            b.style.display = 'inline-block';
+                        });
+                    } else {
+                        badges.forEach(b => {
+                            b.style.display = 'none';
+                        });
+                    }
+                })
+                .catch(() => {});
+        })();
+        <% } %>
+    </script>
+</body>
+</html>

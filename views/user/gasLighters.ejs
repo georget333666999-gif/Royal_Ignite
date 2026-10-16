@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle || "The Gas Collection — Haute Briquet & Precision Flame | ROYAL IGNITE" %></title>
+    <meta name="description" content="Explore The Gas Collection by Royal Ignite: six precision-engineered luxury butane instruments of flame. Dual-ceramic windproof jet flame, acoustic 440 Hz chime lid, and quadruple-filtered butane fuel chamber.">
+    <link rel="stylesheet" href="/css/user/style.css">
+    <link rel="stylesheet" href="/css/user/gasLighters.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="gas-body">
+
+    <!-- 1. NAVIGATION HEADER -->
+    <header class="gas-header">
+        <div class="gas-container gas-header-inner">
+            <a href="/" class="gas-brand">
+                <svg class="gas-brand-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2ZM12 16C10.3431 16 9 14.6569 9 13C9 10.5 11 7 12 5.5C13 7 15 10.5 15 13C15 14.6569 13.6569 16 12 16Z"/>
+                </svg>
+                <span class="gas-brand-name">ROYAL IGNITE</span>
+            </a>
+
+            <nav class="gas-nav">
+                <a href="/fuel-lighters" class="gas-nav-link">Fuel Lighters</a>
+                <a href="/gas-lighters" class="gas-nav-link active">Gas Lighters</a>
+                <a href="/electric-lighters" class="gas-nav-link">Electric Lighters</a>
+                <a href="/refills-and-care" class="gas-nav-link">Refills & Care</a>
+            </nav>
+
+            <div class="gas-nav-actions">
+                <a href="/products" class="gas-icon-btn" title="Search Catalogue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <a href="/wishlist" class="gas-icon-btn" title="Wishlist Vault" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="gas-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+                <a href="/cart" class="gas-icon-btn" title="Shopping Bag" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 2. BREADCRUMB & HERO HEADER -->
+        <section class="gas-hero-section">
+            <div class="gas-container">
+                <nav class="gas-breadcrumb" aria-label="Breadcrumb">
+                    <a href="/">Home</a>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">Gas Lighters</span>
+                </nav>
+
+                <div class="gas-hero-grid">
+                    <div>
+                        <span class="kicker">The Art of Compression • Haute Briquet</span>
+                        <h1 class="gas-hero-title">The <span class="italic-gold">Gas</span> Collection</h1>
+                        <h2 class="gas-hero-subheadline">Dual-Ceramic Jet Flame & Micro-Calibrated Compression</h2>
+                        <p class="gas-hero-desc">
+                            Six precision-engineered instruments of fire sculpted from solid naval brass, 925 sterling silver, and aerospace titanium alloys. Each unit features internal anti-clog ceramic micro-burners, 440 Hz acoustic lid resonance, and high-pressure windproof torch flames tested to 1,300°C.
+                        </p>
+                    </div>
+
+                    <!-- Integrated Sorting Toolbar -->
+                    <div class="gas-hero-actions">
+                        <div class="gas-sort-bar">
+                            <label for="gasSortSelect" class="gas-sort-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                                    <line x1="10" y1="18" x2="14" y2="18"></line>
+                                </svg>
+                                Sort By
+                            </label>
+                            <select id="gasSortSelect" class="gas-sort-select" onchange="handleSortChange(this.value)">
+                                <option value="curated" <%= (typeof activeSort !== 'undefined' && activeSort === 'curated') ? 'selected' : '' %>>Curated Atelier Sequence</option>
+                                <option value="price_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_asc') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price_desc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_desc') ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="name_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'name_asc') ? 'selected' : '' %>>Name: A — Z</option>
+                                <option value="newest" <%= (typeof activeSort !== 'undefined' && activeSort === 'newest') ? 'selected' : '' %>>Newest Editions</option>
+                            </select>
+                        </div>
+                        <div class="gas-hero-badge">
+                            <span class="gas-live-pulse"></span>
+                            <span>6 BUTANE EDITIONS</span> &nbsp;|&nbsp; DUAL-JET TORCH
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmarks Ribbon -->
+                <div class="gas-metrics-strip">
+                    <div class="gas-metric-item">
+                        <span class="gas-metric-num">1,300°C</span>
+                        <span class="gas-metric-label">Dual Jet Flame</span>
+                        <span class="gas-metric-sub">Windproof Ceramic Torch</span>
+                    </div>
+                    <div class="gas-metric-item">
+                        <span class="gas-metric-num">38 μm</span>
+                        <span class="gas-metric-label">Micron Tolerances</span>
+                        <span class="gas-metric-sub">Acoustic Valve Seal</span>
+                    </div>
+                    <div class="gas-metric-item">
+                        <span class="gas-metric-num">440 Hz</span>
+                        <span class="gas-metric-label">Harmonic Chime</span>
+                        <span class="gas-metric-sub">Signature Lid Resonator</span>
+                    </div>
+                    <div class="gas-metric-item">
+                        <span class="gas-metric-num">99.9%</span>
+                        <span class="gas-metric-label">Pure Butane Chamber</span>
+                        <span class="gas-metric-sub">Zero-Impurity Pressure Tank</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CURATED 6-PIECE ATELIER SHOWCASE -->
+        <section class="gas-collection-section" id="models">
+            <div class="gas-container">
+                <div class="gas-section-header">
+                    <div>
+                        <span class="kicker">Gas Masterpieces</span>
+                        <h2 class="gas-section-title">The Butane <span class="italic-gold">Editions</span></h2>
+                    </div>
+                    <p class="gas-section-subtext">
+                        Select any creation to inspect its dual-angle photography, micro-burner tolerances, and internal flame diagram.
+                    </p>
+                </div>
+
+                <!-- Structured 3-Column Luxury Grid -->
+                <div class="gas-cards-grid">
+                    <% products.forEach(function(product, index) { 
+                        const frontImg = (product.images && product.images[0]) || '/uploads/gas/apex_lighter.jpg';
+                        const editionNum = `0${index + 1} / 06`;
+                    %>
+                        <article class="gas-card" data-id="<%= product._id %>" data-price="<%= product.effectivePrice %>">
+                            <!-- Top Card Meta Bar -->
+                            <div class="gas-card-header">
+                                <span class="gas-card-badge">
+                                    <span class="gas-dot-indicator"></span>
+                                    <%= product.editionTag || `EDITION 0${index + 1}` %>
+                                </span>
+                                <span class="gas-card-edition-num"><%= editionNum %></span>
+                            </div>
+
+                            <!-- Controlled Image Stage (Well-Proportioned) -->
+                            <div class="gas-card-stage">
+                                <a href="/products/<%= product._id %>" class="gas-card-link" title="Inspect <%= product.name %>">
+                                    <img src="<%= frontImg %>" alt="<%= product.name %>" class="gas-card-img" loading="lazy" onerror="this.src='/uploads/gas/apex_lighter.jpg';" />
+                                </a>
+                                <div class="gas-card-flame-glow"></div>
+                            </div>
+
+                            <!-- Card Body Information -->
+                            <div class="gas-card-body">
+                                <span class="gas-card-kicker"><%= product.flameTag || 'DUAL CERAMIC JET — 1,300°C' %></span>
+                                <h3 class="gas-card-title">
+                                    <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="gas-card-desc"><%= product.description %></p>
+
+                                <div class="gas-card-specs">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2Z"></path>
+                                    </svg>
+                                    <span><%= product.specs || 'AEROSPACE ALLOY / DUAL-JET TORCH' %></span>
+                                </div>
+
+                                <div class="gas-card-footer">
+                                    <div class="gas-pricing-col">
+                                        <span class="gas-price-kicker">Atelier Price</span>
+                                        <div class="gas-price-values">
+                                            <span class="gas-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                            <% if (product.salePrice && product.regularPrice > product.salePrice) { %>
+                                                <span class="gas-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="gas-card-actions">
+                                        <a href="/products/<%= product._id %>" class="gas-acquire-btn">Acquire Edition →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    <% }); %>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ATELIER BUTANE ARCHITECTURE SECTION -->
+        <section class="gas-blueprint-section">
+            <div class="gas-container">
+                <div class="gas-blueprint-grid">
+                    <div class="gas-blueprint-content">
+                        <span class="kicker">Physics of Compression</span>
+                        <h2 class="gas-blueprint-title">Fire under absolute <span class="italic-gold">control</span>.</h2>
+                        <p class="gas-blueprint-lead">
+                            By compressing pure butane gas through aerospace-grade micron injectors and ceramic ignition nozzles, Royal Ignite gas lighters achieve an unwavering, pinpoint 1,300°C windproof torch.
+                        </p>
+
+                        <div class="gas-anatomy-list">
+                            <div class="gas-anatomy-item">
+                                <div class="gas-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2Z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Twin Dual-Ceramic Jet Nozzles</h4>
+                                    <p>Internal ceramic guides stabilize the butane flame at 1,300°C, remaining completely windproof up to 90 km/h with zero soot or carbon residue.</p>
+                                </div>
+                            </div>
+
+                            <div class="gas-anatomy-item">
+                                <div class="gas-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Acoustic Chime Lid Resonance (440 Hz)</h4>
+                                    <p>Machined from solid brass billet to emit a crisp, crystalline 440 Hz concert-pitch chime upon opening, engineered to acoustic tolerances.</p>
+                                </div>
+                            </div>
+
+                            <div class="gas-anatomy-item">
+                                <div class="gas-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Quadruple-Filtered Fuel Reservoir</h4>
+                                    <p>Anti-depressurization chamber maintains consistent flame velocity and height regardless of ambient temperature or high elevation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gas-blueprint-visual">
+                        <div class="gas-spec-card">
+                            <span class="gas-spec-card-badge">HIGH-PRESSURE SPECIFICATION</span>
+                            <h3 class="gas-spec-card-title">The Butane Architecture</h3>
+                            <ul class="gas-spec-checklist">
+                                <li><strong>Chassis Metallurgy:</strong> Solid Naval Brass, 925 Sterling Silver & PVD Obsidian</li>
+                                <li><strong>Flame Profile:</strong> Dual-Ceramic Torch & Linear Columnar Flame</li>
+                                <li><strong>Thermal Output:</strong> 1,300°C High-Pressure Windproof Core</li>
+                                <li><strong>Burner Tolerance:</strong> 38 Microns Precision Acoustic Valve Seal</li>
+                                <li><strong>Safety Interlock:</strong> Instantaneous Spring-Loaded Shutoff Valve</li>
+                            </ul>
+                            <div class="gas-spec-card-footer">
+                                <span>Certificate of Authenticity with each serial edition</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PROTOCOLS OF REFILLING & LONGEVITY -->
+        <section class="gas-rituals-section">
+            <div class="gas-container">
+                <div class="gas-rituals-header">
+                    <span class="kicker">Gas Protocols</span>
+                    <h2 class="gas-rituals-title">The Standard of <span class="italic-gold">Excellence</span></h2>
+                    <p class="gas-rituals-desc">
+                        Engineered for a lifetime of precision ignition. Three protocols to ensure optimal butane pressure and burner cleanliness.
+                    </p>
+                </div>
+
+                <div class="gas-rituals-grid">
+                    <div class="gas-ritual-card">
+                        <span class="gas-ritual-step">01</span>
+                        <h3>The Inverted Butane Charge</h3>
+                        <p>Invert the lighter vertically and depress the brass canister nozzle in 3 short bursts of 3 seconds each to prevent vapor expansion locks.</p>
+                        <a href="/refills-and-care" class="gas-ritual-link">View Refills & Care →</a>
+                    </div>
+                    <div class="gas-ritual-card">
+                        <span class="gas-ritual-step">02</span>
+                        <h3>Tank Purging Protocol</h3>
+                        <p>Before every refill, depress the intake valve using the atelier brass stylus to expel residual air pressure and maximize fuel capacity.</p>
+                        <a href="/refills-and-care" class="gas-ritual-link">View Care Instruments →</a>
+                    </div>
+                    <div class="gas-ritual-card">
+                        <span class="gas-ritual-step">03</span>
+                        <h3>Flame Wheel Calibration</h3>
+                        <p>Calibrate the concealed micro-regulator at the base with gentle quarter-turns to balance fuel economy with windproof torch velocity.</p>
+                        <a href="/products" class="gas-ritual-link">Explore Capabilities →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 6. FOOTER -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Sorting & Wishlist Handler Scripts -->
+    <script>
+        function handleSortChange(sortValue) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortValue);
+            window.location.href = url.toString();
+        }
+
+        async function handleCategoryWishlistToggle(event, productId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const btn = event.currentTarget || event.target.closest('.cat-wishlist-btn');
+            if (!btn) return;
+            const svg = btn.querySelector('svg');
+
+            try {
+                const response = await fetch('/wishlist/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || data.redirect) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sign In Required',
+                            text: 'Please sign in to save creations to your wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64',
+                            confirmButtonText: 'Sign In'
+                        }).then(() => {
+                            window.location.href = data.redirect || `/user/login?redirect=/gas-lighters`;
+                        });
+                    } else {
+                        window.location.href = data.redirect || `/user/login?redirect=/gas-lighters`;
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    if (data.inWishlist) {
+                        btn.classList.add('active');
+                        btn.setAttribute('title', 'Remove from Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', '#E5A93C');
+                            svg.setAttribute('stroke', '#E5A93C');
+                        }
+                    } else {
+                        btn.classList.remove('active');
+                        btn.setAttribute('title', 'Add to Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    const headerBadge = document.querySelector('.wishlist-badge-count');
+                    if (headerBadge) {
+                        if (data.count > 0) {
+                            headerBadge.textContent = data.count;
+                            headerBadge.style.display = 'inline-block';
+                        } else {
+                            headerBadge.style.display = 'none';
+                        }
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2400,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#F6BD64'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Category wishlist error:", err);
+            }
+        }
+
+        // Fetch Wishlist Counter on load
+        <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+        (function() {
+            fetch('/wishlist/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.wishlist-badge-count');
+                    if (data && data.success && data.count > 0) {
+                        badges.forEach(b => {
+                            b.textContent = data.count;
+                            b.style.display = 'inline-block';
+                        });
+                    } else {
+                        badges.forEach(b => {
+                            b.style.display = 'none';
+                        });
+                    }
+                })
+                .catch(() => {});
+        })();
+        <% } %>
+    </script>
+</body>
+</html>

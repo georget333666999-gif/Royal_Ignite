@@ -1,11 +1,11 @@
-require("dotenv").config();
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+import "dotenv/config";
 
-const User = require("../models/userModel");
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
+import User from "../models/userModel.js";
 
 passport.use(
     new GoogleStrategy(
@@ -15,13 +15,9 @@ passport.use(
             callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback"
         },
         async (accessToken, refreshToken, profile, done) => {
-
             try {
-
                 // Check if Google account already exists
-                let user = await User.findOne({
-                    googleId: profile.id
-                });
+                let user = await User.findOne({ googleId: profile.id });
 
                 if (user) {
                     if (user.isBlocked) {
@@ -32,31 +28,15 @@ passport.use(
 
                 // Check if email already exists
                 const email = profile.emails?.[0]?.value;
-
                 if (!email) {
-                    return done(
-                        null,
-                        false,
-                        {
-                            message: "Google account does not have an email."
-                        }
-                    );
+                    return done(null, false, { message: "Google account does not have an email." });
                 }
 
-                user = await User.findOne({
-                    email: email.toLowerCase()
-                });
+                user = await User.findOne({ email: email.toLowerCase() });
 
-                // Generate a random password for Google users
-                const randomPassword = crypto
-                    .randomBytes(32)
-                    .toString("hex");
-
-                const hashedPassword = await bcrypt.hash(
-                    randomPassword,
-                    10
-                );
-
+                // Generate a random password hash for OAuth accounts
+                const randomPassword = crypto.randomBytes(32).toString("hex");
+                const hashedPassword = await bcrypt.hash(randomPassword, 10);
                 const avatarUrl = profile.photos?.[0]?.value || null;
 
                 if (user) {
@@ -72,71 +52,46 @@ passport.use(
                     }
 
                     await user.save();
-
                     return done(null, user);
                 }
 
                 // Create new Google user
                 user = await User.create({
-
-                    name:
-                        profile.displayName ||
-                        profile.name?.givenName ||
-                        "Google User",
-
+                    name: profile.displayName || profile.name?.givenName || "Google User",
                     email: email.toLowerCase(),
-
                     password: hashedPassword,
-
                     googleId: profile.id,
-
                     imgUrl: avatarUrl,
-
                     isVerified: true,
-
                     isAdmin: false,
-
                     isBlocked: false
-
                 });
 
                 return done(null, user);
-
             } catch (error) {
-
                 return done(error);
-
             }
-
         }
     )
 );
 
-
 // Store user ID in session
 passport.serializeUser((user, done) => {
-
-    done(null, user._id);
-
+    try {
+        done(null, user._id);
+    } catch (error) {
+        done(error);
+    }
 });
-
 
 // Retrieve user from session
 passport.deserializeUser(async (id, done) => {
-
     try {
-
         const user = await User.findById(id);
-
         done(null, user);
-
     } catch (error) {
-
         done(error);
-
     }
-
 });
 
-
-module.exports = passport;
+export default passport;

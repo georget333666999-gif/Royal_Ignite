@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= product.name %> — ROYAL IGNITE</title>
+    <meta name="description" content="<%= (product.description || '').slice(0, 160) %>" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/shop.css" />
+    <link rel="stylesheet" href="/css/user/productDetails.css" />
+    <!-- SweetAlert2 for Quiet Luxury Alerts & Notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'Bodoni Moda', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 22px !important;
+            background: #E5A93C !important;
+            color: #141312 !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: opacity 0.2s ease !important;
+        }
+        .royal-swal-confirm-btn:hover {
+            opacity: 0.9 !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+        .royal-swal-toast {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+            color: #eae6df !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        @keyframes cartPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.22); color: #E5A93C; }
+            100% { transform: scale(1); }
+        }
+        .cart-pulse-active {
+            animation: cartPulse 0.6s ease-in-out;
+        }
+        @keyframes dtSpin {
+            100% { transform: rotate(360deg); }
+        }
+        .dt-spin {
+            animation: dtSpin 0.8s linear infinite;
+        }
+    </style>
+</head>
+
+<body class="details-body">
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- 1. BREADCRUMBS -->
+    <section class="dt-breadcrumb-section">
+        <div class="dt-container">
+            <nav class="dt-breadcrumb" aria-label="Breadcrumb">
+                <a href="/">HOME</a>
+                <span class="dt-crumb-sep">&gt;</span>
+                <% 
+                    const catName = (product.category && product.category.name) ? product.category.name.toUpperCase() : 'THE COLLECTION';
+                    let catLink = '/products';
+                    if (catName.includes('FUEL')) catLink = '/fuel-lighters';
+                    else if (catName.includes('GAS')) catLink = '/gas-lighters';
+                    else if (catName.includes('ELECTRIC')) catLink = '/electric-lighters';
+                    else if (catName.includes('REFILL') || catName.includes('CARE')) catLink = '/refills-and-care';
+                    else if (product.category) catLink = `/products?category=${product.category._id}`;
+                %>
+                <a href="<%= catLink %>"><%= catName %></a>
+                <span class="dt-crumb-sep">&gt;</span>
+                <span class="dt-crumb-active"><%= product.name.toUpperCase() %></span>
+            </nav>
+        </div>
+    </section>
+
+    <!-- 2. PRODUCT MAIN HERO: GALLERY + BUY PANEL -->
+    <main class="dt-product-hero">
+        <div class="dt-container">
+            <div class="dt-hero-grid">
+
+                <!-- ----------------------------------------------------
+                     LEFT COLUMN: GALLERY WITH VERTICAL THUMBNAIL STRIP
+                     ---------------------------------------------------- -->
+                <%
+                    const isRefillsOrCare = Boolean(
+                        (product.category && (
+                            (typeof product.category === 'string' && /refill|care/i.test(product.category)) ||
+                            (product.category.name && /refill|care/i.test(product.category.name))
+                        )) ||
+                        catName.includes('REFILL') ||
+                        catName.includes('CARE')
+                    );
+
+                    // Prepare list of gallery images
+                    let galleryImages = [];
+                    if (Array.isArray(product.images) && product.images.length > 0) {
+                        if (isRefillsOrCare) {
+                            // Refills & Care products need only 1 image - side profile removed
+                            galleryImages = [product.images[0]];
+                        } else {
+                            galleryImages = product.images.slice(0, 2);
+                            // Fallback: If only 1 image exists on lighters, duplicate so both Front View and Side Profile are available
+                            if (galleryImages.length === 1) {
+                                galleryImages = [galleryImages[0], galleryImages[0]];
+                            }
+                        }
+                    } else {
+                        galleryImages = ['/uploads/products/monarch/angle_front.jpg', '/uploads/products/monarch/angle_side.jpg'];
+                    }
+
+                    const angleLabels = isRefillsOrCare ? ["Product View"] : ["Front View", "Side Profile"];
+                %>
+
+                <div class="dt-gallery-wrap <%= galleryImages.length <= 1 ? 'dt-gallery-single' : '' %>">
+
+                    <!-- Vertical Thumbnails Column (Only shown when multiple angle views exist) -->
+                    <% if (galleryImages.length > 1) { %>
+                    <div class="dt-thumbnails-column" id="thumbnailsColumn" role="tablist">
+                        <% galleryImages.forEach(function(imgSrc, idx) { 
+                            const angleLabel = angleLabels[idx] || `Angle 0${idx + 1}`;
+                        %>
+                            <button type="button" 
+                                    class="dt-thumbnail-btn <%= idx === 0 ? 'active' : '' %>" 
+                                    data-img="<%= imgSrc %>" 
+                                    data-index="<%= idx + 1 %>"
+                                    data-label="<%= angleLabel %>"
+                                    title="<%= angleLabel %>"
+                                    aria-label="View <%= product.name %> <%= angleLabel %>">
+                                <img src="<%= imgSrc %>" alt="<%= product.name %> <%= angleLabel %>" loading="lazy" onerror="this.src='/uploads/monarch_lighter.png';" />
+                                <span class="dt-thumb-angle-label"><%= angleLabel %></span>
+                            </button>
+                        <% }); %>
+                    </div>
+                    <% } %>
+
+                    <!-- Main Display Frame with High-Precision Cursor Zoom -->
+                    <div class="dt-main-display" id="mainDisplay" title="Hover to Zoom • Click to Expand">
+                        
+                        <!-- Top Left Indicator Pill -->
+                        <div class="dt-image-indicator-pill">
+                            <span class="dt-indicator-dot"></span>
+                            <span id="activeAngleText"><%= angleLabels[0] %></span>
+                        </div>
+
+                        <!-- Top Right Zoom Cue Pill -->
+                        <div class="dt-zoom-cue-pill" id="zoomCuePill">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="11" y1="8" x2="11" y2="14"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                            <span id="zoomCueText">Hover to Zoom</span>
+                        </div>
+
+                        <!-- Main Image -->
+                        <img id="activeProductImage" 
+                             class="dt-active-img" 
+                             src="<%= galleryImages[0] %>" 
+                             alt="<%= product.name %>" 
+                             onerror="this.src='/uploads/monarch_lighter.png';" />
+
+                        <!-- Bottom Right Pagination Badge e.g. 1/2 (shown only if multiple angles exist) -->
+                        <% if (galleryImages.length > 1) { %>
+                        <div class="dt-gallery-pagination-badge">
+                            <span class="dt-current-index" id="currentImgIndex">1</span> / <span id="totalImgCount"><%= galleryImages.length %></span>
+                        </div>
+                        <% } %>
+                    </div>
+
+                </div>
+
+                <!-- ----------------------------------------------------
+                     RIGHT COLUMN: PRODUCT DETAILS & PURCHASE PANEL
+                     ---------------------------------------------------- -->
+                <div class="dt-details-panel">
+                    
+                    <!-- Category Tag Kicker -->
+                    <span class="dt-category-kicker">
+                        <%= (product.category && product.category.name) ? `THE ${product.category.name.toUpperCase()} COLLECTION` : 'THE FUEL COLLECTION' %>
+                    </span>
+
+                    <!-- Product Main Title -->
+                    <h1 class="dt-product-title"><%= product.name %></h1>
+
+                    <!-- Price & Monospace Serial/Edition Header -->
+                    <div class="dt-price-serial-row">
+                        <div class="dt-price-col">
+                            <span class="dt-price-label">Price</span>
+                            <div>
+                                <span class="dt-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                <% if (product.hasDiscount && product.regularPrice > product.effectivePrice) { %>
+                                    <span class="dt-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="dt-serial-col">
+                            <span>SERIAL NO: RI-<%= (product._id.toString().slice(-6) || 'MNR-042').toUpperCase() %></span>
+                            <span class="dt-edition-sub">EDITION: 042 / 300</span>
+                        </div>
+                    </div>
+
+                    <!-- Editorial Description Text -->
+                    <p class="dt-description-text">
+                        <%= product.description || 'Hand-chased sterling silver, adorned with royal motifs traced from 16th-century court archives. Each creation is sealed with a numbered atelier stamp — a quiet promise of provenance and a tribute to regal craftsmanship.' %>
+                    </p>
+
+
+
+                    <!-- Personalized Engraving Input with 0/10 Counter -->
+                    <div class="dt-engraving-group">
+                        <div class="dt-engraving-header">
+                            <span class="dt-option-label">Personalized Engraving</span>
+                            <span class="dt-counter-text"><span id="engravingCount">0</span>/10</span>
+                        </div>
+                        <input type="text" 
+                               id="engravingInput" 
+                               name="engraving" 
+                               maxlength="10" 
+                               class="dt-engraving-input" 
+                               placeholder="Enter monogram or initials (optional)..." 
+                               oninput="updateEngravingCounter(this)" />
+                    </div>
+
+                    <!-- Premium Gift Packaging Toggle Card -->
+                    <div class="dt-packaging-card">
+                        <div class="dt-packaging-info">
+                            <span class="dt-packaging-title">Premium Gift Packaging</span>
+                            <span class="dt-packaging-sub">Hand-stitched suede box with linen sleeve • +₹1,200</span>
+                        </div>
+                        <label class="dt-switch" aria-label="Toggle Premium Gift Packaging">
+                            <input type="checkbox" id="giftPackagingToggle" />
+                            <span class="dt-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Stock Status & Purchase Actions Form -->
+                    <% 
+                        const isOutOfStock = product.stock <= 0;
+                        const maxStock = Math.min(5, Math.max(0, product.stock));
+                    %>
+
+                    <% if (isOutOfStock) { %>
+                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 14px 18px; margin-bottom: 24px; color: #f87171; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                            <span>●</span>
+                            <span>Numbered Edition Sold Out — Archival Reservation Unavailable</span>
+                        </div>
+                    <% } %>
+
+                    <form id="productPurchaseForm" action="/cart/add" method="POST">
+                        <input type="hidden" name="productId" value="<%= product._id %>" />
+                        <input type="hidden" name="engraving" id="hiddenEngravingInput" value="" />
+                        <input type="hidden" name="giftPackaging" id="hiddenGiftPackagingInput" value="false" />
+
+                        <div class="dt-action-row">
+                            <!-- Quantity Stepper -->
+                            <div class="dt-qty-stepper">
+                                <button type="button" class="dt-qty-btn" id="btnMinus" onclick="stepQty(-1)" <%= isOutOfStock ? 'disabled' : '' %>>−</button>
+                                <input type="number" 
+                                       id="qtyInput" 
+                                       name="quantity" 
+                                       value="<%= isOutOfStock ? '0' : '1' %>" 
+                                       min="1" 
+                                       max="<%= isOutOfStock ? 0 : maxStock %>" 
+                                       class="dt-qty-input" 
+                                       readonly />
+                                <button type="button" class="dt-qty-btn" id="btnPlus" onclick="stepQty(1)" <%= isOutOfStock ? 'disabled' : '' %>>+</button>
+                            </div>
+
+                            <!-- Add to Cart CTA -->
+                            <button type="submit" 
+                                    class="dt-btn-add-cart" 
+                                    id="btnAddToCart" 
+                                    <%= isOutOfStock ? 'disabled' : '' %>>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                                <span><%= isOutOfStock ? 'Sold Out' : ((typeof isInCart !== 'undefined' && isInCart) ? 'Already in Cart' : 'Add to Cart') %></span>
+                            </button>
+
+                            <!-- Buy Now CTA -->
+                            <button type="button" 
+                                    class="dt-btn-buy-now" 
+                                    id="btnBuyNow" 
+                                    onclick="triggerBuyNow()" 
+                                    <%= isOutOfStock ? 'disabled' : '' %>>
+                                <span>Buy Now</span>
+                            </button>
+
+                            <!-- Wishlist Heart Button -->
+                            <% const userHasInWishlist = (typeof isInWishlist !== 'undefined' && isInWishlist); %>
+                            <button type="button" 
+                                    class="dt-btn-wishlist <%= userHasInWishlist ? 'active' : '' %>" 
+                                    id="btnWishlist" 
+                                    data-product-id="<%= product._id %>"
+                                    title="<%= userHasInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' %>" 
+                                    onclick="toggleWishlist(event, '<%= product._id %>', this)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="<%= userHasInWishlist ? '#E5A93C' : 'none' %>" stroke="<%= userHasInWishlist ? '#E5A93C' : 'currentColor' %>" stroke-width="1.8">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Trust Perks Row -->
+                    <div class="dt-trust-perks-row">
+                        <div class="dt-perk-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <polyline points="9 12 11 14 15 10"></polyline>
+                            </svg>
+                            <span>Certificate of Authenticity</span>
+                        </div>
+                        <div class="dt-perk-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                            <span>Atelier Serviced</span>
+                        </div>
+                        <div class="dt-perk-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="3" width="15" height="13"></rect>
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                            </svg>
+                            <span>Insured Shipping</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- 3. VOICES OF COLLECTORS (RATINGS & REVIEWS SECTION) -->
+    <section class="dt-reviews-section" id="reviews-section">
+        <div class="dt-container">
+            <h2 class="dt-section-title-large">Voices of <br>Collectors</h2>
+
+            <!-- Rating Breakdown & Write Review Toolbar -->
+            <div class="dt-rating-breakdown-row">
+                <div class="dt-rating-bars-wrap">
+                    <div class="dt-rating-header-line">
+                        <div class="dt-stars-gold">★★★★★</div>
+                        <strong>4.9/5</strong>
+                        <span style="color: var(--dt-text-muted);">Based on 326 reviews</span>
+                    </div>
+
+                    <!-- 5 Star Bar -->
+                    <div class="dt-breakdown-bar-item">
+                        <span>5</span>
+                        <div class="dt-bar-track">
+                            <div class="dt-bar-fill" style="width: 85%;"></div>
+                        </div>
+                        <span>85%</span>
+                    </div>
+
+                    <!-- 4 Star Bar -->
+                    <div class="dt-breakdown-bar-item">
+                        <span>4</span>
+                        <div class="dt-bar-track">
+                            <div class="dt-bar-fill" style="width: 10%;"></div>
+                        </div>
+                        <span>10%</span>
+                    </div>
+
+                    <!-- 3 Star Bar -->
+                    <div class="dt-breakdown-bar-item">
+                        <span>3</span>
+                        <div class="dt-bar-track">
+                            <div class="dt-bar-fill" style="width: 3%;"></div>
+                        </div>
+                        <span>3%</span>
+                    </div>
+
+                    <!-- 2 Star Bar -->
+                    <div class="dt-breakdown-bar-item">
+                        <span>2</span>
+                        <div class="dt-bar-track">
+                            <div class="dt-bar-fill" style="width: 1%;"></div>
+                        </div>
+                        <span>1%</span>
+                    </div>
+
+                    <!-- 1 Star Bar -->
+                    <div class="dt-breakdown-bar-item">
+                        <span>1</span>
+                        <div class="dt-bar-track">
+                            <div class="dt-bar-fill" style="width: 1%;"></div>
+                        </div>
+                        <span>1%</span>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="button" class="dt-btn-write-review" onclick="openReviewModal()">Write a Review</button>
+                </div>
+            </div>
+
+            <!-- Reviews 3-Column Grid -->
+            <div class="dt-reviews-grid">
+                
+                <!-- Review Card 1 -->
+                <div class="dt-review-card">
+                    <div>
+                        <div class="dt-reviewer-header">
+                            <div class="dt-reviewer-user">
+                                <div class="dt-reviewer-avatar">A</div>
+                                <div class="dt-reviewer-meta">
+                                    <span class="dt-reviewer-name">Alexander M.</span>
+                                    <span class="dt-verified-badge">✓ Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="dt-review-date">Oct 12, 2025</span>
+                        </div>
+
+                        <div class="dt-review-stars">★★★★★</div>
+                        <span class="dt-review-finish-tag">Finish: Sterling Silver</span>
+                        <h3 class="dt-review-title">Exceptional Craftsmanship</h3>
+                        <p class="dt-review-body">
+                            The weight and balance of The Monarch are truly unparalleled. The hand-chased silver details catch the light beautifully, making it not just a tool, but a true heirloom.
+                        </p>
+                    </div>
+
+                    <button type="button" class="dt-helpful-btn" onclick="incHelpful(this)">
+                        👍 Helpful (<span class="helpful-count">12</span>)
+                    </button>
+                </div>
+
+                <!-- Review Card 2 -->
+                <div class="dt-review-card">
+                    <div>
+                        <div class="dt-reviewer-header">
+                            <div class="dt-reviewer-user">
+                                <div class="dt-reviewer-avatar">E</div>
+                                <div class="dt-reviewer-meta">
+                                    <span class="dt-reviewer-name">Eleanor R.</span>
+                                    <span class="dt-verified-badge">✓ Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="dt-review-date">Sep 28, 2025</span>
+                        </div>
+
+                        <div class="dt-review-stars">★★★★★</div>
+                        <span class="dt-review-finish-tag">Finish: Rose Gold Accent</span>
+                        <h3 class="dt-review-title">A Perfect Gift</h3>
+                        <p class="dt-review-body">
+                            Purchased this for my husband's 50th birthday. The personalized engraving was flawless, and the presentation in the suede box elevated the entire gifting experience.
+                        </p>
+                    </div>
+
+                    <button type="button" class="dt-helpful-btn" onclick="incHelpful(this)">
+                        👍 Helpful (<span class="helpful-count">8</span>)
+                    </button>
+                </div>
+
+                <!-- Review Card 3 -->
+                <div class="dt-review-card">
+                    <div>
+                        <div class="dt-reviewer-header">
+                            <div class="dt-reviewer-user">
+                                <div class="dt-reviewer-avatar">C</div>
+                                <div class="dt-reviewer-meta">
+                                    <span class="dt-reviewer-name">Charles D.</span>
+                                    <span class="dt-verified-badge">✓ Verified Purchase</span>
+                                </div>
+                            </div>
+                            <span class="dt-review-date">Aug 03, 2025</span>
+                        </div>
+
+                        <div class="dt-review-stars">★★★★★</div>
+                        <span class="dt-review-finish-tag">Finish: Sterling Silver</span>
+                        <h3 class="dt-review-title">Heirloom Quality</h3>
+                        <p class="dt-review-body">
+                            The mechanism is incredibly smooth and reliable. The flame is consistent even in a draft. My only minor critique is that it requires filling slightly more often than my vintage piece, but well worth it.
+                        </p>
+                    </div>
+
+                    <button type="button" class="dt-helpful-btn" onclick="incHelpful(this)">
+                        👍 Helpful (<span class="helpful-count">5</span>)
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Load More Reviews Button -->
+            <div class="dt-load-reviews-wrap">
+                <button type="button" class="dt-btn-load-more" onclick="this.textContent = 'All 326 Reviews Loaded'">Load More Reviews</button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 4. CURATED FOR YOU (COMPANION EDITIONS) -->
+    <section class="dt-curated-section">
+        <div class="dt-container">
+            <div class="dt-curated-header">
+                <h2 class="dt-curated-title">Curated For You</h2>
+                <p class="dt-curated-desc">
+                    Hand-selected masterpieces from the Royal Ignite collection, designed to complement the discerning taste of a true collector.
+                </p>
+            </div>
+
+            <div class="dt-curated-grid">
+                
+                <%
+                    // Define fallback curated masterpieces exactly matching the user's mockup
+                    const defaultCurated = [
+                        {
+                            id: 'nightfall',
+                            badge: 'BESTSELLER',
+                            catTag: 'THE OBSIDIAN COLLECTION',
+                            name: 'Nightfall',
+                            desc: 'Matte black titanium with polished 18k gold accents.',
+                            img: '/uploads/hero_lighter.png',
+                            link: '/products'
+                        },
+                        {
+                            id: 'lepoque',
+                            badge: null,
+                            catTag: 'THE HERITAGE LINE',
+                            name: "L'Époque",
+                            desc: 'Solid brass with intricate guilloché engraving.',
+                            img: '/uploads/fuel/heritage_1924.jpg',
+                            link: '/products'
+                        },
+                        {
+                            id: 'vanguard',
+                            badge: 'Royal Ignite | Voices & Curated',
+                            catTag: 'ELECTRIC EDITIONS',
+                            name: 'Vanguard',
+                            desc: 'Dual-arc plasma ignition in brushed gunmetal.',
+                            img: '/uploads/electric/aether_lighter.jpg',
+                            link: '/products'
+                        },
+                        {
+                            id: 'crimson_ember',
+                            badge: 'LIMITED',
+                            catTag: 'THE ROSE GOLD EDITION',
+                            name: 'Crimson Ember',
+                            desc: 'Rose gold chassis with carbon fiber inlay details.',
+                            img: '/uploads/monarch_lighter.png',
+                            link: '/products'
+                        }
+                    ];
+
+                    // Merge dynamic relatedProducts if provided by backend
+                    const curatedList = (Array.isArray(relatedProducts) && relatedProducts.length > 0)
+                        ? relatedProducts.map((rel, i) => ({
+                            id: rel._id,
+                            badge: i === 0 ? 'BESTSELLER' : (i === 3 ? 'LIMITED' : (i === 2 ? 'Royal Ignite | Voices & Curated' : null)),
+                            catTag: rel.category ? `THE ${rel.category.name.toUpperCase()} LINE` : defaultCurated[i % 4].catTag,
+                            name: rel.name,
+                            desc: rel.description || defaultCurated[i % 4].desc,
+                            img: (rel.images && rel.images[0]) || defaultCurated[i % 4].img,
+                            link: `/products/${rel._id}`
+                        }))
+                        : defaultCurated;
+
+                    // Pad up to 4 if needed
+                    while (curatedList.length < 4) {
+                        curatedList.push(defaultCurated[curatedList.length]);
+                    }
+                %>
+
+                <% curatedList.slice(0, 4).forEach(function(item) { 
+                    const isValidId = item.id && /^[0-9a-fA-F]{24}$/.test(String(item.id));
+                    const isItemWishlisted = isValidId && (typeof userWishlistIds !== 'undefined' && Array.isArray(userWishlistIds) && userWishlistIds.includes(String(item.id)));
+                %>
+                    <article class="dt-curated-card">
+                        <div class="dt-curated-img-wrap">
+                            <% if (item.badge) { %>
+                                <span class="dt-curated-badge-pill"><%= item.badge %></span>
+                            <% } %>
+
+                            <% if (isValidId) { %>
+                                <button type="button" 
+                                        class="dt-curated-wishlist-btn <%= isItemWishlisted ? 'active' : '' %>" 
+                                        data-product-id="<%= item.id %>"
+                                        title="<%= isItemWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' %>" 
+                                        onclick="toggleWishlist(event, '<%= item.id %>', this)">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="<%= isItemWishlisted ? '#E5A93C' : 'none' %>" stroke="<%= isItemWishlisted ? '#E5A93C' : 'currentColor' %>" stroke-width="1.8">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                    </svg>
+                                </button>
+                            <% } %>
+
+                            <a href="<%= item.link %>">
+                                <img src="<%= item.img %>" alt="<%= item.name %>" class="dt-curated-img" loading="lazy" onerror="this.src='/uploads/monarch_lighter.png';" />
+                            </a>
+                        </div>
+
+                        <div class="dt-curated-card-body">
+                            <span class="dt-curated-cat-tag"><%= item.catTag %></span>
+                            <h3 class="dt-curated-card-title">
+                                <a href="<%= item.link %>"><%= item.name %></a>
+                            </h3>
+                            <p class="dt-curated-card-desc"><%= item.desc %></p>
+                        </div>
+                    </article>
+                <% }); %>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Fullscreen Atelier Lightbox Modal -->
+    <div id="atelierLightbox" class="dt-lightbox-modal" aria-hidden="true" role="dialog">
+        <div class="dt-lightbox-backdrop" onclick="closeLightbox()"></div>
+        <div class="dt-lightbox-container">
+            <div class="dt-lightbox-header">
+                <div class="dt-lightbox-title-group">
+                    <span class="dt-lightbox-kicker">ATELIER ARCHIVE INSPECTION</span>
+                    <h3 class="dt-lightbox-title"><%= product.name %> — <span id="lightboxAngleLabel"><%= angleLabels[0] %></span></h3>
+                </div>
+                <button type="button" class="dt-lightbox-close-btn" onclick="closeLightbox()" title="Close (Esc)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="dt-lightbox-view" id="lightboxView">
+                <img id="lightboxImg" src="<%= galleryImages[0] %>" alt="<%= product.name %>" />
+            </div>
+
+            <% if (galleryImages.length > 1) { %>
+            <div class="dt-lightbox-footer">
+                <div class="dt-lightbox-thumbnails">
+                    <% galleryImages.forEach(function(imgSrc, idx) { 
+                        const angleLabel = angleLabels[idx] || `Angle 0${idx + 1}`;
+                    %>
+                        <button type="button" 
+                                class="dt-lightbox-thumb <%= idx === 0 ? 'active' : '' %>" 
+                                onclick="switchLightboxAngle('<%= imgSrc %>', '<%= angleLabel %>', this)">
+                            <img src="<%= imgSrc %>" alt="<%= angleLabel %>" />
+                            <span><%= angleLabel %></span>
+                        </button>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- 5. FOOTER (EXACT MATCH TO MAISON MOCKUP) -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- 6. CLIENT JAVASCRIPT: INNER CURSOR ZOOM, LIGHTBOX, THUMBNAILS, AND PURCHASE -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Vertical Thumbnail Switcher & Indicator Counter
+            const thumbs = document.querySelectorAll(".dt-thumbnail-btn");
+            const activeImg = document.getElementById("activeProductImage");
+            const currentIndexEl = document.getElementById("currentImgIndex");
+            const lightboxImg = document.getElementById("lightboxImg");
+            const lightboxAngleLabel = document.getElementById("lightboxAngleLabel");
+
+            thumbs.forEach(thumb => {
+                thumb.addEventListener("click", () => {
+                    thumbs.forEach(t => t.classList.remove("active"));
+                    thumb.classList.add("active");
+
+                    const newSrc = thumb.getAttribute("data-img");
+                    const newIdx = thumb.getAttribute("data-index");
+                    const newLabel = thumb.getAttribute("data-label");
+
+                    if (newSrc && activeImg) {
+                        activeImg.src = newSrc;
+                    }
+                    if (newSrc && lightboxImg) {
+                        lightboxImg.src = newSrc;
+                    }
+                    if (newIdx && currentIndexEl) {
+                        currentIndexEl.textContent = newIdx;
+                    }
+
+                    const activeAngleText = document.getElementById("activeAngleText");
+                    if (activeAngleText && newLabel) {
+                        activeAngleText.textContent = newLabel;
+                    }
+                    if (lightboxAngleLabel && newLabel) {
+                        lightboxAngleLabel.textContent = newLabel;
+                    }
+
+                    // Synchronize lightbox thumbnail active state
+                    document.querySelectorAll(".dt-lightbox-thumb").forEach(lt => {
+                        const thumbImg = lt.querySelector("img");
+                        if (thumbImg && thumbImg.src) {
+                            lt.classList.toggle("active", thumbImg.getAttribute("src") === newSrc);
+                        }
+                    });
+                });
+            });
+
+            // 2. High-Precision Inner Magnifier Zoom & Pan
+            const display = document.getElementById("mainDisplay");
+            const zoomCueText = document.getElementById("zoomCueText");
+
+            if (display && activeImg) {
+                let isZooming = false;
+                const zoomFactor = 2.4;
+
+                display.addEventListener("mouseenter", () => {
+                    isZooming = true;
+                    display.classList.add("is-zoomed");
+                    activeImg.style.transform = `scale(${zoomFactor})`;
+                    if (zoomCueText) zoomCueText.textContent = "2.4× Zoomed";
+                });
+
+                display.addEventListener("mousemove", (e) => {
+                    if (!isZooming) return;
+                    const rect = display.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    activeImg.style.transformOrigin = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+                });
+
+                display.addEventListener("mouseleave", () => {
+                    isZooming = false;
+                    display.classList.remove("is-zoomed");
+                    activeImg.style.transformOrigin = "center center";
+                    activeImg.style.transform = "scale(1)";
+                    if (zoomCueText) zoomCueText.textContent = "Hover to Zoom";
+                });
+
+                // Click to open fullscreen Lightbox inspection
+                display.addEventListener("click", () => {
+                    openLightbox();
+                });
+            }
+        });
+
+        // Fullscreen Lightbox Modal Controls
+        function openLightbox() {
+            const modal = document.getElementById("atelierLightbox");
+            const activeImg = document.getElementById("activeProductImage");
+            const lightboxImg = document.getElementById("lightboxImg");
+            if (modal) {
+                if (activeImg && lightboxImg) {
+                    lightboxImg.src = activeImg.src;
+                }
+                modal.classList.add("active");
+                modal.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById("atelierLightbox");
+            if (modal) {
+                modal.classList.remove("active");
+                modal.setAttribute("aria-hidden", "true");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function switchLightboxAngle(src, label, btn) {
+            const lightboxImg = document.getElementById("lightboxImg");
+            const lightboxAngleLabel = document.getElementById("lightboxAngleLabel");
+            if (lightboxImg) lightboxImg.src = src;
+            if (lightboxAngleLabel) lightboxAngleLabel.textContent = label;
+
+            document.querySelectorAll(".dt-lightbox-thumb").forEach(b => b.classList.remove("active"));
+            if (btn) btn.classList.add("active");
+
+            // Also synchronize main page active thumbnail and image
+            const thumbs = document.querySelectorAll(".dt-thumbnail-btn");
+            thumbs.forEach(t => {
+                const match = t.getAttribute("data-img") === src;
+                t.classList.toggle("active", match);
+                if (match) {
+                    const activeImg = document.getElementById("activeProductImage");
+                    if (activeImg) activeImg.src = src;
+                    const activeAngleText = document.getElementById("activeAngleText");
+                    if (activeAngleText) activeAngleText.textContent = label;
+                    const idx = t.getAttribute("data-index");
+                    const currentIndexEl = document.getElementById("currentImgIndex");
+                    if (currentIndexEl && idx) currentIndexEl.textContent = idx;
+                }
+            });
+        }
+
+        // Close Lightbox on Escape key
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeLightbox();
+            }
+        });
+
+
+
+        // 4. Personalized Engraving Character Counter
+        function updateEngravingCounter(input) {
+            const countEl = document.getElementById("engravingCount");
+            if (countEl) countEl.textContent = input.value.length;
+
+            const hiddenInput = document.getElementById("hiddenEngravingInput");
+            if (hiddenInput) hiddenInput.value = input.value;
+        }
+
+        // 5. Quantity Stepper
+        const maxStock = <%= isOutOfStock ? 0 : maxStock %>;
+        function stepQty(delta) {
+            const input = document.getElementById("qtyInput");
+            if (!input || maxStock <= 0) return;
+
+            let val = parseInt(input.value, 10) || 1;
+            val += delta;
+
+            if (val < 1) val = 1;
+            if (val > maxStock) val = maxStock;
+
+            input.value = val;
+
+            const minusBtn = document.getElementById("btnMinus");
+            const plusBtn = document.getElementById("btnPlus");
+            if (minusBtn) minusBtn.disabled = (val <= 1);
+            if (plusBtn) plusBtn.disabled = (val >= maxStock);
+        }
+
+        // 6. Buy Now Handler (Submits and sets redirect flag)
+        function triggerBuyNow() {
+            const form = document.getElementById("productPurchaseForm");
+            if (!form) return;
+
+            // Update gift packaging state
+            const toggle = document.getElementById("giftPackagingToggle");
+            const giftInput = document.getElementById("hiddenGiftPackagingInput");
+            if (toggle && giftInput) {
+                giftInput.value = toggle.checked ? "true" : "false";
+            }
+
+            // Create temporary input for direct checkout redirect
+            const buyNowInput = document.createElement("input");
+            buyNowInput.type = "hidden";
+            buyNowInput.name = "buyNow";
+            buyNowInput.value = "true";
+            form.appendChild(buyNowInput);
+
+            form.submit();
+        }
+
+        // 6b. Add to Cart AJAX Form Submission (Quiet Luxury In-Page Feedback)
+        const productForm = document.getElementById("productPurchaseForm");
+        if (productForm) {
+            productForm.addEventListener("submit", async function(e) {
+                // If it is Buy Now action, allow standard submission to proceed directly to checkout
+                if (productForm.querySelector('input[name="buyNow"]')) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                // Synchronize gift packaging and engraving state
+                const toggle = document.getElementById("giftPackagingToggle");
+                const giftInput = document.getElementById("hiddenGiftPackagingInput");
+                if (toggle && giftInput) {
+                    giftInput.value = toggle.checked ? "true" : "false";
+                }
+
+                const btn = document.getElementById("btnAddToCart");
+                const originalHtml = btn ? btn.innerHTML : "";
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `
+                        <svg class="dt-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9" stroke-dasharray="28" stroke-dashoffset="10"></circle>
+                        </svg>
+                        <span>Adding to Bag...</span>
+                    `;
+                }
+
+                try {
+                    const productId = productForm.querySelector('input[name="productId"]')?.value;
+                    const qtyInput = document.getElementById("qtyInput");
+                    const quantity = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
+                    const engraving = document.getElementById("hiddenEngravingInput")?.value || "";
+                    const giftPackaging = document.getElementById("hiddenGiftPackagingInput")?.value || "false";
+
+                    const response = await fetch("/cart/add", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            productId,
+                            quantity,
+                            engraving,
+                            giftPackaging
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 401 || data.redirect) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Sign In Required',
+                                text: data.message || 'Please sign in to add pieces to your atelier bag.',
+                                icon: 'info',
+                                iconColor: '#E5A93C',
+                                showCancelButton: true,
+                                confirmButtonText: 'Sign In',
+                                cancelButtonText: 'Continue Browsing',
+                                customClass: {
+                                    popup: 'royal-luxury-swal',
+                                    title: 'royal-swal-title',
+                                    confirmButton: 'royal-swal-confirm-btn',
+                                    cancelButton: 'royal-swal-cancel-btn'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = data.redirect || `/user/login?redirect=/products/${productId}`;
+                                }
+                            });
+                        } else {
+                            window.location.href = data.redirect || `/user/login?redirect=/products/${productId}`;
+                        }
+                        return;
+                    }
+
+                    if (!response.ok || !data.success) {
+                        if (typeof Swal !== 'undefined') {
+                            if (data.alreadyInCart) {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Already in Bag',
+                                    text: data.message || 'Already added to cart',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'View Bag',
+                                    cancelButtonText: 'Continue Browsing',
+                                    confirmButtonColor: '#E5A93C',
+                                    cancelButtonColor: 'rgba(255,255,255,0.15)',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    customClass: {
+                                        popup: 'royal-luxury-swal',
+                                        title: 'royal-swal-title',
+                                        confirmButton: 'royal-swal-confirm-btn',
+                                        cancelButton: 'royal-swal-cancel-btn'
+                                    }
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = '/cart';
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Cannot Add to Bag',
+                                    text: data.message || 'Could not add this piece to your atelier bag.',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    confirmButtonColor: '#E5A93C',
+                                    customClass: {
+                                        popup: 'royal-luxury-swal',
+                                        title: 'royal-swal-title',
+                                        confirmButton: 'royal-swal-confirm-btn'
+                                    }
+                                });
+                            }
+                        } else {
+                            alert(data.message || 'Already added to cart');
+                        }
+                        if (btn) {
+                            btn.disabled = false;
+                            if (data.alreadyInCart) {
+                                btn.innerHTML = `
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E5A93C" stroke-width="2">
+                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                    </svg>
+                                    <span>Already in Cart</span>
+                                `;
+                            } else {
+                                btn.innerHTML = originalHtml;
+                            }
+                        }
+                        return;
+                    }
+
+                    // Success visual feedback on Add to Cart button
+                    if (btn) {
+                        btn.innerHTML = `
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span style="color: #22c55e;">Added to Bag</span>
+                        `;
+                    }
+
+                    // Subtle micro-interaction on the header shopping bag icon
+                    const headerCartIcon = document.querySelector('header a[href="/cart"]');
+                    if (headerCartIcon) {
+                        headerCartIcon.classList.remove("cart-pulse-active");
+                        void headerCartIcon.offsetWidth;
+                        headerCartIcon.classList.add("cart-pulse-active");
+                    }
+
+                    // Quiet Luxury success toast notification on product details page
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Creation added to your atelier bag successfully.',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-swal-toast'
+                            }
+                        });
+                    }
+
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = `
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E5A93C" stroke-width="2">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                                <span>Already in Cart</span>
+                            `;
+                        }
+                    }, 2200);
+
+                } catch (err) {
+                    console.error("Cart add error:", err);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: 'An error occurred while adding to your bag. Please try again.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#E5A93C'
+                        });
+                    } else {
+                        alert('An error occurred while adding to your bag. Please try again.');
+                    }
+                } finally {
+                    if (btn && btn.disabled && !btn.innerHTML.includes("Added to Bag")) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                }
+            });
+        }
+
+        // Flash message toast notification on page load
+        <% if (typeof success !== 'undefined' && success) { %>
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '<%= success %>',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#eae6df',
+                    iconColor: '#E5A93C',
+                    customClass: {
+                        popup: 'royal-swal-toast'
+                    }
+                });
+            }
+        <% } %>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: '<%= error %>',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#eae6df',
+                    iconColor: '#ef4444',
+                    customClass: {
+                        popup: 'royal-swal-toast'
+                    }
+                });
+            }
+        <% } %>
+
+        let isWishlistBusy = false;
+
+        async function toggleWishlist(arg1, arg2, arg3) {
+            let event = null;
+            let productId = null;
+            let btn = null;
+
+            if (arg1 && typeof arg1 === 'object' && typeof arg1.preventDefault === 'function') {
+                event = arg1;
+                productId = arg2;
+                btn = arg3;
+            } else {
+                productId = arg1;
+                btn = arg2;
+            }
+
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            if (isWishlistBusy) return;
+
+            if (!btn) {
+                if (event && event.currentTarget) {
+                    btn = event.currentTarget.closest(".dt-btn-wishlist") || event.currentTarget;
+                } else {
+                    btn = document.getElementById("btnWishlist");
+                }
+            }
+
+            if (!productId) {
+                productId = (btn && btn.dataset && btn.dataset.productId) 
+                    ? btn.dataset.productId 
+                    : "<%= product._id %>";
+            }
+
+            const svg = btn ? btn.querySelector("svg") : null;
+            const path = svg ? svg.querySelector("path") : null;
+
+            isWishlistBusy = true;
+            if (btn) btn.style.opacity = "0.6";
+
+            try {
+                const response = await fetch('/wishlist/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || data.redirect) {
+                    const loginUrl = data.redirect || `/user/login?redirect=/products/${productId}`;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sign In Required',
+                            text: 'Please sign in to save pieces to your wishlist vault.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#E5A93C',
+                            confirmButtonText: 'Sign In',
+                            showCancelButton: true,
+                            cancelButtonText: 'Stay on Page',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn',
+                                cancelButton: 'royal-swal-cancel-btn'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = loginUrl;
+                            }
+                        });
+                    } else {
+                        window.location.href = loginUrl;
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    const matchingButtons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+                    matchingButtons.forEach(targetBtn => {
+                        const targetSvg = targetBtn.querySelector("svg");
+                        const targetPath = targetSvg ? targetSvg.querySelector("path") : null;
+                        if (data.inWishlist) {
+                            targetBtn.classList.add("active");
+                            targetBtn.setAttribute("title", "Remove from Wishlist");
+                            if (targetSvg) {
+                                targetSvg.setAttribute("fill", "#E5A93C");
+                                targetSvg.setAttribute("stroke", "#E5A93C");
+                                targetSvg.style.fill = "#E5A93C";
+                                targetSvg.style.stroke = "#E5A93C";
+                            }
+                            if (targetPath) {
+                                targetPath.setAttribute("fill", "#E5A93C");
+                                targetPath.setAttribute("stroke", "#E5A93C");
+                                targetPath.style.fill = "#E5A93C";
+                                targetPath.style.stroke = "#E5A93C";
+                            }
+                        } else {
+                            targetBtn.classList.remove("active");
+                            targetBtn.setAttribute("title", "Add to Wishlist");
+                            if (targetSvg) {
+                                targetSvg.setAttribute("fill", "none");
+                                targetSvg.setAttribute("stroke", "currentColor");
+                                targetSvg.style.fill = "none";
+                                targetSvg.style.stroke = "currentColor";
+                            }
+                            if (targetPath) {
+                                targetPath.setAttribute("fill", "none");
+                                targetPath.setAttribute("stroke", "currentColor");
+                                targetPath.style.fill = "none";
+                                targetPath.style.stroke = "currentColor";
+                            }
+                        }
+                    });
+
+                    // Synchronize header wishlist badges across desktop and mobile headers
+                    const headerBadges = document.querySelectorAll('.wishlist-badge-count');
+                    headerBadges.forEach(function (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    });
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || (data.inWishlist ? 'Piece added to your wishlist.' : 'Piece removed from your wishlist.'),
+                            showConfirmButton: false,
+                            timer: 2400,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-swal-toast'
+                            }
+                        });
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: data.message || 'Unable to update wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    } else {
+                        alert(data.message || 'Unable to update wishlist.');
+                    }
+                }
+            } catch (err) {
+                console.error("Wishlist toggle error:", err);
+            } finally {
+                const matchingButtons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+                matchingButtons.forEach(b => { b.style.opacity = "1"; });
+                if (btn) btn.style.opacity = "1";
+                isWishlistBusy = false;
+            }
+        }
+
+        // 8. Helpful Counter Increment
+        function incHelpful(btn) {
+            if (!btn || btn.dataset.voted) return;
+            const countSpan = btn.querySelector(".helpful-count");
+            if (countSpan) {
+                let current = parseInt(countSpan.textContent, 10) || 0;
+                countSpan.textContent = current + 1;
+                btn.style.color = "var(--dt-gold)";
+                btn.dataset.voted = "true";
+            }
+        }
+
+        // 9. Write Review Placeholder
+        function openReviewModal() {
+            alert("Thank you for sharing your experience. The Connoisseur Review submission portal will open for verified atelier owners.");
+        }
+    </script>
+
+</body>
+</html>

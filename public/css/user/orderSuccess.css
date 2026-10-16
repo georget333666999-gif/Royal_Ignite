@@ -1,0 +1,287 @@
+/* ==========================================================================
+   ROYAL IGNITE — Order Success Stylesheet
+   Luxury Aesthetic: Obsidian (#000000), Slate Surfaces (#0E0E12), Gold (#F6BD64)
+   ========================================================================== */
+
+:root {
+    --os-bg: #000000;
+    --os-card-bg: #0E0E12;
+    --os-border: rgba(255, 255, 255, 0.08);
+    --os-gold: #F6BD64;
+    --os-gold-hover: #E5A93C;
+    --os-gold-glow: rgba(246, 189, 100, 0.25);
+    --os-text-main: #FFFFFF;
+    --os-text-muted: #9E9EA8;
+    --os-text-subtle: #686873;
+    --os-success: #10b981;
+}
+
+body.order-success-body {
+    background-color: var(--os-bg) !important;
+    color: var(--os-text-main);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.order-success-main {
+    flex: 1;
+    padding: 72px 0 100px;
+    background-color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.order-success-container {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.order-success-card {
+    background: var(--os-card-bg);
+    border: 1px solid var(--os-border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(246, 189, 100, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Atmospheric Radiant Glow at Top */
+.order-success-glow {
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 160px;
+    background: radial-gradient(ellipse, rgba(246, 189, 100, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Seal / Emblem Illustration */
+.order-seal-emblem {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(246, 189, 100, 0.18) 0%, rgba(14, 14, 18, 0.9) 70%);
+    border: 1px solid rgba(246, 189, 100, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--os-gold);
+    box-shadow: 0 0 25px var(--os-gold-glow);
+    position: relative;
+}
+
+.order-seal-emblem::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed rgba(246, 189, 100, 0.25);
+}
+
+.order-kicker {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--os-gold);
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.order-success-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #FFFFFF;
+    margin: 0 0 16px;
+}
+
+.order-success-title .italic-gold {
+    font-style: italic;
+    color: var(--os-gold);
+}
+
+.order-success-desc {
+    font-size: 15px;
+    color: var(--os-text-muted);
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto 36px;
+}
+
+/* Order Details Reference Box */
+.order-reference-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--os-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+    text-align: left;
+}
+
+.reference-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 24px;
+}
+
+@media (max-width: 580px) {
+    .reference-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+}
+
+.ref-item-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--os-text-subtle);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.ref-item-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.ref-item-value.gold {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 17px;
+    color: var(--os-gold);
+    letter-spacing: 0.5px;
+}
+
+/* Items Preview Strip */
+.order-items-strip {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.items-strip-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--os-text-muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.items-strip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.strip-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #FFFFFF;
+}
+
+.strip-item-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.strip-item-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: #141318;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.strip-item-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.strip-item-qty {
+    color: var(--os-text-subtle);
+    font-size: 12px;
+}
+
+/* CTA Buttons Row */
+.order-success-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+@media (max-width: 580px) {
+    .order-success-actions {
+        flex-direction: column;
+    }
+}
+
+.btn-order-details {
+    padding: 14px 28px;
+    background: var(--os-gold);
+    color: #0E0E12;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 18px var(--os-gold-glow);
+}
+
+.btn-order-details:hover {
+    background: var(--os-gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px var(--os-gold-glow);
+}
+
+.btn-continue-shopping {
+    padding: 14px 28px;
+    background: transparent;
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+}
+
+.btn-continue-shopping:hover {
+    border-color: var(--os-gold);
+    color: var(--os-gold);
+    background: rgba(246, 189, 100, 0.05);
+}

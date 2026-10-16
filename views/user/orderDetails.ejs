@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : `Order #${order.orderId} — ROYAL IGNITE` %></title>
+    <meta name="description" content="View acquisition details, craftsmanship milestones, and download invoice for Order #<%= order.orderId %>." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/orderDetails.css" />
+
+    <!-- SweetAlert2 for Quiet Luxury Dialogs -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'Bodoni Moda', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 22px !important;
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-confirm-gold {
+            background: #F6BD64 !important;
+            color: #0E0E12 !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            cursor: pointer !important;
+        }
+    </style>
+</head>
+
+<body class="order-details-body">
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Main Content -->
+    <main class="order-details-main">
+        <div class="order-details-container">
+
+            <!-- Breadcrumbs & Header Bar (c.v) -->
+            <div class="order-details-header">
+                <div class="order-details-breadcrumbs">
+                    <a href="/user/profile">Atelier Profile</a>
+                    <span>/</span>
+                    <a href="/orders">Acquired Editions</a>
+                    <span>/</span>
+                    <span>#<%= order.orderId %></span>
+                </div>
+
+                <div class="order-header-bar">
+                    <div class="order-heading-group">
+                        <h1 class="order-details-title">
+                            Edition <span class="order-id-highlight">#<%= order.orderId %></span>
+                            <span class="status-badge <%= order.orderStatus.toLowerCase() %>">
+                                <span class="status-dot"></span>
+                                <span><%= order.orderStatus %></span>
+                            </span>
+                        </h1>
+                        <div class="order-meta-stamp">
+                            <span>Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                            <span class="stamp-dot"></span>
+                            <span><%= new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %></span>
+                            <span class="stamp-dot"></span>
+                            <span>Payment: <%= order.paymentMethod %> (<%= order.paymentStatus %>)</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions (c.ii, c.iv, c.vi) -->
+                    <div class="order-header-actions">
+                        <!-- Invoice Download (c.vi) -->
+                        <a href="/orders/<%= order.orderId %>/invoice" 
+                           class="btn-download-invoice" 
+                           target="_blank" 
+                           title="Download official atelier invoice as PDF">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download Invoice (PDF)</span>
+                        </a>
+
+                        <!-- Cancel Entire Order (c.ii, c.iii) -->
+                        <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing') { %>
+                            <button type="button" 
+                                    class="btn-header-cancel" 
+                                    onclick="promptCancelOrder('<%= order.orderId %>')">
+                                Cancel Entire Order
+                            </button>
+                        <% } %>
+
+                        <!-- Return Order (c.iv) -->
+                        <% if (order.orderStatus === 'Delivered') { %>
+                            <button type="button" 
+                                    class="btn-header-return" 
+                                    onclick="promptReturnOrder('<%= order.orderId %>')">
+                                Request Return
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Progress Stepper (c.v) -->
+            <section class="order-stepper-card">
+                <div class="stepper-header">
+                    <span class="stepper-title">Craftsmanship & Delivery Trajectory</span>
+                    <span style="font-size: 12.5px; color: var(--od-text-muted);">
+                        <% if (order.orderStatus === 'Delivered') { %>
+                            Delivered safely to client destination
+                        <% } else if (order.orderStatus === 'Cancelled') { %>
+                            Acquisition terminated
+                        <% } else if (order.orderStatus === 'Returned') { %>
+                            Creation returned to atelier vault
+                        <% } else { %>
+                            Estimated dispatch within 24-48 hours
+                        <% } %>
+                    </span>
+                </div>
+
+                <% 
+                    const isCancelled = order.orderStatus === 'Cancelled';
+                    const isReturned = order.orderStatus === 'Returned';
+                    
+                    let progressPercent = 0;
+                    let isPlacedDone = false, isProcessingDone = false, isShippedDone = false, isDeliveredDone = false;
+                    let isPlacedActive = false, isProcessingActive = false, isShippedActive = false, isDeliveredActive = false;
+
+                    if (!isCancelled && !isReturned) {
+                        if (order.orderStatus === 'Placed') {
+                            isPlacedActive = true;
+                            progressPercent = 0;
+                        } else if (order.orderStatus === 'Processing') {
+                            isPlacedDone = true;
+                            isProcessingActive = true;
+                            progressPercent = 33.33;
+                        } else if (order.orderStatus === 'Shipped') {
+                            isPlacedDone = true;
+                            isProcessingDone = true;
+                            isShippedActive = true;
+                            progressPercent = 66.66;
+                        } else if (order.orderStatus === 'Delivered') {
+                            isPlacedDone = true;
+                            isProcessingDone = true;
+                            isShippedDone = true;
+                            isDeliveredDone = true;
+                            progressPercent = 100;
+                        }
+                    }
+                %>
+
+                <% if (!isCancelled && !isReturned) { %>
+                    <div class="stepper-track">
+                        <div class="stepper-progress-fill" style="width: <%= progressPercent %>%;"></div>
+
+                        <!-- Step 1: Placed -->
+                        <div class="stepper-step <%= isPlacedDone ? 'completed' : (isPlacedActive ? 'active' : '') %>">
+                            <div class="step-node">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <span class="step-label">Placed</span>
+                            <span class="step-sub"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) %></span>
+                        </div>
+
+                        <!-- Step 2: Processing -->
+                        <div class="stepper-step <%= isProcessingDone ? 'completed' : (isProcessingActive ? 'active' : '') %>">
+                            <div class="step-node">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                                </svg>
+                            </div>
+                            <span class="step-label">Processing</span>
+                            <span class="step-sub">Atelier Inspection</span>
+                        </div>
+
+                        <!-- Step 3: Shipped -->
+                        <div class="stepper-step <%= isShippedDone ? 'completed' : (isShippedActive ? 'active' : '') %>">
+                            <div class="step-node">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </div>
+                            <span class="step-label">Dispatched</span>
+                            <span class="step-sub">Courier Concierge</span>
+                        </div>
+
+                        <!-- Step 4: Delivered -->
+                        <div class="stepper-step <%= isDeliveredDone ? 'completed' : (isDeliveredActive ? 'active' : '') %>">
+                            <div class="step-node">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <span class="step-label">Delivered</span>
+                            <span class="step-sub"><%= order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Safely Received' %></span>
+                        </div>
+                    </div>
+                <% } else if (isCancelled) { %>
+                    <!-- Cancellation Notice Banner -->
+                    <div class="order-notice-banner notice-cancelled">
+                        <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <div>
+                            <strong>Acquisition Cancelled</strong> 
+                            <% if (order.cancelledAt) { %>
+                                on <%= new Date(order.cancelledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %> at <%= new Date(order.cancelledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
+                            <% } %>
+                            <div style="margin-top: 4px; font-size: 13px; color: #fca5a5;">
+                                Reason: <%= order.cancellationReason || 'Cancelled by client request' %>
+                            </div>
+                        </div>
+                    </div>
+                <% } else if (isReturned) { %>
+                    <!-- Return Notice Banner -->
+                    <div class="order-notice-banner notice-returned">
+                        <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        <div>
+                            <strong>Acquisition Returned to Atelier</strong>
+                            <% if (order.returnedAt) { %>
+                                on <%= new Date(order.returnedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                            <% } %>
+                            <div style="margin-top: 4px; font-size: 13px; color: #fdba74;">
+                                Return Reason: <%= order.returnReason %>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </section>
+
+            <!-- Main Order Details Grid -->
+            <div class="order-grid">
+
+                <!-- Left Column: Itemized Creations (c.ii, c.iii, c.v) -->
+                <div class="order-items-column">
+                    <div class="order-items-card">
+                        <div class="card-title-bar">
+                            <h2>Reserved Creations</h2>
+                            <span class="card-count-badge"><%= order.items.length %> <%= order.items.length === 1 ? 'Piece' : 'Pieces' %></span>
+                        </div>
+
+                        <div class="order-items-table">
+                            <% order.items.forEach(function(item) { %>
+                                <% const isPieceCancelled = item.status === 'Cancelled'; %>
+                                <div class="order-item-entry <%= isPieceCancelled ? 'item-cancelled' : '' %>" id="item-entry-<%= item._id %>">
+                                    <div class="entry-left">
+                                        <div class="entry-thumb">
+                                            <img src="<%= item.image || '/uploads/hero_lighter.png' %>" 
+                                                 alt="<%= item.name %>" 
+                                                 loading="lazy"
+                                                 onerror="this.src='/uploads/hero_lighter.png';" />
+                                        </div>
+                                        <div class="entry-info">
+                                            <span class="entry-category"><%= item.categoryName || 'Royal Edition' %></span>
+                                            <a href="/products/<%= item.product && item.product._id ? item.product._id : (item.product || '#') %>" class="entry-title">
+                                                <%= item.name %>
+                                            </a>
+                                            <div class="entry-meta">
+                                                <span>Quantity: <strong><%= item.quantity %></strong></span>
+                                                <span>•</span>
+                                                <span>Unit: ₹<%= Number(item.price).toLocaleString('en-IN') %></span>
+                                                <% if (item.status && item.status !== order.orderStatus) { %>
+                                                    <span>•</span>
+                                                    <span class="status-badge <%= item.status.toLowerCase() %>" style="padding: 2px 8px; font-size: 10.5px;">
+                                                        <span class="status-dot"></span>
+                                                        <span><%= item.status %></span>
+                                                    </span>
+                                                <% } %>
+                                            </div>
+
+                                            <% if (isPieceCancelled && item.cancelReason) { %>
+                                                <div class="item-cancel-reason-callout">
+                                                    Cancel Note: <%= item.cancelReason %>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="entry-right">
+                                        <div class="entry-price-total">
+                                            ₹<%= Number(item.lineTotal).toLocaleString('en-IN') %>
+                                        </div>
+
+                                        <% if (isPieceCancelled) { %>
+                                            <span class="item-cancelled-tag">Cancelled</span>
+                                        <% } else if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing') { %>
+                                            <!-- Specific Product Cancel Button (c.ii, c.iii) -->
+                                            <button type="button" 
+                                                    class="btn-cancel-piece"
+                                                    onclick="promptCancelPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
+                                                Cancel This Piece
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Shipping & Pricing Breakdown -->
+                <div class="order-side-column">
+
+                    <!-- Delivery Destination Card -->
+                    <div class="side-card">
+                        <div class="side-card-title">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>Delivery Destination</span>
+                        </div>
+
+                        <div class="address-info-block">
+                            <div class="address-recipient-name">
+                                <span><%= order.shippingAddress.fullName %></span>
+                                <span class="address-type-pill"><%= order.shippingAddress.addressType || 'Home' %></span>
+                            </div>
+                            <div class="address-phone">
+                                Phone: <%= order.shippingAddress.phone %>
+                            </div>
+                            <div>
+                                <%= order.shippingAddress.addressLine %><br>
+                                <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> — <%= order.shippingAddress.pincode %><br>
+                                <%= order.shippingAddress.country || 'India' %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment & Pricing Breakdown -->
+                    <div class="side-card">
+                        <div class="side-card-title">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>Pricing & Payment</span>
+                        </div>
+
+                        <div class="pricing-breakdown">
+                            <div class="pricing-row">
+                                <span>Editions Subtotal</span>
+                                <span>₹<%= Number(order.pricing ? order.pricing.subtotal : 0).toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <% if (order.pricing && order.pricing.discount > 0) { %>
+                                <div class="pricing-row" style="color: #10b981;">
+                                    <span>Atelier Privilege Discount</span>
+                                    <span>-₹<%= Number(order.pricing.discount).toLocaleString('en-IN') %></span>
+                                </div>
+                            <% } %>
+
+                            <div class="pricing-row free-gold">
+                                <span>Insured White-Glove Shipping</span>
+                                <span><%= (order.pricing && order.pricing.shippingFee > 0) ? ('₹' + Number(order.pricing.shippingFee).toLocaleString('en-IN')) : 'Complimentary' %></span>
+                            </div>
+
+                            <% if (order.pricing && order.pricing.tax > 0) { %>
+                                <div class="pricing-row">
+                                    <span>Estimated Taxes</span>
+                                    <span>₹<%= Number(order.pricing.tax).toLocaleString('en-IN') %></span>
+                                </div>
+                            <% } %>
+
+                            <div class="pricing-divider"></div>
+
+                            <div class="pricing-total-row">
+                                <span class="pricing-total-label">Total Payable</span>
+                                <span class="pricing-total-amount">₹<%= Number(order.pricing ? order.pricing.totalAmount : 0).toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <div class="payment-method-badge">
+                                <span>Payment Channel:</span>
+                                <span><%= order.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : order.paymentMethod %></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concierge Assistance Card -->
+                    <div class="side-card concierge-card">
+                        <div class="side-card-title" style="color: var(--od-gold);">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span>Atelier Concierge</span>
+                        </div>
+                        <p class="concierge-desc">
+                            Each Royal Ignite lighter is individually registered in the workshop log. For adjustments, questions on provenance, or maintenance guidance, connect with our concierge.
+                        </p>
+                        <a href="mailto:concierge@royal-ignite.com" class="btn-concierge-contact">
+                            <span>Inquire With Concierge</span>
+                            <span>→</span>
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- Action Handlers Script -->
+    <script>
+        // Prompt Cancel Entire Order with Optional Reason (c.ii, c.iii)
+        function promptCancelOrder(orderId) {
+            Swal.fire({
+                title: 'Cancel Entire Acquisition?',
+                html: `Are you sure you wish to cancel order <strong>#${orderId}</strong>?<br><span style="font-size: 13px; color: #9A9388; display: block; margin-top: 8px;">Stock for all pieces will be returned to the atelier vault.</span>`,
+                input: 'text',
+                inputPlaceholder: 'Reason for cancellation (optional)...',
+                icon: 'warning',
+                iconColor: '#F6BD64',
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Cancellation',
+                cancelButtonText: 'Keep Order',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const reason = result.value || '';
+                    try {
+                        const response = await fetch(`/orders/${orderId}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ reason })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Cancelled',
+                                text: data.message || 'Your order has been cancelled.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Notice',
+                                text: data.message || 'Could not cancel order.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Cancel order error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: 'An error occurred while connecting to the server.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Prompt Cancel Specific Product in Order with Optional Reason (c.ii, c.iii)
+        function promptCancelPiece(orderId, itemId, itemName) {
+            Swal.fire({
+                title: 'Cancel This Piece?',
+                html: `Are you sure you wish to cancel <strong>${itemName}</strong> from this order?<br><span style="font-size: 13px; color: #9A9388; display: block; margin-top: 8px;">Its inventory will be immediately restored to the atelier.</span>`,
+                input: 'text',
+                inputPlaceholder: 'Reason for cancellation (optional)...',
+                icon: 'warning',
+                iconColor: '#F6BD64',
+                showCancelButton: true,
+                confirmButtonText: 'Cancel Piece',
+                cancelButtonText: 'Retain Piece',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const reason = result.value || '';
+                    try {
+                        const response = await fetch(`/orders/${orderId}/items/${itemId}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ reason })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Piece Cancelled',
+                                text: data.message || 'Piece was successfully cancelled and stock updated.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Notice',
+                                text: data.message || 'Could not cancel piece.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Cancel piece error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: 'An error occurred while connecting to the atelier server.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Prompt Return Delivered Order with Mandatory Reason (c.iv)
+        function promptReturnOrder(orderId) {
+            Swal.fire({
+                title: 'Initiate Atelier Return',
+                html: `Please provide a mandatory reason for returning order <strong>#${orderId}</strong>:`,
+                input: 'textarea',
+                inputPlaceholder: 'State detailed reason for return (mandatory)...',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'A return reason is mandatory to proceed.';
+                    }
+                },
+                icon: 'question',
+                iconColor: '#F6BD64',
+                showCancelButton: true,
+                confirmButtonText: 'Submit Return Request',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn royal-swal-confirm-gold',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const reason = result.value.trim();
+                    try {
+                        const response = await fetch(`/orders/${orderId}/return`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ reason })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Return Initiated',
+                                text: data.message || 'Return request recorded. Courier concierge will coordinate pickup.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Notice',
+                                text: data.message || 'Could not process return request.',
+                                background: '#141312',
+                                color: '#eae6df',
+                                confirmButtonColor: '#F6BD64'
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Return order error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: 'An error occurred while connecting to the server.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

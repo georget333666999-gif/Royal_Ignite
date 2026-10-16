@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'The Atelier Collection — ROYAL IGNITE' %></title>
+    <meta name="description" content="Discover handcrafted luxury lighters, sterling silver editions, and rare windproof torches at Royal Ignite." />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/shop.css" />
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Shop Hero / Header -->
+    <section class="shop-hero">
+        <div class="section-container">
+            <div class="shop-breadcrumb">
+                <a href="/">Home</a>
+                <span>/</span>
+                <span class="current">The Collection</span>
+                <% if (category && categories) { 
+                    const currentCat = categories.find(c => c._id.toString() === category.toString());
+                    if (currentCat) { %>
+                        <span>/</span>
+                        <span class="current"><%= currentCat.name %></span>
+                    <% } 
+                } %>
+            </div>
+            
+            <h1 class="shop-hero-title">Curated Masterpieces</h1>
+            <p class="shop-hero-desc">
+                Engineered for distinction, forged in nobility. Browse our authentic limited runs, precious metal lighters, and high-precision ignition instruments.
+            </p>
+        </div>
+    </section>
+
+    <!-- Main Catalog Section -->
+    <main class="catalog-section">
+        <div class="section-container">
+            <% const currentError = (typeof errorMessage !== 'undefined' && errorMessage) ? errorMessage : ((typeof error !== 'undefined' && error) ? error : null); %>
+            <% if (currentError) { %>
+                <div class="shop-alert-banner" role="alert">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><%= currentError %></span>
+                    <button type="button" class="btn-alert-close" onclick="this.parentElement.remove();">&times;</button>
+                </div>
+            <% } %>
+
+            <div class="catalog-layout">
+
+                <!-- 1. Filter Sidebar -->
+                <aside class="filter-sidebar">
+                    <div class="filter-sidebar-header">
+                        <h2 class="filter-sidebar-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="4" y1="21" x2="4" y2="14"></line>
+                                <line x1="4" y1="10" x2="4" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12" y2="3"></line>
+                                <line x1="20" y1="21" x2="20" y2="16"></line>
+                                <line x1="20" y1="12" x2="20" y2="3"></line>
+                                <line x1="1" y1="14" x2="7" y2="14"></line>
+                                <line x1="9" y1="8" x2="15" y2="8"></line>
+                                <line x1="17" y1="16" x2="23" y2="16"></line>
+                            </svg>
+                            Filters
+                        </h2>
+                        <% if (search || category || minPrice || maxPrice || inStockOnly || sort !== 'newest') { %>
+                            <a href="/products" class="btn-clear-all" title="Reset all applied filters">Reset All</a>
+                        <% } %>
+                    </div>
+
+                    <!-- Category Filter Group -->
+                    <div class="filter-group">
+                        <div class="filter-label">Categories</div>
+                        <div class="category-filter-list">
+                            <a href="/products?<%= new URLSearchParams({ search, minPrice, maxPrice, sort, inStockOnly: inStockOnly ? 'true' : '' }).toString() %>"
+                               class="category-filter-item <%= !category ? 'active' : '' %>">
+                                <span>All Editions</span>
+                                <span class="cat-count-badge"><%= totalActiveProducts || 0 %></span>
+                            </a>
+                            <% if (Array.isArray(categories)) { %>
+                                <% categories.forEach(function(cat) { %>
+                                    <% 
+                                        const queryParams = new URLSearchParams({
+                                            category: cat._id.toString(),
+                                            search,
+                                            minPrice,
+                                            maxPrice,
+                                            sort,
+                                            inStockOnly: inStockOnly ? 'true' : ''
+                                        });
+                                        const isActive = category && category.toString() === cat._id.toString();
+                                    %>
+                                    <a href="/products?<%= queryParams.toString() %>"
+                                       class="category-filter-item <%= isActive ? 'active' : '' %>">
+                                        <span><%= cat.name %></span>
+                                        <span class="cat-count-badge"><%= cat.productCount || 0 %></span>
+                                    </a>
+                                <% }); %>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Price Filter Group -->
+                    <div class="filter-group">
+                        <div class="filter-label">Price Range</div>
+                        
+                        <!-- Quick Presets -->
+                        <div class="price-presets">
+                            <% 
+                                const buildPriceUrl = (min, max) => {
+                                    const p = new URLSearchParams({
+                                        category,
+                                        search,
+                                        minPrice: min || '',
+                                        maxPrice: max || '',
+                                        sort,
+                                        inStockOnly: inStockOnly ? 'true' : ''
+                                    });
+                                    return '/products?' + p.toString();
+                                };
+                            %>
+                            <a href="<%= buildPriceUrl('', '') %>" 
+                               class="price-preset-link <%= (!minPrice && !maxPrice) ? 'active' : '' %>">
+                                Any Price
+                            </a>
+                            <a href="<%= buildPriceUrl('0', '5000') %>" 
+                               class="price-preset-link <%= (minPrice == 0 && maxPrice == 5000) ? 'active' : '' %>">
+                                Under ₹5,000
+                            </a>
+                            <a href="<%= buildPriceUrl('5000', '10000') %>" 
+                               class="price-preset-link <%= (minPrice == 5000 && maxPrice == 10000) ? 'active' : '' %>">
+                                ₹5,000 — ₹10,000
+                            </a>
+                            <a href="<%= buildPriceUrl('10000', '20000') %>" 
+                               class="price-preset-link <%= (minPrice == 10000 && maxPrice == 20000) ? 'active' : '' %>">
+                                ₹10,000 — ₹20,000
+                            </a>
+                            <a href="<%= buildPriceUrl('20000', '') %>" 
+                               class="price-preset-link <%= (minPrice == 20000 && !maxPrice) ? 'active' : '' %>">
+                                ₹20,000 & Above
+                            </a>
+                        </div>
+
+                        <!-- Custom Min / Max Price Inputs -->
+                        <form action="/products" method="GET" class="custom-price-form">
+                            <!-- Preserve active parameters -->
+                            <input type="hidden" name="search" value="<%= search %>" />
+                            <input type="hidden" name="category" value="<%= category %>" />
+                            <input type="hidden" name="sort" value="<%= sort %>" />
+                            <% if (inStockOnly) { %><input type="hidden" name="inStockOnly" value="true" /><% } %>
+
+                            <div class="price-inputs-row">
+                                <div class="price-input-wrap">
+                                    <span class="price-currency">₹</span>
+                                    <input type="number" name="minPrice" placeholder="Min" min="0" value="<%= minPrice %>" class="price-input" />
+                                </div>
+                                <div class="price-input-wrap">
+                                    <span class="price-currency">₹</span>
+                                    <input type="number" name="maxPrice" placeholder="Max" min="0" value="<%= maxPrice %>" class="price-input" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-apply-price">Apply Price</button>
+                        </form>
+                    </div>
+
+                    <!-- Availability Filter -->
+                    <div class="filter-group">
+                        <div class="filter-label">Availability</div>
+                        <form id="stockFilterForm" action="/products" method="GET">
+                            <input type="hidden" name="search" value="<%= search %>" />
+                            <input type="hidden" name="category" value="<%= category %>" />
+                            <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                            <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                            <input type="hidden" name="sort" value="<%= sort %>" />
+
+                            <label class="stock-toggle-label">
+                                <input type="checkbox" name="inStockOnly" value="true" <%= inStockOnly ? 'checked' : '' %> onchange="document.getElementById('stockFilterForm').submit();" />
+                                <span>In-Stock Pieces Only</span>
+                            </label>
+                        </form>
+                    </div>
+
+                </aside>
+
+                <!-- 2. Catalog Content Area -->
+                <section class="catalog-content">
+                    
+                    <!-- Top Action Bar: Search & Sort -->
+                    <div class="catalog-topbar">
+                        
+                        <!-- Search Form with Backend Query & Cancel / Clear Button -->
+                        <form action="/products" method="GET" class="search-box-form" id="searchCatalogForm">
+                            <!-- Preserve existing filters when searching -->
+                            <input type="hidden" name="category" value="<%= category %>" />
+                            <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                            <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                            <input type="hidden" name="sort" value="<%= sort %>" />
+                            <% if (inStockOnly) { %><input type="hidden" name="inStockOnly" value="true" /><% } %>
+
+                            <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+
+                            <input type="text"
+                                   name="search"
+                                   id="catalog-search"
+                                   placeholder="Search by title, edition, or craft..."
+                                   value="<%= search %>"
+                                   class="catalog-search-input"
+                                   autocomplete="off" />
+
+                            <!-- Cancel / Clear Button (Backend) -->
+                            <% if (search) { %>
+                                <% 
+                                    const clearSearchQuery = new URLSearchParams({
+                                        category,
+                                        minPrice,
+                                        maxPrice,
+                                        sort,
+                                        inStockOnly: inStockOnly ? 'true' : ''
+                                    });
+                                %>
+                                <a href="/products?<%= clearSearchQuery.toString() %>" class="btn-clear-search" title="Clear Search">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </a>
+                            <% } %>
+                        </form>
+
+                        <!-- Results Count & Sorting Controls -->
+                        <div class="topbar-controls">
+                            <div class="catalog-count-text">
+                                Showing <strong><%= products.length %></strong> of <strong><%= totalProducts %></strong> pieces
+                            </div>
+
+                            <!-- Sorting Dropdown Form -->
+                            <form action="/products" method="GET" class="sort-group" id="sortForm">
+                                <input type="hidden" name="search" value="<%= search %>" />
+                                <input type="hidden" name="category" value="<%= category %>" />
+                                <input type="hidden" name="minPrice" value="<%= minPrice %>" />
+                                <input type="hidden" name="maxPrice" value="<%= maxPrice %>" />
+                                <% if (inStockOnly) { %><input type="hidden" name="inStockOnly" value="true" /><% } %>
+
+                                <label for="sortSelect" class="sort-label">Sort By:</label>
+                                <select name="sort" id="sortSelect" class="sort-select" onchange="document.getElementById('sortForm').submit();">
+                                    <option value="newest" <%= (!sort || sort === 'newest') ? 'selected' : '' %>>Newest Editions</option>
+                                    <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
+                                    <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
+                                    <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Name: A — Z</option>
+                                    <option value="name_desc" <%= sort === 'name_desc' ? 'selected' : '' %>>Name: Z — A</option>
+                                </select>
+                            </form>
+                        </div>
+
+                    </div>
+
+                    <!-- Active Filter Chips Bar -->
+                    <% 
+                        const hasActiveFilters = search || category || minPrice || maxPrice || inStockOnly;
+                    %>
+                    <% if (hasActiveFilters) { %>
+                        <div class="active-filters-bar">
+                            <span class="active-filter-title">Active Filters:</span>
+
+                            <!-- Search Chip -->
+                            <% if (search) { %>
+                                <% 
+                                    const noSearch = new URLSearchParams({ category, minPrice, maxPrice, sort, inStockOnly: inStockOnly ? 'true' : '' });
+                                %>
+                                <a href="/products?<%= noSearch.toString() %>" class="filter-chip" title="Remove search filter">
+                                    <span>Search: "<%= search %>"</span>
+                                    <span class="filter-chip-remove">×</span>
+                                </a>
+                            <% } %>
+
+                            <!-- Category Chip -->
+                            <% if (category && categories) { 
+                                const activeCat = categories.find(c => c._id.toString() === category.toString());
+                                if (activeCat) {
+                                    const noCat = new URLSearchParams({ search, minPrice, maxPrice, sort, inStockOnly: inStockOnly ? 'true' : '' });
+                            %>
+                                <a href="/products?<%= noCat.toString() %>" class="filter-chip" title="Remove category filter">
+                                    <span>Category: <%= activeCat.name %></span>
+                                    <span class="filter-chip-remove">×</span>
+                                </a>
+                            <%  }
+                            } %>
+
+                            <!-- Price Range Chip -->
+                            <% if (minPrice || maxPrice) { 
+                                const noPrice = new URLSearchParams({ search, category, sort, inStockOnly: inStockOnly ? 'true' : '' });
+                            %>
+                                <a href="/products?<%= noPrice.toString() %>" class="filter-chip" title="Remove price filter">
+                                    <span>Price: ₹<%= minPrice || '0' %> — <%= maxPrice ? ('₹' + maxPrice) : 'Above' %></span>
+                                    <span class="filter-chip-remove">×</span>
+                                </a>
+                            <% } %>
+
+                            <!-- In Stock Chip -->
+                            <% if (inStockOnly) { 
+                                const noStock = new URLSearchParams({ search, category, minPrice, maxPrice, sort });
+                            %>
+                                <a href="/products?<%= noStock.toString() %>" class="filter-chip" title="Remove in-stock filter">
+                                    <span>In-Stock Only</span>
+                                    <span class="filter-chip-remove">×</span>
+                                </a>
+                            <% } %>
+
+                            <!-- Clear All Link -->
+                            <a href="/products" class="btn-clear-all" style="margin-left: auto;">Clear All</a>
+                        </div>
+                    <% } %>
+
+                    <!-- Product Grid -->
+                    <% if (Array.isArray(products) && products.length > 0) { %>
+                        <div class="products-grid">
+                            <% products.forEach(function(product) { %>
+                                <% 
+                                    const hasDiscount = product.salePrice && product.salePrice > 0 && product.salePrice < product.regularPrice;
+                                    const discountPercent = hasDiscount ? Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) : 0;
+                                    const isOutOfStock = product.stock <= 0;
+                                    const primaryImage = (product.images && product.images.length > 0) ? product.images[0] : '/uploads/hero_lighter.png';
+                                %>
+                                <article class="product-card" id="product-<%= product._id %>">
+                                    
+                                    <!-- Image Box & Badges -->
+                                    <div class="product-img-wrap">
+                                        <div class="product-badges">
+                                            <% if (isOutOfStock) { %>
+                                                <span class="badge-sold-out">Sold Out</span>
+                                            <% } else if (hasDiscount) { %>
+                                                <span class="badge-sale">-<%= discountPercent %>% OFF</span>
+                                            <% } %>
+                                        </div>
+
+                                        <!-- Wishlist Heart Button -->
+                                        <% const isItemInWishlist = (typeof wishlistProductIds !== 'undefined' && Array.isArray(wishlistProductIds) && wishlistProductIds.includes(product._id.toString())); %>
+                                        <button type="button" 
+                                                class="card-wishlist-btn <%= isItemInWishlist ? 'active' : '' %>" 
+                                                data-product-id="<%= product._id %>"
+                                                title="<%= isItemInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' %>"
+                                                onclick="handleCardWishlistToggle(event, '<%= product._id %>')">
+                                            <svg width="17" height="17" viewBox="0 0 24 24" fill="<%= isItemInWishlist ? '#E5A93C' : 'none' %>" stroke="<%= isItemInWishlist ? '#E5A93C' : 'currentColor' %>" stroke-width="2">
+                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                            </svg>
+                                        </button>
+
+                                        <a href="/products/<%= product._id %>">
+                                            <img src="<%= primaryImage %>" 
+                                                 alt="<%= product.name %>" 
+                                                 class="product-card-img" 
+                                                 loading="lazy"
+                                                 onerror="this.src='/uploads/hero_lighter.png';" />
+                                        </a>
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="product-card-body">
+                                        <div class="product-card-category">
+                                            <%= product.categoryDoc ? product.categoryDoc.name : 'Royal Ignite' %>
+                                        </div>
+
+                                        <h3 class="product-card-title">
+                                            <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                        </h3>
+
+                                        <p class="product-card-desc">
+                                            <%= product.description %>
+                                        </p>
+
+                                        <!-- Pricing & Stock Footer -->
+                                        <div class="product-card-footer">
+                                            <div class="pricing-box">
+                                                <% if (hasDiscount) { %>
+                                                    <span class="sale-price-tag">₹<%= Number(product.salePrice).toLocaleString('en-IN') %></span>
+                                                    <span class="original-price-tag">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                                <% } else { %>
+                                                    <span class="sale-price-tag">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                                <% } %>
+                                            </div>
+
+                                            <div class="stock-indicator">
+                                                <span class="stock-dot <%= isOutOfStock ? 'sold-out' : '' %>"></span>
+                                                <span><%= isOutOfStock ? 'Sold Out' : (product.stock <= 5 ? `Only ${product.stock} Left` : 'In Stock') %></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="card-actions">
+                                            <a href="/products/<%= product._id %>" class="btn-card-action btn-card-primary">
+                                                <span>View Masterpiece</span>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                </svg>
+                                            </a>
+                                        </div>
+
+                                    </div>
+
+                                </article>
+                            <% }); %>
+                        </div>
+
+                        <!-- 3. Server-Side Pagination Bar -->
+                        <% if (totalPages > 1) { %>
+                            <% 
+                                const buildPageUrl = (targetPage) => {
+                                    const params = new URLSearchParams({
+                                        page: targetPage,
+                                        search: search || '',
+                                        category: category || '',
+                                        minPrice: minPrice || '',
+                                        maxPrice: maxPrice || '',
+                                        sort: sort || 'newest',
+                                        inStockOnly: inStockOnly ? 'true' : ''
+                                    });
+                                    return '/products?' + params.toString();
+                                };
+                            %>
+                            <div class="pagination-container">
+                                <nav class="pagination-links" aria-label="Catalog Pagination">
+                                    <!-- Previous Page Button -->
+                                    <a href="<%= currentPage > 1 ? buildPageUrl(currentPage - 1) : '#' %>" 
+                                       class="page-btn <%= currentPage <= 1 ? 'disabled' : '' %>"
+                                       aria-label="Previous Page">
+                                        ← Prev
+                                    </a>
+
+                                    <!-- Page Number Buttons -->
+                                    <% for (let i = 1; i <= totalPages; i++) { %>
+                                        <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                                            <a href="<%= buildPageUrl(i) %>" 
+                                               class="page-btn <%= i === currentPage ? 'active' : '' %>">
+                                                <%= i %>
+                                            </a>
+                                        <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                                            <span class="page-ellipsis">…</span>
+                                        <% } %>
+                                    <% } %>
+
+                                    <!-- Next Page Button -->
+                                    <a href="<%= currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#' %>" 
+                                       class="page-btn <%= currentPage >= totalPages ? 'disabled' : '' %>"
+                                       aria-label="Next Page">
+                                        Next →
+                                    </a>
+                                </nav>
+
+                                <div class="pagination-info">
+                                    Page <strong><%= currentPage %></strong> of <strong><%= totalPages %></strong> (Total <%= totalProducts %> items)
+                                </div>
+                            </div>
+                        <% } %>
+
+                    <% } else { %>
+                        
+                        <!-- Empty Catalog State -->
+                        <div class="empty-catalog-state">
+                            <div class="empty-icon-wrap">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                            <h3 class="empty-title">No Masterpieces Found</h3>
+                            <p class="empty-desc">
+                                We couldn't find any creations matching your search or active filter combination. Refine your query or reset filters to browse the entire collection.
+                            </p>
+                            <a href="/products" class="btn-empty-reset">
+                                Reset All Filters
+                            </a>
+                        </div>
+
+                    <% } %>
+
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Toggle Card Wishlist (AJAX)
+        async function handleCardWishlistToggle(event, productId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const btn = event.currentTarget || event.target.closest('.card-wishlist-btn');
+            if (!btn) return;
+            const svg = btn.querySelector('svg');
+
+            try {
+                const response = await fetch('/wishlist/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || data.redirect) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sign In Required',
+                            text: 'Please sign in to save pieces to your wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64',
+                            confirmButtonText: 'Sign In'
+                        }).then(() => {
+                            window.location.href = data.redirect || `/user/login?redirect=/products`;
+                        });
+                    } else {
+                        window.location.href = data.redirect || `/user/login?redirect=/products`;
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    if (data.inWishlist) {
+                        btn.classList.add('active');
+                        btn.setAttribute('title', 'Remove from Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', '#E5A93C');
+                            svg.setAttribute('stroke', '#E5A93C');
+                        }
+                    } else {
+                        btn.classList.remove('active');
+                        btn.setAttribute('title', 'Add to Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    // Update header wishlist badge if present
+                    const headerBadge = document.querySelector('.wishlist-badge-count');
+                    if (headerBadge) {
+                        if (data.count > 0) {
+                            headerBadge.textContent = data.count;
+                            headerBadge.style.display = 'inline-block';
+                        } else {
+                            headerBadge.style.display = 'none';
+                        }
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2400,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#F6BD64'
+                        });
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Notice',
+                            text: data.message || 'Unable to update wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Card wishlist error:", err);
+            }
+        }
+    </script>
+    <% if ((typeof errorMessage !== 'undefined' && errorMessage) || (typeof error !== 'undefined' && error)) { 
+        const alertMsg = (typeof errorMessage !== 'undefined' && errorMessage) ? errorMessage : error;
+    %>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'warning',
+                    title: <%- JSON.stringify(alertMsg) %>,
+                    showConfirmButton: false,
+                    timer: 4500,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#f0ece6',
+                    iconColor: '#d48833'
+                });
+            }
+        });
+    </script>
+    <% } %>
+
+</body>
+</html>

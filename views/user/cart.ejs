@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Your Atelier Bag — ROYAL IGNITE' %></title>
+    <meta name="description" content="Review reserved luxury lighters and connoisseur editions in your Royal Ignite atelier bag." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/shop.css" />
+    <link rel="stylesheet" href="/css/user/cart.css" />
+    <!-- SweetAlert2 for Quiet Luxury Pop-ups & Notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'Bodoni Moda', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 22px !important;
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: opacity 0.2s ease !important;
+        }
+        .royal-swal-confirm-btn:hover {
+            opacity: 0.9 !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+        .royal-swal-toast {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+            color: #eae6df !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Main Cart Section -->
+    <main class="cart-section">
+        <div class="section-container">
+            
+            <!-- Breadcrumbs -->
+            <nav class="cart-breadcrumb" aria-label="Breadcrumb">
+                <a href="/">Home</a>
+                <span>/</span>
+                <a href="/products">The Collection</a>
+                <span>/</span>
+                <span class="current">Atelier Bag</span>
+            </nav>
+
+            <!-- Hero Header -->
+            <div class="cart-hero-header">
+                <div>
+                    <h1 class="cart-title">Your Atelier Bag</h1>
+                    <p class="cart-subtitle" id="cart-hero-lead">
+                        <% if (cart && cart.items && cart.items.length > 0) { %>
+                            <%= cart.itemCount %> <%= cart.itemCount === 1 ? 'piece' : 'pieces' %> currently reserved in your private bag
+                        <% } else { %>
+                            Your personal collection is currently empty
+                        <% } %>
+                    </p>
+                </div>
+                <a href="/products" class="cart-continue-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Continue Browsing</span>
+                </a>
+            </div>
+
+            <!-- Flash Error / Success Alerts -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="cart-alert error" role="alert">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="cart-alert success" role="alert">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span><%= success %></span>
+                </div>
+            <% } %>
+
+            <!-- Blocking Issues Banner (Out-of-Stock / Unlisted Restriction) -->
+            <% if (cart && cart.hasBlockingIssues) { %>
+                <div class="blocking-notice-card" role="alert">
+                    <div class="blocking-notice-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Inventory Attention Required Before Checkout</span>
+                    </div>
+                    <ul class="blocking-reasons-list">
+                        <% cart.blockingReasons.forEach(function(reason) { %>
+                            <li><%= reason %></li>
+                        <% }); %>
+                    </ul>
+                </div>
+            <% } %>
+
+            <!-- Cart Content Area -->
+            <div id="cart-content-area">
+            <% if (cart && Array.isArray(cart.items) && cart.items.length > 0) { %>
+                <div class="cart-layout-grid">
+                    
+                    <!-- 1. Cart Items Column -->
+                    <div class="cart-items-column" id="cart-items-container">
+                        <% cart.items.forEach(function(item) { %>
+                            <% 
+                                const hasIssue = item.isOutOfStock || item.isInsufficientStock || item.isUnavailable;
+                                const itemImg = (item.images && item.images.length > 0) ? item.images[0] : '/uploads/hero_lighter.png';
+                            %>
+                            <article class="cart-item-card <%= hasIssue ? 'has-issue' : '' %>" id="cart-item-<%= item.productId %>" data-product-id="<%= item.productId %>">
+                                
+                                <!-- Thumbnail -->
+                                <div class="cart-item-img-box">
+                                    <% if (item.productId && !item.isUnavailable) { %>
+                                        <a href="/products/<%= item.productId %>">
+                                            <img src="<%= itemImg %>" alt="<%= item.name %>" onerror="this.src='/uploads/hero_lighter.png';" />
+                                        </a>
+                                    <% } else { %>
+                                        <img src="<%= itemImg %>" alt="<%= item.name || 'Unavailable piece' %>" onerror="this.src='/uploads/hero_lighter.png';" />
+                                    <% } %>
+                                </div>
+
+                                <!-- Information -->
+                                <div class="cart-item-info">
+                                    <div class="cart-item-cat"><%= item.categoryName || 'Archived' %></div>
+                                    <h2 class="cart-item-title">
+                                        <% if (item.productId && !item.isUnavailable) { %>
+                                            <a href="/products/<%= item.productId %>"><%= item.name %></a>
+                                        <% } else { %>
+                                            <span><%= item.name || 'Unavailable Edition' %></span>
+                                        <% } %>
+                                    </h2>
+
+                                    <div class="cart-item-unit-price">
+                                        Unit Price: <strong>₹<%= Number(item.price).toLocaleString('en-IN') %></strong>
+                                        <% if (item.hasDiscount) { %>
+                                            <span style="text-decoration: line-through; opacity: 0.6; font-size: 0.8rem; margin-left: 6px;">
+                                                ₹<%= Number(item.regularPrice).toLocaleString('en-IN') %>
+                                            </span>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- Status Warnings -->
+                                    <% if (item.isOutOfStock) { %>
+                                        <div class="cart-item-warning sold-out">
+                                            <span>Sold Out — Unavailable for Purchase</span>
+                                        </div>
+                                    <% } else if (item.isInsufficientStock) { %>
+                                        <div class="cart-item-warning low-stock">
+                                            <span>Only <%= item.stock %> remaining in the atelier</span>
+                                        </div>
+                                    <% } else if (item.isUnavailable) { %>
+                                        <div class="cart-item-warning sold-out">
+                                            <span><%= item.unavailableReason %></span>
+                                        </div>
+                                    <% } %>
+                                </div>
+
+                                <!-- Actions & Stepper -->
+                                <div class="cart-item-actions">
+                                    <div class="cart-item-line-total" id="line-total-<%= item.productId %>">
+                                        ₹<%= Number(item.lineTotal || 0).toLocaleString('en-IN') %>
+                                    </div>
+
+                                    <!-- Quantity Stepper -->
+                                    <div class="cart-qty-stepper" id="stepper-<%= item.productId %>">
+                                        <button type="button" 
+                                                class="btn-cart-qty" 
+                                                id="btn-minus-<%= item.productId %>"
+                                                onclick="changeQuantity('<%= item.productId %>', -1)"
+                                                <%= (item.quantity <= 1 || item.isOutOfStock || item.isUnavailable) ? 'disabled' : '' %>
+                                                title="Decrease quantity">
+                                            −
+                                        </button>
+                                        <span class="cart-qty-value" id="qty-val-<%= item.productId %>" data-qty="<%= item.quantity %>" data-max="<%= item.maxAllowed %>">
+                                            <%= item.quantity %>
+                                        </span>
+                                        <button type="button" 
+                                                class="btn-cart-qty" 
+                                                id="btn-plus-<%= item.productId %>"
+                                                onclick="changeQuantity('<%= item.productId %>', 1)"
+                                                <%= (item.quantity >= item.maxAllowed || item.isOutOfStock || item.isUnavailable) ? 'disabled' : '' %>
+                                                title="Increase quantity">
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <!-- Remove Item Action -->
+                                    <form action="/cart/remove/<%= item.productId || item._id %>" 
+                                          method="POST" 
+                                          class="cart-remove-form" 
+                                          id="form-remove-<%= item.productId %>"
+                                          data-product-id="<%= item.productId %>"
+                                          data-name="<%= item.name || 'Unavailable Edition' %>">
+                                        <button type="submit" class="btn-remove-item">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                            <span>Remove</span>
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </article>
+                        <% }); %>
+                    </div>
+
+                    <!-- 2. Order Summary Sidebar -->
+                    <aside class="order-summary-sidebar">
+                        <h2 class="summary-title">Acquisition Summary</h2>
+
+                        <div class="summary-row" id="cart-catalog-row" style="<%= (cart.savings && cart.savings > 0) ? 'display: flex;' : 'display: none;' %>">
+                            <span>Catalog Value</span>
+                            <span id="cart-catalog-val">₹<%= Number(cart.regularTotal || cart.subtotal).toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="summary-row savings" id="cart-savings-row" style="<%= (cart.savings && cart.savings > 0) ? 'display: flex;' : 'display: none;' %>">
+                            <span>Atelier Savings</span>
+                            <span id="cart-savings-val">− ₹<%= Number(cart.savings || 0).toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="summary-row">
+                            <span id="cart-summary-items-count">Subtotal (<%= cart.itemCount %> <%= cart.itemCount === 1 ? 'item' : 'items' %>)</span>
+                            <span id="cart-subtotal-val">₹<%= Number(cart.subtotal).toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Insured Courier</span>
+                            <span class="free-courier-tag">Complimentary</span>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Atelier Packaging</span>
+                            <span class="free-courier-tag">Included</span>
+                        </div>
+
+                        <div class="summary-row total-row">
+                            <span>Total</span>
+                            <span class="summary-total-val" id="cart-total-val">₹<%= Number(cart.totalPrice).toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="cart-savings-badge" id="cart-savings-badge" style="<%= (cart.savings && cart.savings > 0) ? 'display: block;' : 'display: none;' %>">
+                            You are saving ₹<span id="cart-badge-savings-val"><%= Number(cart.savings || 0).toLocaleString('en-IN') %></span> on this order
+                        </div>
+
+                        <!-- Checkout Action -->
+                        <div id="checkout-btn-wrap" style="margin-top: 18px;">
+                            <button type="button" class="btn-checkout disabled" id="btnCheckoutRestricted" style="<%= cart.hasBlockingIssues ? 'display: flex;' : 'display: none;' %>" disabled>
+                                <span>Checkout Restricted</span>
+                            </button>
+                            <p class="checkout-restricted-hint" id="checkout-restricted-hint" style="<%= cart.hasBlockingIssues ? 'display: block;' : 'display: none;' %>">
+                                Resolve sold-out or unavailable items in your bag before proceeding to payment.
+                            </p>
+
+                            <a href="/checkout" class="btn-checkout" id="btnProceedCheckout" style="<%= !cart.hasBlockingIssues ? 'display: inline-flex;' : 'display: none;' %>">
+                                <span>Proceed to Checkout</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+
+                        <!-- Trust Perks -->
+                        <div class="summary-perks-list">
+                            <div class="summary-perk-row">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <span>Certified authentic numbered registry</span>
+                            </div>
+                            <div class="summary-perk-row">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                                <span>Tamper-proof insured air freight</span>
+                            </div>
+                            <div class="summary-perk-row">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                <span>Lifetime atelier ignition servicing</span>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                </div>
+            <% } else { %>
+                
+                <!-- Empty Cart State -->
+                <div class="cart-empty-box">
+                    <div class="empty-bag-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                    </div>
+                    <h2 class="empty-bag-title">Your Atelier Bag is Empty</h2>
+                    <p class="empty-bag-desc">
+                        No creations have been reserved in your collection yet. Browse our curated editions of handcrafted sterling silver and brass lighters.
+                    </p>
+                    <a href="/products" class="btn-shop-collection">
+                        Explore The Collection
+                    </a>
+                </div>
+
+            <% } %>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- Cart Interactive Script -->
+    <script>
+        // BFCache Invalidation: Ensure that navigating Back/Forward always reloads fresh cart state from server
+        window.addEventListener('pageshow', function (event) {
+            const isBackForward = event.persisted || 
+                (window.performance && window.performance.navigation && window.performance.navigation.type === 2) ||
+                (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward");
+
+            if (isBackForward) {
+                window.location.reload();
+            }
+        });
+
+        // Luxury SweetAlert2 Confirmation for Removing Items from Bag
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (!form.classList || !form.classList.contains('cart-remove-form')) return;
+            if (form.dataset.confirmed === 'true') return;
+
+            e.preventDefault();
+            const itemName = form.dataset.name ? `<strong>${form.dataset.name}</strong>` : 'this piece';
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Remove From Bag?',
+                    html: `Are you sure you want to remove ${itemName} from your atelier bag?<br><span style="font-size: 13px; color: #9A9388; display: block; margin-top: 8px;">You can always add it again later from The Collection.</span>`,
+                    icon: 'warning',
+                    iconColor: '#E5A93C',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Remove',
+                    cancelButtonText: 'Keep in Bag',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn',
+                        cancelButton: 'royal-swal-cancel-btn'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        handleRemoveCartItem(form);
+                    }
+                });
+            } else {
+                if (confirm('Remove this piece from your atelier bag?')) {
+                    handleRemoveCartItem(form);
+                }
+            }
+        });
+
+        let isUpdatingCart = false;
+
+        function applyCartDataToDOM(cart) {
+            if (!cart) return;
+
+            // 1. Update line totals and stepper states for each item in the DOM
+            if (Array.isArray(cart.items)) {
+                cart.items.forEach(function (item) {
+                    const pid = item.productId || item._id;
+                    const lineTotalEl = document.getElementById('line-total-' + pid);
+                    if (lineTotalEl) {
+                        lineTotalEl.textContent = '₹' + Number(item.lineTotal || 0).toLocaleString('en-IN');
+                    }
+
+                    const qtySpan = document.getElementById('qty-val-' + pid);
+                    if (qtySpan) {
+                        qtySpan.textContent = item.quantity;
+                        qtySpan.dataset.qty = item.quantity;
+                        qtySpan.dataset.max = item.maxAllowed;
+                    }
+
+                    const btnMinus = document.getElementById('btn-minus-' + pid);
+                    if (btnMinus) {
+                        btnMinus.disabled = (item.quantity <= 1 || item.isOutOfStock || item.isUnavailable);
+                    }
+
+                    const btnPlus = document.getElementById('btn-plus-' + pid);
+                    if (btnPlus) {
+                        btnPlus.disabled = (item.quantity >= item.maxAllowed || item.isOutOfStock || item.isUnavailable);
+                    }
+                });
+            }
+
+            // 2. Update Hero Subtitle Count
+            const heroSubtitle = document.getElementById('cart-hero-lead');
+            if (heroSubtitle) {
+                if (cart.itemCount > 0) {
+                    heroSubtitle.textContent = `${cart.itemCount} ${cart.itemCount === 1 ? 'piece' : 'pieces'} currently reserved in your private bag`;
+                } else {
+                    heroSubtitle.textContent = 'Your personal collection is currently empty';
+                }
+            }
+
+            // 3. Update Summary Rows
+            const summaryItemsCount = document.getElementById('cart-summary-items-count');
+            if (summaryItemsCount) {
+                summaryItemsCount.textContent = `Subtotal (${cart.itemCount} ${cart.itemCount === 1 ? 'item' : 'items'})`;
+            }
+
+            const subtotalVal = document.getElementById('cart-subtotal-val');
+            if (subtotalVal) {
+                subtotalVal.textContent = '₹' + Number(cart.subtotal || 0).toLocaleString('en-IN');
+            }
+
+            const catalogRow = document.getElementById('cart-catalog-row');
+            const catalogVal = document.getElementById('cart-catalog-val');
+            const savingsRow = document.getElementById('cart-savings-row');
+            const savingsVal = document.getElementById('cart-savings-val');
+            const savingsBadge = document.getElementById('cart-savings-badge');
+            const badgeSavingsVal = document.getElementById('cart-badge-savings-val');
+
+            const savings = Number(cart.savings || 0);
+            const regularTotal = Number(cart.regularTotal || cart.subtotal || 0);
+
+            if (savings > 0) {
+                if (catalogRow) catalogRow.style.display = 'flex';
+                if (catalogVal) catalogVal.textContent = '₹' + regularTotal.toLocaleString('en-IN');
+                if (savingsRow) savingsRow.style.display = 'flex';
+                if (savingsVal) savingsVal.textContent = '− ₹' + savings.toLocaleString('en-IN');
+                if (savingsBadge) savingsBadge.style.display = 'block';
+                if (badgeSavingsVal) badgeSavingsVal.textContent = savings.toLocaleString('en-IN');
+            } else {
+                if (catalogRow) catalogRow.style.display = 'none';
+                if (savingsRow) savingsRow.style.display = 'none';
+                if (savingsBadge) savingsBadge.style.display = 'none';
+            }
+
+            const totalVal = document.getElementById('cart-total-val');
+            if (totalVal) {
+                totalVal.textContent = '₹' + Number(cart.totalPrice || 0).toLocaleString('en-IN');
+            }
+
+            // 4. Update Header Bag Badges
+            const headerBadges = document.querySelectorAll('.header-badge-count.cart-badge-count');
+            headerBadges.forEach(function (b) {
+                if (cart.itemCount > 0) {
+                    b.textContent = cart.itemCount;
+                    b.style.display = 'inline-block';
+                } else {
+                    b.style.display = 'none';
+                }
+            });
+
+            // 5. Update Checkout Button State if blocking issues changed
+            const btnProceedCheckout = document.getElementById('btnProceedCheckout');
+            const btnCheckoutRestricted = document.getElementById('btnCheckoutRestricted');
+            const restrictedHint = document.getElementById('checkout-restricted-hint');
+            if (cart.hasBlockingIssues) {
+                if (btnProceedCheckout) btnProceedCheckout.style.display = 'none';
+                if (btnCheckoutRestricted) btnCheckoutRestricted.style.display = 'flex';
+                if (restrictedHint) restrictedHint.style.display = 'block';
+            } else {
+                if (btnProceedCheckout) btnProceedCheckout.style.display = 'inline-flex';
+                if (btnCheckoutRestricted) btnCheckoutRestricted.style.display = 'none';
+                if (restrictedHint) restrictedHint.style.display = 'none';
+            }
+        }
+
+        function renderEmptyCartView() {
+            const heroSubtitle = document.getElementById('cart-hero-lead');
+            if (heroSubtitle) {
+                heroSubtitle.textContent = 'Your personal collection is currently empty';
+            }
+
+            const contentArea = document.getElementById('cart-content-area');
+            if (contentArea) {
+                contentArea.innerHTML = `
+                    <div class="cart-empty-box">
+                        <div class="empty-bag-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                        </div>
+                        <h2 class="empty-bag-title">Your Atelier Bag is Empty</h2>
+                        <p class="empty-bag-desc">
+                            No creations have been reserved in your collection yet. Browse our curated editions of handcrafted sterling silver and brass lighters.
+                        </p>
+                        <a href="/products" class="btn-shop-collection">
+                            Explore The Collection
+                        </a>
+                    </div>
+                `;
+            }
+
+            const headerBadges = document.querySelectorAll('.header-badge-count.cart-badge-count');
+            headerBadges.forEach(function (b) {
+                b.style.display = 'none';
+            });
+        }
+
+        async function changeQuantity(productId, delta) {
+            if (!productId || isUpdatingCart) return;
+
+            const qtySpan = document.getElementById('qty-val-' + productId);
+            if (!qtySpan) return;
+
+            const currentQty = parseInt(qtySpan.dataset.qty || qtySpan.textContent.trim(), 10) || 1;
+            const maxAllowed = parseInt(qtySpan.dataset.max, 10) || 5;
+            const targetQty = currentQty + delta;
+
+            if (targetQty < 1) return;
+            if (targetQty > maxAllowed) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: `Maximum limit is ${maxAllowed} units per piece`,
+                        showConfirmButton: false,
+                        timer: 2500,
+                        background: '#141312',
+                        color: '#eae6df',
+                        iconColor: '#E5A93C'
+                    });
+                }
+                return;
+            }
+
+            const btnMinus = document.getElementById('btn-minus-' + productId);
+            const btnPlus = document.getElementById('btn-plus-' + productId);
+            if (btnMinus) btnMinus.disabled = true;
+            if (btnPlus) btnPlus.disabled = true;
+            isUpdatingCart = true;
+
+            try {
+                const response = await fetch("/cart/update-quantity", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        productId,
+                        quantity: targetQty
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cannot Update Quantity',
+                            text: data.message || "Could not update quantity.",
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    } else {
+                        alert(data.message || "Could not update quantity.");
+                    }
+                    if (btnMinus) btnMinus.disabled = (currentQty <= 1);
+                    if (btnPlus) btnPlus.disabled = (currentQty >= maxAllowed);
+                    return;
+                }
+
+                // Dynamically update the DOM in place
+                applyCartDataToDOM(data.cart);
+
+            } catch (err) {
+                console.error("Cart update error:", err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Notice',
+                        text: 'An error occurred while updating your bag. Please try again.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#E5A93C'
+                    });
+                } else {
+                    alert("An error occurred while updating your bag. Please try again.");
+                }
+                if (btnMinus) btnMinus.disabled = (currentQty <= 1);
+                if (btnPlus) btnPlus.disabled = (currentQty >= maxAllowed);
+            } finally {
+                isUpdatingCart = false;
+            }
+        }
+
+        // Backwards compatibility for any legacy callers
+        function updateQuantity(productId, newQty) {
+            const qtySpan = document.getElementById('qty-val-' + productId);
+            const currentQty = qtySpan ? (parseInt(qtySpan.dataset.qty, 10) || 1) : 1;
+            changeQuantity(productId, newQty - currentQty);
+        }
+
+        async function handleRemoveCartItem(form) {
+            const card = form.closest('.cart-item-card');
+            if (card) {
+                card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                card.style.opacity = '0.4';
+                card.style.pointerEvents = 'none';
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    if (card) {
+                        card.style.transition = 'all 0.35s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(-12px)';
+                        card.style.maxHeight = '0';
+                        card.style.paddingTop = '0';
+                        card.style.paddingBottom = '0';
+                        card.style.marginTop = '0';
+                        card.style.marginBottom = '0';
+                        card.style.border = 'none';
+                        card.style.overflow = 'hidden';
+
+                        setTimeout(function () {
+                            card.remove();
+
+                            if (!data.cart || !data.cart.items || data.cart.items.length === 0) {
+                                renderEmptyCartView();
+                            } else {
+                                applyCartDataToDOM(data.cart);
+                            }
+                        }, 350);
+                    } else {
+                        if (!data.cart || !data.cart.items || data.cart.items.length === 0) {
+                            renderEmptyCartView();
+                        } else {
+                            applyCartDataToDOM(data.cart);
+                        }
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Item removed from your atelier bag.',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-swal-toast'
+                            }
+                        });
+                    }
+                } else {
+                    if (card) {
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = 'auto';
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cannot Remove Item',
+                            text: data.message || 'Could not remove item from bag.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#E5A93C',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    } else {
+                        alert(data.message || 'Could not remove item.');
+                    }
+                }
+            } catch (err) {
+                console.error('Error removing cart item via fetch:', err);
+                form.dataset.confirmed = 'true';
+                form.submit();
+            }
+        }
+
+        // Flash message toast notification on page load
+        <% if (typeof success !== 'undefined' && success) { %>
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '<%= success %>',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#eae6df',
+                    iconColor: '#E5A93C',
+                    customClass: {
+                        popup: 'royal-swal-toast'
+                    }
+                });
+            }
+        <% } %>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: '<%= error %>',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#eae6df',
+                    iconColor: '#ef4444',
+                    customClass: {
+                        popup: 'royal-swal-toast'
+                    }
+                });
+            }
+        <% } %>
+    </script>
+
+</body>
+</html>

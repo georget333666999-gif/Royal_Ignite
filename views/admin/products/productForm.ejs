@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= mode === 'edit' ? 'Edit Product' : 'Add New Product' %> - ROYAL IGNITE Admin</title>
+    <link rel="stylesheet" href="/css/admin/productForm.css" />
+    <!-- Cropper.js for Client-Side Image Cropping and Resizing Before Upload -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <!-- SweetAlert2 for Quiet Luxury Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(212, 136, 51, 0.28) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
+            color: #f0ece6 !important;
+            font-family: 'Instrument Sans', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'DM Serif Display', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.4px !important;
+            padding: 10px 22px !important;
+            box-shadow: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.4px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            box-shadow: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <a href="/admin/dashboard" class="sidebar-logo">ROYAL IGNITE</a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="/admin/dashboard" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/analytics" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="/admin/categories" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/products" class="nav-link active">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/users" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Customers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <form action="/admin/logout" method="POST">
+            <button type="submit" class="btn-logout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+            </button>
+        </form>
+    </aside>
+
+    <!-- Main Wrapper Area -->
+    <div class="main-wrapper">
+        
+        <!-- Top Navbar Header -->
+        <header class="top-navbar">
+            <h1 class="top-navbar-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+                <%= mode === 'edit' ? 'Edit Product' : 'Add New Product' %>
+            </h1>
+            <a href="/admin/products" class="back-link">
+                &larr; Back to Products
+            </a>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="content-padding">
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert-box alert-danger">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <!-- Product Form -->
+            <form id="productForm" novalidate onsubmit="handleProductFormSubmit(event)">
+                
+                <!-- Section 1: General Information -->
+                <div class="form-section-card">
+                    <h3 class="section-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        General Information
+                    </h3>
+                    <p class="section-desc">Provide the luxury catalog title, category classification, and detailed description.</p>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="productName">Product Title <span class="req">*</span></label>
+                            <input
+                                type="text"
+                                id="productName"
+                                name="name"
+                                class="form-control"
+                                placeholder="e.g. Royal Ignite Monarch Gold Lighter"
+                                maxlength="120"
+                                required
+                                value="<%= product.name || '' %>"
+                                autocomplete="off"
+                            />
+                            <div class="form-help">
+                                <span>Specific luxury model title</span>
+                                <span id="titleCounter">0/120</span>
+                            </div>
+                            <div class="field-error-msg" id="nameError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productCategory">Category <span class="req">*</span></label>
+                            <select id="productCategory" name="category" class="form-control" required>
+                                <option value="">Select a Category</option>
+                                <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+                                    <% categories.forEach(cat => { %>
+                                        <option value="<%= cat._id %>" <%= (product.category && String(product.category._id || product.category) === String(cat._id)) ? 'selected' : '' %>>
+                                            <%= cat.name %>
+                                        </option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                            <div class="form-help">
+                                <span>Assign to an active catalog category</span>
+                            </div>
+                            <div class="field-error-msg" id="categoryError"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="productDescription">Description <span class="req">*</span></label>
+                        <textarea
+                            id="productDescription"
+                            name="description"
+                            class="form-control"
+                            placeholder="Detailed product specifications, materials, craftsmanship, dimensions, and warranty..."
+                            maxlength="3000"
+                            required
+                        ><%= product.description || '' %></textarea>
+                        <div class="form-help">
+                            <span>Detailed description for store listing</span>
+                            <span id="descCounter">0/3000</span>
+                        </div>
+                        <div class="field-error-msg" id="descriptionError"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-check">
+                            <input type="checkbox" id="productListed" name="isListed" value="true" <%= (product.isListed !== false) ? 'checked' : '' %> />
+                            <span class="form-check-label">List product in store catalog immediately (Active)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section 2: Pricing & Inventory -->
+                <div class="form-section-card">
+                    <h3 class="section-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Pricing &amp; Inventory
+                    </h3>
+                    <p class="section-desc">Set retail price, promotional discount, and available stock levels.</p>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label" for="regularPrice">Regular Price (&#8377;) <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="regularPrice"
+                                name="regularPrice"
+                                class="form-control"
+                                placeholder="e.g. 4999"
+                                min="1"
+                                step="0.01"
+                                required
+                                value="<%= product.regularPrice || '' %>"
+                            />
+                            <div class="form-help">
+                                <span>Standard retail price</span>
+                            </div>
+                            <div class="field-error-msg" id="regularPriceError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="salePrice">Sale / Offer Price (&#8377;)</label>
+                            <input
+                                type="number"
+                                id="salePrice"
+                                name="salePrice"
+                                class="form-control"
+                                placeholder="e.g. 3999 (Optional)"
+                                min="0"
+                                step="0.01"
+                                value="<%= (product.salePrice !== null && product.salePrice !== undefined) ? product.salePrice : '' %>"
+                            />
+                            <div class="form-help">
+                                <span>Must be &le; regular price</span>
+                            </div>
+                            <div class="field-error-msg" id="salePriceError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="productStock">Stock Quantity <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="productStock"
+                                name="stock"
+                                class="form-control"
+                                placeholder="e.g. 25"
+                                min="0"
+                                step="1"
+                                required
+                                value="<%= (product.stock !== undefined) ? product.stock : '' %>"
+                            />
+                            <div class="form-help">
+                                <span>Units in warehouse inventory</span>
+                            </div>
+                            <div class="field-error-msg" id="stockError"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Multi-Image Upload with Cropping & Resizing -->
+                <div class="form-section-card" id="mediaSectionCard">
+                    <h3 class="section-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        Product Media (Minimum 3 Images)
+                    </h3>
+                    <p class="section-desc">
+                        Upload high-resolution product photographs. Each image can be cropped and resized to a standardized 1:1 aspect ratio before submission.
+                    </p>
+
+                    <!-- Requirement Tracker Badge -->
+                    <div id="imageCountBadge" class="upload-requirement-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span id="imageCountText">0 / 3 images uploaded (Minimum 3 required)</span>
+                    </div>
+
+                    <!-- Drag & Drop Upload Zone -->
+                    <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('productImageInput').click()">
+                        <input
+                            type="file"
+                            id="productImageInput"
+                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                            multiple
+                            style="display: none;"
+                            onchange="handleFilesSelected(this.files)"
+                        />
+                        <div class="upload-icon-circle">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h4 class="upload-title">Click to upload or drag &amp; drop images here</h4>
+                        <p class="upload-subtitle">Supports JPG, PNG, and WEBP (up to 5MB each). Minimum 3 images required.</p>
+                    </div>
+
+                    <!-- Images Preview Grid -->
+                    <div class="image-preview-grid" id="imagePreviewGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div class="field-error-msg" id="imagesError" style="margin-top: 12px;"></div>
+                </div>
+
+                <!-- Bottom Action Buttons -->
+                <div class="form-action-bar">
+                    <a href="/admin/products" class="btn-form-cancel">Cancel</a>
+                    <button type="submit" class="btn-form-submit" id="submitProductBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <%= mode === 'edit' ? 'Update Product' : 'Save & Publish Product' %>
+                    </button>
+                </div>
+
+            </form>
+
+        </main>
+    </div>
+
+    <!-- ========================================
+         CROPPER MODAL DIALOG
+         ======================================== -->
+    <div class="cropper-modal-overlay" id="cropperModal">
+        <div class="cropper-modal-dialog">
+            <div class="cropper-modal-header">
+                <h3 class="cropper-modal-title">Crop &amp; Resize Product Image</h3>
+                <button type="button" class="btn-crop-cancel" onclick="closeCropperModal()">&times;</button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="cropper-canvas-wrap">
+                <img id="cropperImage" src="" alt="Crop target" />
+            </div>
+
+            <!-- Toolbar Controls -->
+            <div class="cropper-toolbar">
+                <div class="cropper-tool-group">
+                    <span style="font-size: 12px; color: #a1a1aa; margin-right: 4px;">Aspect Ratio:</span>
+                    <button type="button" class="btn-crop-tool active" id="ratio1to1Btn" onclick="setAspectRatio(1)">1:1 Square</button>
+                    <button type="button" class="btn-crop-tool" id="ratioFreeBtn" onclick="setAspectRatio(NaN)">Free</button>
+                </div>
+
+                <div class="cropper-tool-group">
+                    <button type="button" class="btn-crop-tool" onclick="cropperZoom(0.1)" title="Zoom In">+</button>
+                    <button type="button" class="btn-crop-tool" onclick="cropperZoom(-0.1)" title="Zoom Out">&minus;</button>
+                    <button type="button" class="btn-crop-tool" onclick="cropperRotate(-90)" title="Rotate Left">&#x21bb; -90&deg;</button>
+                    <button type="button" class="btn-crop-tool" onclick="cropperRotate(90)" title="Rotate Right">&#x21ba; +90&deg;</button>
+                    <button type="button" class="btn-crop-tool" onclick="cropperReset()" title="Reset Crop">Reset</button>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="cropper-modal-footer">
+                <button type="button" class="btn-crop-cancel" onclick="closeCropperModal()">Cancel</button>
+                <button type="button" class="btn-crop-apply" onclick="applyCrop()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Apply Crop &amp; Resize (800x800)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client-side Management Scripts -->
+    <script>
+        // Existing images from product (when in edit mode)
+        const initialExistingImages = <%- JSON.stringify(product.images || []) %>;
+        let existingImages = [...initialExistingImages];
+
+        // Store for newly selected images: { id, originalFile, croppedBlob, previewUrl, isCropped }
+        let newImages = [];
+        let cropperInstance = null;
+        let currentCroppingImageId = null;
+
+        // Character counters
+        const nameInput = document.getElementById('productName');
+        const descInput = document.getElementById('productDescription');
+        const titleCounter = document.getElementById('titleCounter');
+        const descCounter = document.getElementById('descCounter');
+
+        if (nameInput && titleCounter) {
+            titleCounter.textContent = `${nameInput.value.length}/120`;
+            nameInput.addEventListener('input', () => {
+                titleCounter.textContent = `${nameInput.value.length}/120`;
+            });
+        }
+        if (descInput && descCounter) {
+            descCounter.textContent = `${descInput.value.length}/3000`;
+            descInput.addEventListener('input', () => {
+                descCounter.textContent = `${descInput.value.length}/3000`;
+            });
+        }
+
+        // Drag & Drop Setup
+        const dropzone = document.getElementById('dropzone');
+        if (dropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFilesSelected(files);
+            }, false);
+        }
+
+        // Handle selected files with strict client-side validation
+        function handleFilesSelected(files) {
+            if (!files || files.length === 0) return;
+
+            const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const maxFileSize = 5 * 1024 * 1024; // 5MB limit
+            let invalidFormatCount = 0;
+            let oversizedCount = 0;
+
+            Array.from(files).forEach(file => {
+                const fileType = file.type.toLowerCase();
+                if (!allowedMimeTypes.includes(fileType)) {
+                    invalidFormatCount++;
+                    return;
+                }
+                if (file.size > maxFileSize) {
+                    oversizedCount++;
+                    return;
+                }
+                if (existingImages.length + newImages.length >= 10) {
+                    return;
+                }
+
+                const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    newImages.push({
+                        id: imageId,
+                        originalFile: file,
+                        previewUrl: e.target.result,
+                        croppedBlob: null,
+                        isCropped: false
+                    });
+                    renderImagePreviews();
+                    validateImages(false);
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            if (invalidFormatCount > 0 || oversizedCount > 0) {
+                let msg = '';
+                if (invalidFormatCount > 0) {
+                    msg += `<strong>${invalidFormatCount} file(s) skipped:</strong> Only JPG, PNG, and WEBP formats are accepted.<br>`;
+                }
+                if (oversizedCount > 0) {
+                    msg += `<strong>${oversizedCount} file(s) skipped:</strong> File size exceeds maximum limit of 5MB.`;
+                }
+                luxurySwal.fire({
+                    icon: 'warning',
+                    iconColor: '#f59e0b',
+                    title: 'Upload Notice',
+                    html: msg,
+                    confirmButtonText: 'Understood',
+                    confirmButtonColor: '#D48833'
+                });
+            }
+
+            // Reset input so re-selecting same file triggers change
+            document.getElementById('productImageInput').value = '';
+        }
+
+        // Render preview cards (both existing and new images)
+        function renderImagePreviews() {
+            const grid = document.getElementById('imagePreviewGrid');
+            grid.innerHTML = '';
+
+            // 1. Existing images (Edit mode)
+            existingImages.forEach((imgUrl, index) => {
+                const card = document.createElement('div');
+                card.className = 'image-preview-card is-cropped';
+                card.innerHTML = `
+                    <div class="preview-img-wrap">
+                        <img src="${imgUrl}" alt="Existing product image" />
+                        <span class="preview-badge-status badge-existing">Existing Image</span>
+                    </div>
+                    <div class="preview-card-actions">
+                        <button type="button" class="btn-preview-action btn-preview-delete" onclick="removeExistingImage(${index})">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Remove
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // 2. Newly added images
+            newImages.forEach(img => {
+                const card = document.createElement('div');
+                card.className = `image-preview-card ${img.isCropped ? 'is-cropped' : 'needs-crop'}`;
+                card.innerHTML = `
+                    <div class="preview-img-wrap">
+                        <img src="${img.previewUrl}" alt="New product image" />
+                        <span class="preview-badge-status ${img.isCropped ? 'badge-cropped' : 'badge-uncropped'}">
+                            ${img.isCropped ? '&#10003; Cropped (800x800)' : 'Uncropped'}
+                        </span>
+                    </div>
+                    <div class="preview-card-actions">
+                        <button type="button" class="btn-preview-action btn-preview-crop" onclick="openCropperForImage('${img.id}')">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="6" cy="6" r="3"></circle>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+                                <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+                                <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+                            </svg>
+                            ${img.isCropped ? 'Re-Crop' : 'Crop Image'}
+                        </button>
+                        <button type="button" class="btn-preview-action btn-preview-delete" onclick="removeNewImage('${img.id}')">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            updateImageCounter();
+        }
+
+        // Update image counter badge
+        function updateImageCounter() {
+            const total = existingImages.length + newImages.length;
+            const badge = document.getElementById('imageCountBadge');
+            const text = document.getElementById('imageCountText');
+
+            if (total >= 3) {
+                badge.className = 'upload-requirement-badge valid';
+                text.innerHTML = `&#10003; ${total} / 3 images uploaded (Requirement satisfied)`;
+            } else {
+                badge.className = 'upload-requirement-badge';
+                const remaining = 3 - total;
+                text.textContent = `${total} / 3 images uploaded (Please upload at least ${remaining} more)`;
+            }
+        }
+
+        // Remove existing image
+        function removeExistingImage(index) {
+            existingImages.splice(index, 1);
+            renderImagePreviews();
+            validateImages(true);
+        }
+
+        // Remove newly added image
+        function removeNewImage(id) {
+            newImages = newImages.filter(img => img.id !== id);
+            renderImagePreviews();
+            validateImages(true);
+        }
+
+        // ========================================
+        // CROPPER.JS INTEGRATION
+        // ========================================
+        function openCropperForImage(id) {
+            const target = newImages.find(img => img.id === id);
+            if (!target) return;
+
+            currentCroppingImageId = id;
+            const cropperImg = document.getElementById('cropperImage');
+            cropperImg.src = target.previewUrl;
+
+            const modal = document.getElementById('cropperModal');
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+
+            // Initialize Cropper with luxury 1:1 aspect ratio preset
+            cropperInstance = new Cropper(cropperImg, {
+                aspectRatio: 1, // Standard 1:1 luxury product ratio
+                viewMode: 1,
+                autoCropArea: 0.9,
+                responsive: true,
+                background: false
+            });
+        }
+
+        function closeCropperModal() {
+            const modal = document.getElementById('cropperModal');
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            currentCroppingImageId = null;
+        }
+
+        function setAspectRatio(ratio) {
+            if (!cropperInstance) return;
+            cropperInstance.setAspectRatio(ratio);
+            document.getElementById('ratio1to1Btn').classList.toggle('active', ratio === 1);
+            document.getElementById('ratioFreeBtn').classList.toggle('active', isNaN(ratio));
+        }
+
+        function cropperZoom(delta) {
+            if (cropperInstance) cropperInstance.zoom(delta);
+        }
+
+        function cropperRotate(deg) {
+            if (cropperInstance) cropperInstance.rotate(deg);
+        }
+
+        function cropperReset() {
+            if (cropperInstance) cropperInstance.reset();
+        }
+
+        // Apply crop and resize to standard 800x800
+        function applyCrop() {
+            if (!cropperInstance || !currentCroppingImageId) return;
+
+            // Generate high-quality 800x800 standard canvas
+            const canvas = cropperInstance.getCroppedCanvas({
+                width: 800,
+                height: 800,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            canvas.toBlob((blob) => {
+                const target = newImages.find(img => img.id === currentCroppingImageId);
+                if (target) {
+                    target.croppedBlob = blob;
+                    target.previewUrl = canvas.toDataURL('image/webp', 0.92);
+                    target.isCropped = true;
+                }
+                closeCropperModal();
+                renderImagePreviews();
+            }, 'image/webp', 0.92);
+        }
+
+        // SweetAlert2 helper
+        const luxurySwal = Swal.mixin({
+            customClass: {
+                popup: 'royal-luxury-swal',
+                title: 'royal-swal-title',
+                confirmButton: 'royal-swal-confirm-btn',
+                cancelButton: 'royal-swal-cancel-btn'
+            },
+            buttonsStyling: false
+        });
+
+        // ========================================
+        // COMPREHENSIVE JS VALIDATION ENGINE
+        // ========================================
+        function setFieldError(field, errorEl, message) {
+            if (!field || !errorEl) return;
+            field.classList.add('input-error');
+            errorEl.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>${message}</span>
+            `;
+            errorEl.classList.add('visible');
+        }
+
+        function clearFieldError(field, errorEl) {
+            if (!field || !errorEl) return;
+            field.classList.remove('input-error');
+            errorEl.innerHTML = '';
+            errorEl.classList.remove('visible');
+        }
+
+        // 1. Title Validation
+        function validateTitle(showUi = true) {
+            const field = document.getElementById('productName');
+            const errorEl = document.getElementById('nameError');
+            const val = field.value.trim();
+
+            if (!val) {
+                if (showUi) setFieldError(field, errorEl, 'Product title is required.');
+                return false;
+            }
+            if (val.length < 3) {
+                if (showUi) setFieldError(field, errorEl, 'Product title must be at least 3 characters.');
+                return false;
+            }
+            if (val.length > 120) {
+                if (showUi) setFieldError(field, errorEl, 'Product title cannot exceed 120 characters.');
+                return false;
+            }
+            if (!/[a-zA-Z0-9]/.test(val)) {
+                if (showUi) setFieldError(field, errorEl, 'Product title must contain alphanumeric characters.');
+                return false;
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 2. Category Validation
+        function validateCategory(showUi = true) {
+            const field = document.getElementById('productCategory');
+            const errorEl = document.getElementById('categoryError');
+            const val = field.value.trim();
+
+            if (!val) {
+                if (showUi) setFieldError(field, errorEl, 'Please select a catalog category.');
+                return false;
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 3. Description Validation
+        function validateDescription(showUi = true) {
+            const field = document.getElementById('productDescription');
+            const errorEl = document.getElementById('descriptionError');
+            const val = field.value.trim();
+
+            if (!val) {
+                if (showUi) setFieldError(field, errorEl, 'Product description is required.');
+                return false;
+            }
+            if (val.length < 10) {
+                if (showUi) setFieldError(field, errorEl, 'Product description must be at least 10 characters.');
+                return false;
+            }
+            if (val.length > 3000) {
+                if (showUi) setFieldError(field, errorEl, 'Product description cannot exceed 3000 characters.');
+                return false;
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 4. Regular Price Validation
+        function validateRegularPrice(showUi = true) {
+            const field = document.getElementById('regularPrice');
+            const errorEl = document.getElementById('regularPriceError');
+            const raw = field.value.trim();
+
+            if (!raw) {
+                if (showUi) setFieldError(field, errorEl, 'Regular retail price is required.');
+                return false;
+            }
+            const num = parseFloat(raw);
+            if (isNaN(num) || !isFinite(num)) {
+                if (showUi) setFieldError(field, errorEl, 'Regular price must be a valid number.');
+                return false;
+            }
+            if (num <= 0) {
+                if (showUi) setFieldError(field, errorEl, 'Regular price must be greater than ₹0.');
+                return false;
+            }
+            if (num > 10000000) {
+                if (showUi) setFieldError(field, errorEl, 'Regular price cannot exceed ₹1,00,00,000.');
+                return false;
+            }
+            if (raw.includes('.') && raw.split('.')[1].length > 2) {
+                if (showUi) setFieldError(field, errorEl, 'Regular price cannot have more than 2 decimal places.');
+                return false;
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 5. Sale Price Validation
+        function validateSalePrice(showUi = true) {
+            const field = document.getElementById('salePrice');
+            const errorEl = document.getElementById('salePriceError');
+            const raw = field.value.trim();
+
+            // Sale price is optional
+            if (!raw) {
+                clearFieldError(field, errorEl);
+                return true;
+            }
+            const saleNum = parseFloat(raw);
+            if (isNaN(saleNum) || !isFinite(saleNum)) {
+                if (showUi) setFieldError(field, errorEl, 'Sale price must be a valid number.');
+                return false;
+            }
+            if (saleNum < 0) {
+                if (showUi) setFieldError(field, errorEl, 'Sale price cannot be negative.');
+                return false;
+            }
+            if (raw.includes('.') && raw.split('.')[1].length > 2) {
+                if (showUi) setFieldError(field, errorEl, 'Sale price cannot have more than 2 decimal places.');
+                return false;
+            }
+
+            const regRaw = document.getElementById('regularPrice').value.trim();
+            const regNum = parseFloat(regRaw);
+            if (!isNaN(regNum) && regNum > 0) {
+                if (saleNum > regNum) {
+                    if (showUi) setFieldError(field, errorEl, `Sale price cannot exceed the regular price (₹${regNum.toLocaleString('en-IN')}).`);
+                    return false;
+                }
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 6. Stock Quantity Validation
+        function validateStock(showUi = true) {
+            const field = document.getElementById('productStock');
+            const errorEl = document.getElementById('stockError');
+            const raw = field.value.trim();
+
+            if (!raw) {
+                if (showUi) setFieldError(field, errorEl, 'Stock quantity is required.');
+                return false;
+            }
+            const num = Number(raw);
+            if (isNaN(num) || !isFinite(num)) {
+                if (showUi) setFieldError(field, errorEl, 'Stock must be a valid number.');
+                return false;
+            }
+            if (num < 0) {
+                if (showUi) setFieldError(field, errorEl, 'Stock quantity cannot be negative.');
+                return false;
+            }
+            if (!Number.isInteger(num) || raw.includes('.')) {
+                if (showUi) setFieldError(field, errorEl, 'Stock must be a whole integer (no decimals).');
+                return false;
+            }
+            if (num > 1000000) {
+                if (showUi) setFieldError(field, errorEl, 'Stock quantity cannot exceed 1,000,000 units.');
+                return false;
+            }
+            clearFieldError(field, errorEl);
+            return true;
+        }
+
+        // 7. Images Count Validation
+        function validateImages(showUi = true) {
+            const dropzone = document.getElementById('dropzone');
+            const errorEl = document.getElementById('imagesError');
+            const totalImages = existingImages.length + newImages.length;
+
+            if (totalImages < 3) {
+                if (showUi) {
+                    dropzone.classList.add('has-error');
+                    const remaining = 3 - totalImages;
+                    errorEl.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span>At least 3 product images are required. Currently ${totalImages} uploaded (${remaining} more needed).</span>
+                    `;
+                    errorEl.classList.add('visible');
+                }
+                return false;
+            }
+
+            dropzone.classList.remove('has-error');
+            errorEl.innerHTML = '';
+            errorEl.classList.remove('visible');
+            return true;
+        }
+
+        // Real-time Event Listeners
+        const categoryInput = document.getElementById('productCategory');
+        const regularPriceInput = document.getElementById('regularPrice');
+        const salePriceInput = document.getElementById('salePrice');
+        const stockInput = document.getElementById('productStock');
+
+        // Product Title
+        nameInput.addEventListener('blur', () => validateTitle(true));
+        nameInput.addEventListener('input', () => {
+            if (nameInput.classList.contains('input-error')) validateTitle(true);
+        });
+
+        // Category
+        categoryInput.addEventListener('change', () => validateCategory(true));
+        categoryInput.addEventListener('blur', () => validateCategory(true));
+
+        // Description
+        descInput.addEventListener('blur', () => validateDescription(true));
+        descInput.addEventListener('input', () => {
+            if (descInput.classList.contains('input-error')) validateDescription(true);
+        });
+
+        // Regular Price
+        regularPriceInput.addEventListener('blur', () => {
+            validateRegularPrice(true);
+            if (salePriceInput.value.trim()) validateSalePrice(true);
+        });
+        regularPriceInput.addEventListener('input', () => {
+            if (regularPriceInput.classList.contains('input-error')) validateRegularPrice(true);
+            if (salePriceInput.value.trim() && salePriceInput.classList.contains('input-error')) {
+                validateSalePrice(true);
+            }
+        });
+
+        // Sale Price
+        salePriceInput.addEventListener('blur', () => validateSalePrice(true));
+        salePriceInput.addEventListener('input', () => {
+            if (salePriceInput.classList.contains('input-error') || salePriceInput.value.trim()) {
+                validateSalePrice(true);
+            }
+        });
+
+        // Stock
+        stockInput.addEventListener('blur', () => validateStock(true));
+        stockInput.addEventListener('input', () => {
+            if (stockInput.classList.contains('input-error')) validateStock(true);
+        });
+
+        // Form Submission with Complete Validation & Multi-Image Packaging
+        async function handleProductFormSubmit(e) {
+            e.preventDefault();
+
+            // 1. Run all field-level validations
+            const isTitleValid = validateTitle(true);
+            const isCategoryValid = validateCategory(true);
+            const isDescValid = validateDescription(true);
+            const isRegPriceValid = validateRegularPrice(true);
+            const isSalePriceValid = validateSalePrice(true);
+            const isStockValid = validateStock(true);
+            const isImagesValid = validateImages(true);
+
+            const isFormValid = isTitleValid && isCategoryValid && isDescValid && 
+                                isRegPriceValid && isSalePriceValid && isStockValid && isImagesValid;
+
+            if (!isFormValid) {
+                // Focus and smooth scroll to the first invalid field
+                let firstInvalidEl = null;
+                if (!isTitleValid) firstInvalidEl = document.getElementById('productName');
+                else if (!isCategoryValid) firstInvalidEl = document.getElementById('productCategory');
+                else if (!isDescValid) firstInvalidEl = document.getElementById('productDescription');
+                else if (!isRegPriceValid) firstInvalidEl = document.getElementById('regularPrice');
+                else if (!isSalePriceValid) firstInvalidEl = document.getElementById('salePrice');
+                else if (!isStockValid) firstInvalidEl = document.getElementById('productStock');
+                else if (!isImagesValid) firstInvalidEl = document.getElementById('dropzone');
+
+                if (firstInvalidEl) {
+                    firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (typeof firstInvalidEl.focus === 'function') {
+                        firstInvalidEl.focus();
+                    }
+                }
+
+                luxurySwal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please correct the highlighted fields before submitting.',
+                    confirmButtonText: 'Review Fields',
+                    confirmButtonColor: '#D48833'
+                });
+                return;
+            }
+
+            const name = document.getElementById('productName').value.trim();
+            const category = document.getElementById('productCategory').value;
+            const description = document.getElementById('productDescription').value.trim();
+            const regularPrice = parseFloat(document.getElementById('regularPrice').value);
+            const salePriceVal = document.getElementById('salePrice').value.trim();
+            const salePrice = salePriceVal ? parseFloat(salePriceVal) : null;
+            const stock = parseInt(document.getElementById('productStock').value, 10);
+            const isListed = document.getElementById('productListed').checked;
+            const submitBtn = document.getElementById('submitProductBtn');
+
+            // 2. Assemble multipart FormData
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('category', category);
+            formData.append('description', description);
+            formData.append('regularPrice', regularPrice);
+            if (salePrice !== null) formData.append('salePrice', salePrice);
+            formData.append('stock', stock);
+            formData.append('isListed', isListed);
+
+            // Append existing images retained
+            existingImages.forEach(imgUrl => {
+                formData.append('existingImages', imgUrl);
+            });
+
+            // Append newly uploaded and cropped images
+            newImages.forEach((img, idx) => {
+                if (img.croppedBlob) {
+                    formData.append('productImages', img.croppedBlob, `product-${idx}-${Date.now()}.webp`);
+                } else if (img.originalFile) {
+                    formData.append('productImages', img.originalFile);
+                }
+            });
+
+            // Determine endpoint based on mode
+            const isEdit = '<%= mode %>' === 'edit';
+            const endpoint = isEdit ? '/admin/products/edit/<%= product._id %>' : '/admin/products/add';
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
+                        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10"></path>
+                    </svg>
+                    Saving Product...
+                `;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    luxurySwal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to save product.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#D48833'
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = isEdit ? 'Update Product' : 'Save & Publish Product';
+                    return;
+                }
+
+                luxurySwal.fire({
+                    icon: 'success',
+                    title: isEdit ? 'Product Updated' : 'Product Added',
+                    text: data.message,
+                    confirmButtonText: 'Go to Catalog',
+                    confirmButtonColor: '#D48833'
+                }).then(() => {
+                    window.location.href = '/admin/products';
+                });
+
+            } catch (err) {
+                console.error(err);
+                luxurySwal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'An error occurred while uploading. Please try again.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#D48833'
+                });
+                submitBtn.disabled = false;
+                submitBtn.textContent = isEdit ? 'Update Product' : 'Save & Publish Product';
+            }
+        }
+
+        // Initialize preview on page load
+        renderImagePreviews();
+    </script>
+</body>
+
+</html>

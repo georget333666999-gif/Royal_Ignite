@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
     {
@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-
         email: {
             type: String,
             required: true,
@@ -15,41 +14,33 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true
         },
-
         password: {
             type: String,
             required: true
         },
-
         referralCode: {
             type: String,
             trim: true
         },
-
         imgUrl: {
             type: String
         },
-
         isBlocked: {
             type: Boolean,
             default: false
         },
-
         phone: {
             type: String,
             trim: true
         },
-
         isAdmin: {
             type: Boolean,
             default: false
         },
-
         isVerified: {
             type: Boolean,
             default: false
         },
-
         googleId: {
             type: String,
             sparse: true
@@ -60,4 +51,5 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

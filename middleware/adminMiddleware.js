@@ -1,19 +1,28 @@
-const adminMiddleware = (req, res, next) => {
-    if (!req.session.userId || !req.session.isAdmin) {
+export const adminMiddleware = (req, res, next) => {
+    try {
+        if (!req.session?.userId || !req.session?.isAdmin) {
+            return res.redirect("/admin/login");
+        }
+        next();
+    } catch (err) {
+        console.error("adminMiddleware error:", err);
         return res.redirect("/admin/login");
     }
-
-    next();
 };
 
-const redirectIfAdminLoggedIn = (req, res, next) => {
-    if (req.session && req.session.userId && req.session.isAdmin) {
-        return res.redirect("/admin/dashboard");
+export const redirectIfAdminLoggedIn = (req, res, next) => {
+    try {
+        if (req.session && req.session.userId && req.session.isAdmin) {
+            return res.redirect("/admin/dashboard");
+        }
+        next();
+    } catch (err) {
+        console.error("redirectIfAdminLoggedIn error:", err);
+        next();
     }
-    next();
 };
 
-module.exports = {
+export default {
     adminMiddleware,
     redirectIfAdminLoggedIn
 };

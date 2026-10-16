@@ -1,4 +1,6 @@
-const User = require("../models/userModel");
+import User from "../models/userModel.js";
+import { getOtpExpiryStatus } from "../utils/otpHelper.js";
+import { HTTP_STATUS, RESPONSE_MESSAGES } from "../constants/index.js";
 
 // Email regex helper
 const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(email?.trim() || "");
@@ -52,190 +54,262 @@ const validatePasswordStrength = (password) => {
 // ========================================
 // Signup Validation
 // ========================================
-const validateSignup = (req, res, next) => {
-    const { name, email, phone, password, confirmPassword } = req.body;
-
+const getSignupValidationError = (body = {}) => {
+    const { name, email, phone, password, confirmPassword } = body;
     if (!name || !email || !phone || !password || !confirmPassword) {
-        return res.status(400).render("signup", { error: "All fields are required.", formData: req.body });
+        return "All fields are required.";
     }
+
     const pwdError = validatePasswordStrength(password);
-    if (pwdError) {
-        return res.status(400).render("signup", { error: pwdError, formData: req.body });
-    }
+    if (pwdError) return pwdError;
+
     if (password !== confirmPassword) {
-        return res.status(400).render("signup", { error: "Passwords do not match.", formData: req.body });
+        return RESPONSE_MESSAGES.AUTH.PASSWORD_MISMATCH;
     }
     if (!isValidEmail(email)) {
-        return res.status(400).render("signup", { error: "Please enter a valid email address.", formData: req.body });
+        return "Please enter a valid email address.";
     }
-    const typoError = checkEmailTypo(email);
-    if (typoError) {
-        return res.status(400).render("signup", { error: typoError, formData: req.body });
-    }
+    return checkEmailTypo(email);
+};
 
-    next();
+const validateSignup = (req, res, next) => {
+    try {
+        const error = getSignupValidationError(req.body);
+        if (error) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("signup", { error, formData: req.body });
+        }
+        next();
+    } catch (err) {
+        console.error("validateSignup error:", err);
+        return next(err);
+    }
 };
 
 // ========================================
 // Login Validation
 // ========================================
 const validateLogin = (req, res, next) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).render("login", { error: "Email and password are required.", formData: req.body });
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("login", { error: RESPONSE_MESSAGES.AUTH.EMAIL_PASSWORD_REQUIRED, formData: req.body });
+        }
+        next();
+    } catch (err) {
+        console.error("validateLogin error:", err);
+        return next(err);
     }
-    next();
 };
 
 // ========================================
 // OTP Validation
 // ========================================
-const validateOTP = (req, res, next) => {
-    const { otpCode } = req.body;
-    const isEmailChange = req.originalUrl && req.originalUrl.includes("verify-email-otp");
-
-    if (!otpCode || !otpCode.trim()) {
+const renderOtpValidationError = async (req, res, errorMessage) => {
+    try {
+        const isEmailChange = Boolean(req.originalUrl && req.originalUrl.includes("verify-email-otp"));
         if (isEmailChange) {
-            return res.status(400).render("verifyEmailOtp", {
-                pendingEmail: req.session.pendingNewEmail || "",
-                error: "Please enter the 6-digit OTP code."
+            const { remainingSeconds, resendCooldownSeconds, isExpired } = await getOtpExpiryStatus(req.session?.userId, "email-change");
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("verifyEmailOtp", {
+                pendingEmail: req.session?.pendingNewEmail || "",
+                error: errorMessage,
+                remainingSeconds,
+                resendCooldownSeconds,
+                isExpired
             });
         }
-        return res.status(400).render("verifyOtp", {
-            error: "Please enter the 6-digit OTP code.",
+
+        const { remainingSeconds, resendCooldownSeconds, isExpired } = await getOtpExpiryStatus(req.session?.otpUserId, "signup");
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("verifyOtp", {
+            error: errorMessage,
+            remainingSeconds,
+            resendCooldownSeconds,
+            isExpired
+        });
+    } catch (err) {
+        console.error("renderOtpValidationError error:", err);
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("verifyOtp", {
+            error: errorMessage,
             remainingSeconds: 0,
-            isExpired: false
+            resendCooldownSeconds: 0,
+            isExpired: true
         });
     }
+};
 
-    if (!/^\d{6}$/.test(otpCode.trim())) {
-        if (isEmailChange) {
-            return res.status(400).render("verifyEmailOtp", {
-                pendingEmail: req.session.pendingNewEmail || "",
-                error: "OTP must be exactly 6 digits."
-            });
+const validateOTP = async (req, res, next) => {
+    try {
+        const otpCode = req.body.otpCode ? req.body.otpCode.trim() : "";
+        const isAjax = Boolean(req.xhr || req.headers?.accept?.includes("application/json") || req.is?.("json"));
+
+        if (!otpCode) {
+            if (isAjax) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.OTP.ENTER_CODE });
+            }
+            return await renderOtpValidationError(req, res, RESPONSE_MESSAGES.OTP.ENTER_CODE);
         }
-        return res.status(400).render("verifyOtp", {
-            error: "OTP must be exactly 6 digits.",
-            remainingSeconds: 0,
-            isExpired: false
-        });
-    }
+        if (!/^\d{6}$/.test(otpCode)) {
+            if (isAjax) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.OTP.EXACT_6_DIGITS });
+            }
+            return await renderOtpValidationError(req, res, RESPONSE_MESSAGES.OTP.EXACT_6_DIGITS);
+        }
 
-    next();
+        next();
+    } catch (err) {
+        console.error("validateOTP error:", err);
+        return next(err);
+    }
 };
 
 // ========================================
 // Forgot Password Validation
 // ========================================
 const validateForgotPassword = (req, res, next) => {
-    const { email } = req.body;
-    if (!email) {
-        return res.status(400).render("forgotPassword", { error: "Please enter your email address.", success: null });
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("forgotPassword", { error: "Please enter your email address.", success: null });
+        }
+        if (!isValidEmail(email)) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("forgotPassword", { error: "Please enter a valid email address.", success: null });
+        }
+        const typoError = checkEmailTypo(email);
+        if (typoError) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("forgotPassword", { error: typoError, success: null });
+        }
+        next();
+    } catch (err) {
+        console.error("validateForgotPassword error:", err);
+        return next(err);
     }
-    if (!isValidEmail(email)) {
-        return res.status(400).render("forgotPassword", { error: "Please enter a valid email address.", success: null });
-    }
-    const typoError = checkEmailTypo(email);
-    if (typoError) {
-        return res.status(400).render("forgotPassword", { error: typoError, success: null });
-    }
-    next();
 };
 
 // ========================================
 // Reset Password Validation
 // ========================================
-const validateResetPassword = (req, res, next) => {
-    const { otpCode, newPassword, confirmPassword } = req.body;
-
+const getResetPasswordValidationError = (body = {}) => {
+    const { otpCode, newPassword, confirmPassword } = body;
     if (!otpCode || !newPassword || !confirmPassword) {
-        return res.status(400).render("resetPassword", { error: "All fields are required." });
+        return "All fields are required.";
     }
     if (!/^\d{6}$/.test(otpCode.trim())) {
-        return res.status(400).render("resetPassword", { error: "OTP must be exactly 6 digits." });
+        return RESPONSE_MESSAGES.OTP.EXACT_6_DIGITS;
     }
     const pwdError = validatePasswordStrength(newPassword);
-    if (pwdError) {
-        return res.status(400).render("resetPassword", { error: pwdError });
-    }
-    if (newPassword !== confirmPassword) {
-        return res.status(400).render("resetPassword", { error: "Passwords do not match." });
-    }
+    if (pwdError) return pwdError;
 
-    next();
+    if (newPassword !== confirmPassword) {
+        return RESPONSE_MESSAGES.AUTH.PASSWORD_MISMATCH;
+    }
+    return null;
+};
+
+const validateResetPassword = (req, res, next) => {
+    try {
+        const error = getResetPasswordValidationError(req.body);
+        if (error) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("resetPassword", { error });
+        }
+        next();
+    } catch (err) {
+        console.error("validateResetPassword error:", err);
+        return next(err);
+    }
 };
 
 // ========================================
 // Change Password Validation
 // ========================================
-const validateChangePassword = (req, res, next) => {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
-    const user = req.user || null;
-
+const getChangePasswordValidationError = (body = {}) => {
+    const { currentPassword, newPassword, confirmPassword } = body;
     if (!currentPassword || !newPassword || !confirmPassword) {
-        return res.status(400).render("changePassword", { user, error: "All fields are required.", success: null });
+        return "All fields are required.";
     }
     const pwdError = validatePasswordStrength(newPassword);
-    if (pwdError) {
-        return res.status(400).render("changePassword", { user, error: pwdError, success: null });
-    }
+    if (pwdError) return pwdError;
+
     if (newPassword !== confirmPassword) {
-        return res.status(400).render("changePassword", { user, error: "Passwords do not match.", success: null });
+        return RESPONSE_MESSAGES.AUTH.PASSWORD_MISMATCH;
     }
     if (currentPassword === newPassword) {
-        return res.status(400).render("changePassword", { user, error: "New password must be different from the current password.", success: null });
+        return "New password must be different from the current password.";
     }
+    return null;
+};
 
-    next();
+const validateChangePassword = (req, res, next) => {
+    try {
+        const user = req.user || null;
+        const error = getChangePasswordValidationError(req.body);
+        if (error) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("changePassword", { user, error, success: null });
+        }
+        next();
+    } catch (err) {
+        console.error("validateChangePassword error:", err);
+        return next(err);
+    }
 };
 
 // ========================================
 // Change Email Validation
 // ========================================
-const validateChangeEmail = async (req, res, next) => {
-    const { newEmail } = req.body;
-    let currentEmail = "";
-    try {
-        if (req.session.userId) {
-            const user = await User.findById(req.session.userId).select("email");
-            if (user) currentEmail = user.email;
-        }
-    } catch (e) {}
-
-    if (!newEmail || !newEmail.trim()) {
-        return res.status(400).render("changeEmail", { 
-            error: "Please enter your new email address.",
-            currentEmail,
-            newEmail: ""
-        });
+const getChangeEmailValidationError = (newEmail, currentEmail) => {
+    const trimmed = (newEmail || "").trim();
+    if (!trimmed) {
+        return "Please enter your new email address.";
     }
-    if (!isValidEmail(newEmail)) {
-        return res.status(400).render("changeEmail", { 
-            error: "Please enter a valid email address (e.g., name@domain.com).",
-            currentEmail,
-            newEmail
-        });
+    if (!isValidEmail(trimmed)) {
+        return "Please enter a valid email address (e.g., name@domain.com).";
     }
-    const typoError = checkEmailTypo(newEmail);
+    const typoError = checkEmailTypo(trimmed);
     if (typoError) {
-        return res.status(400).render("changeEmail", { 
-            error: typoError,
-            currentEmail,
-            newEmail
-        });
+        return typoError;
     }
-    if (currentEmail && newEmail.trim().toLowerCase() === currentEmail.toLowerCase()) {
-        return res.status(400).render("changeEmail", {
-            error: "New email must be different from your current email.",
-            currentEmail,
-            newEmail
-        });
+    if (currentEmail && trimmed.toLowerCase() === currentEmail.toLowerCase()) {
+        return "New email must be different from your current email.";
     }
-    next();
+    return null;
 };
 
-module.exports = {
+const validateChangeEmail = async (req, res, next) => {
+    try {
+        const { newEmail } = req.body;
+        let currentEmail = "";
+        try {
+            if (req.session?.userId) {
+                const user = await User.findById(req.session.userId).select("email");
+                if (user) currentEmail = user.email;
+            }
+        } catch (e) {}
+
+        const error = getChangeEmailValidationError(newEmail, currentEmail);
+        if (error) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("changeEmail", {
+                error,
+                currentEmail,
+                newEmail: newEmail || ""
+            });
+        }
+
+        next();
+    } catch (err) {
+        console.error("validateChangeEmail error:", err);
+        return next(err);
+    }
+};
+
+export {
+    validateSignup,
+    validateLogin,
+    validateOTP,
+    validateForgotPassword,
+    validateResetPassword,
+    validateChangePassword,
+    validateChangeEmail
+};
+
+export default {
     validateSignup,
     validateLogin,
     validateOTP,

@@ -1,0 +1,1109 @@
+/* ========================================================
+   ROYAL IGNITE — The Fuel Collection Stylesheet
+   Haute Horology & Mechanical Atelier Editorial Aesthetic
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --fuel-bg: #000000;
+    --fuel-surface: #100F0D;
+    --fuel-card: #100F0D;
+    --fuel-card-border: rgba(255, 255, 255, 0.08);
+    --fuel-card-hover: rgba(229, 169, 60, 0.55);
+    --fuel-gold: #E5A93C;
+    --fuel-gold-bright: #F6BD64;
+    --fuel-gold-light: #F7D08A;
+    --fuel-gold-dark: #A57224;
+    --fuel-amber-glow: rgba(245, 158, 11, 0.22);
+    --fuel-text: #F5F2EB;
+    --fuel-text-muted: #A39D94;
+    --fuel-text-subtle: #6B655D;
+    --fuel-border-subtle: rgba(255, 255, 255, 0.08);
+    --fuel-font-serif: 'Bodoni Moda', Georgia, serif;
+    --fuel-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --fuel-font-mono: 'JetBrains Mono', monospace;
+    --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    caret-color: transparent;
+}
+
+body.fuel-body {
+    background-color: #000000;
+    color: var(--fuel-text);
+    font-family: var(--fuel-font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+    caret-color: var(--fuel-gold) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    cursor: text !important;
+}
+
+.fuel-container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.italic-gold {
+    font-family: var(--fuel-font-serif);
+    font-style: italic;
+    color: var(--fuel-gold);
+}
+
+.kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--fuel-gold);
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+/* ========================================================
+   1. NAVIGATION HEADER
+   ======================================================== */
+.fuel-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(7, 6, 5, 0.88);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--fuel-border-subtle);
+    transition: var(--transition);
+}
+
+.fuel-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+}
+
+.fuel-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--fuel-text);
+}
+
+.fuel-brand-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--fuel-gold);
+}
+
+.fuel-brand-name {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.25rem;
+    letter-spacing: 4px;
+    font-weight: 600;
+    color: var(--fuel-text);
+}
+
+.fuel-nav {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+}
+
+.fuel-nav-link {
+    color: var(--fuel-text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    position: relative;
+    padding: 6px 0;
+}
+
+.fuel-nav-link:hover,
+.fuel-nav-link.active {
+    color: var(--fuel-gold-bright);
+}
+
+.fuel-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--fuel-gold);
+    border-radius: 1px;
+}
+
+.fuel-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.fuel-icon-btn {
+    background: none;
+    border: none;
+    color: var(--fuel-text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.fuel-icon-btn:hover {
+    color: var(--fuel-gold);
+    background: rgba(229, 169, 60, 0.08);
+}
+
+/* ========================================================
+   2. HERO & BENCHMARKS
+   ======================================================== */
+.fuel-hero-section {
+    padding-top: 130px;
+    padding-bottom: 50px;
+    position: relative;
+    background: radial-gradient(circle at 75% 20%, rgba(229, 169, 60, 0.06) 0%, transparent 60%);
+}
+
+.fuel-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--fuel-text-subtle);
+    margin-bottom: 24px;
+}
+
+.fuel-breadcrumb a {
+    color: var(--fuel-text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.fuel-breadcrumb a:hover {
+    color: var(--fuel-gold);
+}
+
+.fuel-breadcrumb .sep {
+    color: rgba(229, 169, 60, 0.6);
+}
+
+.fuel-breadcrumb span.active-crumb {
+    color: var(--fuel-gold);
+}
+
+.fuel-hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.fuel-hero-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 3.8rem;
+    font-weight: 400;
+    line-height: 1.08;
+    margin-bottom: 12px;
+    color: var(--fuel-text);
+}
+
+.fuel-hero-subheadline {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.35rem;
+    color: var(--fuel-gold-light);
+    margin-bottom: 16px;
+    font-weight: 400;
+}
+
+.fuel-hero-desc {
+    color: var(--fuel-text-muted);
+    font-size: 1rem;
+    max-width: 620px;
+    line-height: 1.7;
+}
+
+.fuel-hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.fuel-sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--fuel-card);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.75);
+    padding: 10px 20px;
+    border-radius: 30px;
+    transition: var(--transition);
+}
+
+.fuel-sort-bar:focus-within,
+.fuel-sort-bar:hover {
+    border-color: var(--fuel-gold);
+    box-shadow: 0 0 20px var(--fuel-amber-glow);
+}
+
+.fuel-sort-label {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--fuel-gold);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fuel-sort-select {
+    background: transparent;
+    border: none;
+    color: var(--fuel-text);
+    font-family: var(--fuel-font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+}
+
+.fuel-sort-select option {
+    background: #120F0B;
+    color: #fff;
+    padding: 8px;
+}
+
+.fuel-hero-badge {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    color: var(--fuel-text-muted);
+    text-transform: uppercase;
+}
+
+.fuel-hero-badge span {
+    color: var(--fuel-gold);
+    font-weight: 700;
+}
+
+/* Metrics Ribbon */
+.fuel-metrics-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--fuel-border-subtle);
+    border-bottom: 1px solid var(--fuel-border-subtle);
+}
+
+.fuel-metric-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.fuel-metric-num {
+    font-family: var(--fuel-font-serif);
+    font-size: 2rem;
+    color: var(--fuel-gold);
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.fuel-metric-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--fuel-text);
+    margin-bottom: 2px;
+}
+
+.fuel-metric-sub {
+    font-size: 0.7rem;
+    color: var(--fuel-text-subtle);
+}
+
+/* ========================================================
+   3. CURATED 6-PIECE ATELIER SHOWCASE GRID (WELL-ORGANIZED)
+   ======================================================== */
+.fuel-collection-section {
+    padding: 60px 0 90px;
+}
+
+.fuel-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.fuel-section-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 2.8rem;
+    font-weight: 400;
+    color: var(--fuel-text);
+}
+
+.fuel-section-subtext {
+    max-width: 440px;
+    color: var(--fuel-text-muted);
+    font-size: 0.95rem;
+    text-align: right;
+    line-height: 1.6;
+}
+
+/* The Core 3-Column Grid */
+.fuel-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+/* Individual Luxury Card */
+.fuel-card {
+    background: var(--fuel-card);
+    border: 1px solid var(--fuel-card-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 36px rgba(0, 0, 0, 0.9);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+    position: relative;
+}
+
+.fuel-card:hover {
+    border-color: var(--fuel-card-hover);
+    transform: translateY(-5px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 24px 50px rgba(0, 0, 0, 0.95), 0 0 25px var(--fuel-amber-glow);
+}
+
+/* Top Meta Bar */
+.fuel-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 10px;
+    z-index: 2;
+}
+
+.fuel-card-badge {
+    background: rgba(18, 15, 11, 0.85);
+    border: 1px solid rgba(229, 169, 60, 0.35);
+    color: var(--fuel-gold);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.fuel-card-edition-num {
+    font-family: var(--fuel-font-mono);
+    font-size: 0.68rem;
+    color: var(--fuel-text-subtle);
+    letter-spacing: 1px;
+}
+
+/* CONTROLLED IMAGE VIEWPORT (Crisp, Contained, Proportional) */
+.fuel-card-stage {
+    width: 100%;
+    height: 290px;
+    background: radial-gradient(circle at 50% 50%, rgba(229, 169, 60, 0.1) 0%, rgba(26, 22, 17, 0.85) 60%, #090806 100%);
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.fuel-card-link {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    z-index: 2;
+}
+
+.fuel-card-img {
+    max-width: 82%;
+    max-height: 82%;
+    object-fit: contain;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+    filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.95)) brightness(1.02);
+}
+
+.fuel-card:hover .fuel-card-img {
+    transform: scale(1.06) translateY(-4px);
+    filter: drop-shadow(0 24px 30px rgba(229, 169, 60, 0.25)) brightness(1.08);
+}
+
+.fuel-card-ambient-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 60%, rgba(229, 169, 60, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Card Body Content */
+.fuel-card-body {
+    padding: 22px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fuel-card-kicker {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--fuel-gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.fuel-card-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.55rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+
+.fuel-card-title a {
+    color: #fff;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.fuel-card:hover .fuel-card-title a {
+    color: var(--fuel-gold-light);
+}
+
+.fuel-card-desc {
+    color: var(--fuel-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 44px;
+}
+
+.fuel-card-specs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--fuel-font-mono);
+    font-size: 0.68rem;
+    color: var(--fuel-text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 22px;
+}
+
+.fuel-card-specs svg {
+    color: var(--fuel-gold);
+}
+
+.fuel-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fuel-pricing-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.fuel-price-kicker {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--fuel-text-subtle);
+}
+
+.fuel-price-values {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.fuel-price-val {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--fuel-gold);
+}
+
+.fuel-price-orig {
+    font-size: 0.85rem;
+    color: var(--fuel-text-subtle);
+    text-decoration: line-through;
+}
+
+.fuel-acquire-btn {
+    background: transparent;
+    border: 1px solid rgba(229, 169, 60, 0.35);
+    color: var(--fuel-gold-light);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.fuel-acquire-btn:hover {
+    background: var(--fuel-gold);
+    color: #000;
+    border-color: var(--fuel-gold);
+    box-shadow: 0 4px 16px rgba(229, 169, 60, 0.3);
+}
+
+/* ========================================================
+   4. BLUEPRINT & ANATOMY SECTION
+   ======================================================== */
+.fuel-blueprint-section {
+    padding: 80px 0;
+    border-top: 1px solid var(--fuel-border-subtle);
+    border-bottom: 1px solid var(--fuel-border-subtle);
+    background: radial-gradient(circle at 20% 50%, rgba(229, 169, 60, 0.04) 0%, transparent 60%);
+}
+
+.fuel-blueprint-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.fuel-blueprint-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 3rem;
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 16px;
+}
+
+.fuel-blueprint-lead {
+    color: var(--fuel-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 32px;
+}
+
+.fuel-anatomy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.fuel-anatomy-item {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.fuel-anatomy-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(229, 169, 60, 0.08);
+    border: 1px solid rgba(229, 169, 60, 0.25);
+    color: var(--fuel-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.fuel-anatomy-item h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--fuel-text);
+    margin-bottom: 4px;
+}
+
+.fuel-anatomy-item p {
+    font-size: 0.85rem;
+    color: var(--fuel-text-muted);
+    line-height: 1.5;
+}
+
+.fuel-spec-card {
+    background: var(--fuel-card);
+    border: 1px solid var(--fuel-card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 8px;
+    padding: 36px 32px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.fuel-spec-card-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--fuel-gold);
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.fuel-spec-card-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin-bottom: 24px;
+    color: #fff;
+}
+
+.fuel-spec-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.fuel-spec-checklist li {
+    font-size: 0.85rem;
+    color: var(--fuel-text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+}
+
+.fuel-spec-checklist li strong {
+    color: var(--fuel-text);
+}
+
+.fuel-spec-card-footer {
+    font-size: 0.75rem;
+    color: var(--fuel-gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========================================================
+   5. RITUALS OF RESTORATION
+   ======================================================== */
+.fuel-rituals-section {
+    padding: 80px 0 100px;
+}
+
+.fuel-rituals-header {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 50px;
+}
+
+.fuel-rituals-title {
+    font-family: var(--fuel-font-serif);
+    font-size: 2.8rem;
+    font-weight: 400;
+    margin-bottom: 14px;
+}
+
+.fuel-rituals-desc {
+    color: var(--fuel-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.fuel-rituals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.fuel-ritual-card {
+    background: var(--fuel-card);
+    border: 1px solid var(--fuel-card-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 8px;
+    padding: 32px 28px;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.fuel-ritual-card:hover {
+    border-color: var(--fuel-card-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.fuel-ritual-step {
+    font-family: var(--fuel-font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fuel-gold);
+    margin-bottom: 16px;
+    display: inline-block;
+}
+
+.fuel-ritual-card h3 {
+    font-family: var(--fuel-font-serif);
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.fuel-ritual-card p {
+    color: var(--fuel-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    flex: 1;
+}
+
+.fuel-ritual-link {
+    color: var(--fuel-gold);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: var(--transition);
+}
+
+.fuel-ritual-link:hover {
+    color: var(--fuel-gold-bright);
+    transform: translateX(4px);
+}
+
+/* ========================================================
+   RESPONSIVE DESIGN
+   ======================================================== */
+@media (max-width: 1200px) {
+    .fuel-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .fuel-hero-grid,
+    .fuel-blueprint-grid {
+        grid-template-columns: 1fr;
+    }
+    .fuel-hero-actions {
+        align-items: flex-start;
+    }
+    .fuel-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .fuel-section-subtext {
+        text-align: left;
+    }
+    .fuel-metrics-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .fuel-rituals-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .fuel-container {
+        padding: 0 20px;
+    }
+    .fuel-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .fuel-hero-title {
+        font-size: 2.8rem;
+    }
+    .fuel-section-title {
+        font-size: 2.2rem;
+    }
+    .fuel-metrics-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================================
+   UNIFIED LUXURY FOOTER (FUEL LIGHTERS)
+   ======================================================== */
+.royal-footer {
+    background: #060608;
+    border-top: 1px solid rgba(229, 169, 60, 0.16);
+    padding: 72px 0 36px;
+    color: #EAE6DF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1.3fr;
+    gap: 48px;
+    margin-bottom: 50px;
+}
+
+.footer-col-brand {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #F0ECE1;
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-brand:hover {
+    color: #E5A93C;
+}
+
+.footer-brand-icon {
+    width: 20px;
+    height: 20px;
+    color: #E5A93C;
+    flex-shrink: 0;
+}
+
+.footer-desc {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #9A9488;
+    margin-bottom: 16px;
+    max-width: 340px;
+}
+
+.footer-hallmark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: rgba(229, 169, 60, 0.65);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.footer-title {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: #E5A93C;
+    margin-bottom: 20px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-links li {
+    list-style: none;
+}
+
+.footer-links a {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #B5AEA3;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-links a:hover {
+    color: #FFFFFF;
+    transform: translateX(4px);
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.newsletter-input {
+    flex: 1;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(229, 169, 60, 0.24);
+    border-radius: 6px;
+    padding: 0 14px;
+    color: #FFFFFF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.newsletter-input:focus {
+    border-color: #E5A93C;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 14px rgba(229, 169, 60, 0.2);
+}
+
+.newsletter-input::placeholder {
+    color: #6F685E;
+}
+
+.newsletter-btn {
+    height: 42px;
+    background: rgba(229, 169, 60, 0.12);
+    border: 1px solid rgba(229, 169, 60, 0.38);
+    border-radius: 6px;
+    color: #E5A93C;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newsletter-btn:hover {
+    background: #E5A93C;
+    color: #0E0E12;
+    box-shadow: 0 4px 18px rgba(229, 169, 60, 0.35);
+    transform: translateY(-1px);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.74rem;
+    color: #7D7569;
+}
+
+.footer-copy {
+    color: #7D7569;
+}
+
+.footer-legal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-legal a {
+    color: #7D7569;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-legal a:hover {
+    color: #E5A93C;
+}
+
+.footer-dot {
+    color: rgba(229, 169, 60, 0.4);
+    font-size: 0.6rem;
+}
+
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 36px;
+    }
+}
+
+@media (max-width: 640px) {
+    .royal-footer {
+        padding: 50px 0 30px;
+    }
+    .footer-container {
+        padding: 0 20px;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        margin-bottom: 36px;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+    }
+    .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

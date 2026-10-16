@@ -1,0 +1,577 @@
+/* ========================================================
+   ROYAL IGNITE — Luxury Cart / Shopping Bag Stylesheet
+   ======================================================== */
+
+:root {
+    --bg-dark: #070707;
+    --card-bg: #0D0D0D;
+    --card-hover-bg: #121212;
+    --surface-dark: #141414;
+    --surface-light: #1A1A1A;
+    --gold-primary: #F6BD64;
+    --gold-accent: #D8A24C;
+    --gold-glow: rgba(246, 189, 100, 0.15);
+    --gold-darkText: #442C00;
+    --text-headline: #E5E2E1;
+    --text-body: #D4C4B2;
+    --text-muted: #8E8377;
+    --border-gold: rgba(216, 162, 76, 0.35);
+    --border-subtle: rgba(80, 69, 55, 0.25);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cart-section {
+    padding: 120px 0 80px;
+    background-color: var(--bg-dark);
+    min-height: 80vh;
+}
+
+/* Header & Breadcrumb */
+.cart-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.cart-breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.cart-breadcrumb a:hover {
+    color: var(--gold-primary);
+}
+
+.cart-breadcrumb span.current {
+    color: var(--gold-primary);
+}
+
+.cart-hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.cart-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 2.6rem;
+    color: var(--text-headline);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.cart-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.cart-continue-link {
+    color: var(--gold-primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.cart-continue-link:hover {
+    color: #fff;
+}
+
+/* Alerts */
+.cart-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.cart-alert.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+.cart-alert.success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+}
+
+/* Blocking Issues Notice */
+.blocking-notice-card {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: var(--radius-md);
+    padding: 18px 24px;
+    margin-bottom: 28px;
+}
+
+.blocking-notice-title {
+    color: #f87171;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.blocking-reasons-list {
+    margin-left: 26px;
+    font-size: 0.88rem;
+    color: #fca5a5;
+    line-height: 1.6;
+}
+
+/* Main 2-Column Grid */
+.cart-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 40px;
+    align-items: start;
+}
+
+/* Cart Items List */
+.cart-items-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Individual Cart Item Card */
+.cart-item-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 20px;
+    align-items: center;
+    transition: var(--transition);
+    position: relative;
+}
+
+.cart-item-card:hover {
+    border-color: var(--border-gold);
+}
+
+.cart-item-card.has-issue {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.02);
+}
+
+.cart-item-img-box {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+.cart-item-img-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.cart-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cart-item-cat {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gold-accent);
+}
+
+.cart-item-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 1.18rem;
+    color: var(--text-headline);
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.cart-item-title a {
+    color: var(--text-headline);
+    text-decoration: none;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
+    display: inline-block;
+}
+
+.cart-item-title a:visited {
+    color: var(--text-headline);
+}
+
+.cart-item-title a:hover,
+.cart-item-card:hover .cart-item-title a {
+    color: var(--gold-primary);
+    text-shadow: 0 0 12px var(--gold-glow);
+}
+
+.cart-item-unit-price {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.cart-item-unit-price strong {
+    color: var(--gold-primary);
+}
+
+/* Item Status Warnings */
+.cart-item-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+}
+
+.cart-item-warning.sold-out {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cart-item-warning.low-stock {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Quantity & Subtotal Controls */
+.cart-item-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.cart-item-line-total {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--gold-primary);
+}
+
+.cart-qty-stepper {
+    display: flex;
+    align-items: center;
+    background: var(--surface-dark);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    height: 36px;
+}
+
+.btn-cart-qty {
+    width: 32px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-headline);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cart-qty:hover:not(:disabled) {
+    color: var(--gold-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-cart-qty:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.cart-qty-value {
+    width: 36px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-headline);
+}
+
+.btn-remove-item {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: var(--transition);
+    padding: 4px 6px;
+}
+
+.btn-remove-item:hover {
+    color: #ef4444;
+}
+
+/* --------------------------------------------------------
+   Right Column: Order Summary Sidebar
+   -------------------------------------------------------- */
+.order-summary-sidebar {
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 28px;
+    position: sticky;
+    top: 100px;
+}
+
+.summary-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 1.4rem;
+    color: var(--text-headline);
+    font-weight: 500;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-body);
+    margin-bottom: 14px;
+}
+
+.summary-row.total-row {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-headline);
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-total-val {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 1.6rem;
+    color: var(--gold-primary);
+}
+
+.free-courier-tag {
+    color: #4ade80;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.summary-row.savings {
+    color: #4ade80;
+    font-weight: 500;
+}
+
+.cart-savings-badge {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    color: #4ade80;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 14px;
+    letter-spacing: 0.3px;
+}
+
+/* Checkout Button */
+.btn-checkout {
+    width: 100%;
+    padding: 16px 24px;
+    background: var(--gold-primary);
+    color: var(--gold-darkText);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.btn-checkout:hover:not(:disabled) {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 4px 20px var(--gold-glow);
+}
+
+.btn-checkout:disabled,
+.btn-checkout.disabled {
+    background: var(--surface-light);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.checkout-restricted-hint {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: #f87171;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Summary Trust Perks */
+.summary-perks-list {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-perk-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.summary-perk-row svg {
+    color: var(--gold-primary);
+    flex-shrink: 0;
+}
+
+/* Empty Cart State */
+.cart-empty-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 80px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.empty-bag-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(246, 189, 100, 0.08);
+    border: 1px solid var(--border-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-primary);
+    margin-bottom: 24px;
+}
+
+.empty-bag-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 2rem;
+    color: var(--text-headline);
+    margin-bottom: 12px;
+}
+
+.empty-bag-desc {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.btn-shop-collection {
+    padding: 14px 32px;
+    background: var(--gold-primary);
+    color: var(--gold-darkText);
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.btn-shop-collection:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .cart-layout-grid {
+        grid-template-columns: 1fr;
+    }
+    .order-summary-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-item-card {
+        grid-template-columns: 80px 1fr;
+    }
+    .cart-item-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 14px;
+        margin-top: 8px;
+    }
+    .cart-hero-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

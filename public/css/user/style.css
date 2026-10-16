@@ -1,0 +1,294 @@
+/* ========================================================
+   ROYAL IGNITE — Maison Universal Base & Footer Styles
+   Unified Typography, Colors, and Quiet Luxury Polish
+   ======================================================== */
+
+/* Universal Caret & Selection Suppression:
+   Eliminates accidental blinking text carets (|) and rogue I-beam cursors */
+*, *::before, *::after {
+    caret-color: transparent;
+}
+
+html, body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+/* Allow text input and gold typing caret strictly on editable elements */
+input,
+textarea,
+[contenteditable="true"] {
+    caret-color: #E5A93C !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
+}
+
+/* Pointer cursor for all interactive controls */
+a, button, input[type="button"], input[type="submit"], input[type="reset"], [role="button"], select, summary, label {
+    cursor: pointer;
+}
+
+/* Universal Sticky Navigation Bar */
+.royal-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 80px;
+    background: rgba(7, 7, 7, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1000;
+}
+
+.header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    height: 100%;
+    padding: 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.royal-footer {
+    background: #060608;
+    border-top: 1px solid rgba(229, 169, 60, 0.16);
+    padding: 72px 0 36px;
+    color: #EAE6DF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1.3fr;
+    gap: 48px;
+    margin-bottom: 50px;
+}
+
+.footer-col-brand {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #F0ECE1;
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-brand:hover {
+    color: #E5A93C;
+}
+
+.footer-brand-icon {
+    width: 20px;
+    height: 20px;
+    color: #E5A93C;
+    flex-shrink: 0;
+}
+
+.footer-desc {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #9A9488;
+    margin-bottom: 16px;
+    max-width: 340px;
+}
+
+.footer-hallmark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: rgba(229, 169, 60, 0.65);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.footer-title {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: #E5A93C;
+    margin-bottom: 20px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-links li {
+    list-style: none;
+}
+
+.footer-links a {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #B5AEA3;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-links a:hover {
+    color: #FFFFFF;
+    transform: translateX(4px);
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.newsletter-input {
+    flex: 1;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(229, 169, 60, 0.24);
+    border-radius: 6px;
+    padding: 0 14px;
+    color: #FFFFFF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.newsletter-input:focus {
+    border-color: #E5A93C;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 14px rgba(229, 169, 60, 0.2);
+}
+
+.newsletter-input::placeholder {
+    color: #6F685E;
+}
+
+.newsletter-btn {
+    height: 42px;
+    background: rgba(229, 169, 60, 0.12);
+    border: 1px solid rgba(229, 169, 60, 0.38);
+    border-radius: 6px;
+    color: #E5A93C;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newsletter-btn:hover {
+    background: #E5A93C;
+    color: #0E0E12;
+    box-shadow: 0 4px 18px rgba(229, 169, 60, 0.35);
+    transform: translateY(-1px);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.74rem;
+    color: #7D7569;
+}
+
+.footer-copy {
+    color: #7D7569;
+}
+
+.footer-legal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-legal a {
+    color: #7D7569;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-legal a:hover {
+    color: #E5A93C;
+}
+
+.footer-dot {
+    color: rgba(229, 169, 60, 0.4);
+    font-size: 0.6rem;
+}
+
+/* Responsive Footer */
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 36px;
+    }
+}
+
+@media (max-width: 640px) {
+    .royal-footer {
+        padding: 50px 0 30px;
+    }
+
+    .footer-container {
+        padding: 0 20px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        margin-bottom: 36px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+    }
+
+    .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

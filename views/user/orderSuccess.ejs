@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Acquisition Confirmed — ROYAL IGNITE' %></title>
+    <meta name="description" content="Your Royal Ignite bespoke lighter order has been confirmed and reserved in the atelier." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/orderSuccess.css" />
+</head>
+
+<body class="order-success-body">
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Main Content -->
+    <main class="order-success-main">
+        <div class="order-success-container">
+
+            <div class="order-success-card">
+                <div class="order-success-glow"></div>
+
+                <!-- Seal Emblem Illustration -->
+                <div class="order-seal-emblem">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                </div>
+
+                <span class="order-kicker">Acquisition Confirmed</span>
+                <h1 class="order-success-title">
+                    Thank You For Your <span class="italic-gold">Acquisition</span>
+                </h1>
+                <p class="order-success-desc">
+                    Your bespoke creation has been recorded in the atelier archives. Our courier concierge will dispatch your piece in a tamper-evident sealed capsule.
+                </p>
+
+                <!-- Order Reference Details Box -->
+                <div class="order-reference-box">
+                    <div class="reference-grid">
+                        <div>
+                            <span class="ref-item-label">Order Identifier</span>
+                            <span class="ref-item-value gold"><%= order.orderId %></span>
+                        </div>
+
+                        <div>
+                            <span class="ref-item-label">Registration Date</span>
+                            <span class="ref-item-value">
+                                <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="ref-item-label">Payment Concierge</span>
+                            <span class="ref-item-value">Cash on Delivery (COD)</span>
+                        </div>
+
+                        <div>
+                            <span class="ref-item-label">Total Payable</span>
+                            <span class="ref-item-value">₹<%= Number(order.pricing.totalAmount).toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div style="grid-column: span 2;">
+                            <span class="ref-item-label">Delivery Destination</span>
+                            <span class="ref-item-value" style="font-size: 13.5px; line-height: 1.5; color: var(--os-text-muted);">
+                                <strong><%= order.shippingAddress.fullName %></strong> (<%= order.shippingAddress.phone %>)<br>
+                                <%= order.shippingAddress.addressLine %>, <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> — <%= order.shippingAddress.pincode %>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Items Preview Strip -->
+                    <div class="order-items-strip">
+                        <div class="items-strip-title">Reserved Editions (<%= order.items.length %> <%= order.items.length === 1 ? 'Piece' : 'Pieces' %>)</div>
+                        <div class="items-strip-list">
+                            <% order.items.forEach(function(item) { %>
+                                <div class="strip-item-row">
+                                    <div class="strip-item-name">
+                                        <div class="strip-item-thumb">
+                                            <img src="<%= item.image || '/uploads/hero_lighter.png' %>" alt="<%= item.name %>" loading="lazy" />
+                                        </div>
+                                        <span><%= item.name %> <span class="strip-item-qty">× <%= item.quantity %></span></span>
+                                    </div>
+                                    <span>₹<%= Number(item.lineTotal).toLocaleString('en-IN') %></span>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Buttons Row -->
+                <div class="order-success-actions">
+                    <a href="/orders/<%= order.orderId %>" class="btn-order-details">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        <span>View Order Details</span>
+                    </a>
+
+                    <a href="/products" class="btn-continue-shopping">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        <span>Explore The Collection</span>
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+</body>
+</html>

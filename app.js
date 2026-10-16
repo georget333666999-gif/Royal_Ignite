@@ -1,71 +1,64 @@
-require("dotenv").config();
-const express = require("express");
-const path = require("path");
-const session = require("express-session");
-const MongoStore = require("connect-mongo").default;
-const googleAuthRoutes = require("./USER/routes/googleAuthRoutes");
-const passport = require("./config/passport");
+import "dotenv/config";
 
-const userRoutes = require("./USER/routes/userRoutes");
-const adminRoutes = require("./ADMIN/routes/adminRoutes");
+import path from "path";
+import { fileURLToPath } from "url";
+
+import express from "express";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+
+import passport from "./config/passport.js";
+import { SESSION, HTTP_STATUS, RESPONSE_MESSAGES } from "./constants/index.js";
+
+import googleAuthRoutes from "./routes/user/googleAuthRoutes.js";
+import homeRoutes from "./routes/user/homeRoutes.js";
+import userRoutes from "./routes/user/userRoutes.js";
+import productRoutes from "./routes/user/productRoutes.js";
+import cartRoutes from "./routes/user/cartRoutes.js";
+import wishlistRoutes from "./routes/user/wishlistRoutes.js";
+import checkoutRoutes from "./routes/user/checkoutRoutes.js";
+import orderRoutes from "./routes/user/orderRoutes.js";
+import adminRoutes from "./routes/admin/adminRoutes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-
 
 // ========================================
 // View Engine Configuration
 // ========================================
-
 app.set("view engine", "ejs");
-
 app.set("views", [
-    path.join(__dirname, "ADMIN/views"),
-    path.join(__dirname, "USER/views")
+    path.join(__dirname, "views"),
+    path.join(__dirname, "views/user"),
+    path.join(__dirname, "views/admin")
 ]);
 
-
 // ========================================
-// Built-in Middleware
+// Global Middlewares
 // ========================================
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(
-    express.urlencoded({
-        extended: true
-    })
-);
-
-
-// ========================================
-// Static Files
-// ========================================
-
-app.use(
-    express.static(
-        path.join(__dirname, "public")
-    )
-);
-
-
-// ========================================
-// Cache Control Middleware (Prevents BFCache / back-button showing cached auth/protected pages)
-// ========================================
-
+// Cache Control Middleware (Prevents BFCache from displaying cached auth/protected pages)
 app.use((req, res, next) => {
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    res.set("Pragma", "no-cache");
-    res.set("Expires", "0");
-    next();
+    try {
+        res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+        res.set("Pragma", "no-cache");
+        res.set("Expires", "0");
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
-
 
 // ========================================
 // Session Configurations
 // ========================================
-
 const userSession = session({
-    name: "user.sid",
+    name: SESSION.USER_COOKIE,
     secret: process.env.SESSION_SECRET || "user_session_secret",
     resave: false,
     saveUninitialized: false,
@@ -75,13 +68,13 @@ const userSession = session({
     }),
     cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: SESSION.ONE_DAY_MS,
         sameSite: "lax"
     }
 });
 
 const adminSession = session({
-    name: "admin.sid",
+    name: SESSION.ADMIN_COOKIE,
     secret: process.env.SESSION_SECRET || "admin_session_secret",
     resave: false,
     saveUninitialized: false,
@@ -91,74 +84,74 @@ const adminSession = session({
     }),
     cookie: {
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: SESSION.ONE_DAY_MS,
         sameSite: "lax"
     }
 });
 
-// Admin routes session middleware
+// Route-scoped session handling
 app.use("/admin", adminSession);
-
-// User routes session middleware
 app.use((req, res, next) => {
-    if (req.originalUrl.startsWith("/admin")) {
-        return next();
+    try {
+        if (req.originalUrl.startsWith("/admin")) {
+            return next();
+        }
+        userSession(req, res, next);
+    } catch (err) {
+        next(err);
     }
-    userSession(req, res, next);
 });
 
 // ========================================
-// Passport Configuration
+// Passport Authentication
 // ========================================
-
 app.use(passport.initialize());
+app.use(passport.session());
 
-app.use(passport.session()); 
+// Global template locals for user session state
+app.use((req, res, next) => {
+    try {
+        res.locals.isUserLoggedIn = Boolean(req.session && (req.session.userId || req.session.isUserLoggedIn));
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 // ========================================
-// Routes Configuration
+// Route Mounting
 // ========================================
 app.use("/auth", googleAuthRoutes);
-
 app.use("/admin", adminRoutes);
-
 app.use("/user", userRoutes);
+app.use("/", cartRoutes);
+app.use("/", wishlistRoutes);
+app.use("/", checkoutRoutes);
+app.use("/", orderRoutes);
+app.use("/", productRoutes);
+app.use("/", homeRoutes);
 
-app.get(["/changepassword", "/change-password"], (req, res) => {
-    res.redirect("/user/profile/change-password");
-});
-
-app.all("/logout", (req, res) => {
-    res.redirect("/user/logout");
+// ========================================
+// 404 Catch-All Middleware
+// ========================================
+app.use((req, res) => {
+    res.status(HTTP_STATUS.NOT_FOUND).send(RESPONSE_MESSAGES.COMMON.PAGE_NOT_FOUND);
 });
 
 // ========================================
-// Home / Index Landing Route
+// Centralized Error Handler Middleware
 // ========================================
+app.use((err, req, res, next) => {
+    console.error("[SERVER ERROR]", err);
+    const status = err.status || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+    const message = process.env.NODE_ENV === "production" ? RESPONSE_MESSAGES.COMMON.INTERNAL_ERROR : err.message;
 
-const User = require("./models/userModel");
-
-app.get("/", async (req, res) => {
-    const userId = req.session?.userId || (req.user ? req.user._id.toString() : null);
-    const isUserLoggedIn = Boolean((req.session?.isUserLoggedIn || (typeof req.isAuthenticated === "function" && req.isAuthenticated())) && userId);
-
-    if (isUserLoggedIn) {
-        try {
-            const user = await User.findById(userId);
-            if (!user || user.isBlocked) {
-                await new Promise((resolve) => req.session.destroy(resolve));
-                res.clearCookie("user.sid", { path: "/" });
-                return res.redirect("/user/login?error=" + encodeURIComponent("Your account has been blocked."));
-            }
-        } catch (err) {
-            console.error("Home route user check error:", err);
-        }
+    if (req.xhr || req.headers.accept?.includes("application/json")) {
+        return res.status(status).json({ success: false, message });
     }
 
-    return res.render("index", {
-        isUserLoggedIn,
-        userId
-    });
+    res.status(status).send(message);
 });
 
-module.exports = app;
+export { app };
+export default app;

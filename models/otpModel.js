@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const otpSchema = new mongoose.Schema(
     {
@@ -7,16 +7,13 @@ const otpSchema = new mongoose.Schema(
             ref: "User",
             required: true
         },
-
         otpCode: {
             type: String,
             required: true
         },
-
         purpose: {
             type: String
         },
-
         expiredAt: {
             type: Date,
             required: true,
@@ -24,7 +21,6 @@ const otpSchema = new mongoose.Schema(
                 expires: 0
             }
         },
-
         isUsed: {
             type: Boolean,
             default: false
@@ -35,4 +31,5 @@ const otpSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("OTP", otpSchema);
+const OTP = mongoose.model("OTP", otpSchema);
+export default OTP;

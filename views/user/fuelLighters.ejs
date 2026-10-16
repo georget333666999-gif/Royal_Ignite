@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle || "The Fuel Collection — Mechanical Heritage & Organic Flame | ROYAL IGNITE" %></title>
+    <meta name="description" content="Explore The Fuel Collection by Royal Ignite: six bespoke mechanical liquid fluid heirloom lighters engineered with solid naval brass, hand-knurled strike wheels, and organic cotton wicks.">
+    <link rel="stylesheet" href="/css/user/style.css">
+    <link rel="stylesheet" href="/css/user/fuelLighters.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="fuel-body">
+
+    <!-- 1. NAVIGATION HEADER -->
+    <header class="fuel-header">
+        <div class="fuel-container fuel-header-inner">
+            <a href="/" class="fuel-brand">
+                <svg class="fuel-brand-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C12 2 7 8 7 13C7 15.7614 9.23858 18 12 18C14.7614 18 17 15.7614 17 13C17 8 12 2 12 2ZM12 16C10.3431 16 9 14.6569 9 13C9 10.5 11 7 12 5.5C13 7 15 10.5 15 13C15 14.6569 13.6569 16 12 16Z"/>
+                </svg>
+                <span class="fuel-brand-name">ROYAL IGNITE</span>
+            </a>
+
+            <nav class="fuel-nav">
+                <a href="/fuel-lighters" class="fuel-nav-link active">Fuel Lighters</a>
+                <a href="/gas-lighters" class="fuel-nav-link">Gas Lighters</a>
+                <a href="/electric-lighters" class="fuel-nav-link">Electric Lighters</a>
+                <a href="/refills-and-care" class="fuel-nav-link">Refills & Care</a>
+            </nav>
+
+            <div class="fuel-nav-actions">
+                <a href="/products" class="fuel-icon-btn" title="Search Catalogue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <a href="/wishlist" class="fuel-icon-btn" title="Wishlist Vault" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="fuel-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+                <a href="/cart" class="fuel-icon-btn" title="Shopping Bag" style="position: relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 2. BREADCRUMB & HERO HEADER -->
+        <section class="fuel-hero-section">
+            <div class="fuel-container">
+                <nav class="fuel-breadcrumb" aria-label="Breadcrumb">
+                    <a href="/">Home</a>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">Fuel Lighters</span>
+                </nav>
+
+                <div class="fuel-hero-grid">
+                    <div>
+                        <span class="kicker">The Atelier Collection • Geneva Archive</span>
+                        <h1 class="fuel-hero-title">The <span class="italic-gold">Fuel</span> Collection</h1>
+                        <h2 class="fuel-hero-subheadline">Mechanical Flint Ignition & Liquid Petrol Heritage</h2>
+                        <p class="fuel-hero-desc">
+                            Six mechanical heirloom instruments machined from solid billets of naval brass, 925 sterling silver, and obsidian PVD. Every piece features a hand-knurled spark roller, Japanese unbleached cotton wick, and a soft-close acoustic seal that matures with every strike.
+                        </p>
+                    </div>
+
+                    <!-- Integrated Sorting & Toolbar -->
+                    <div class="fuel-hero-actions">
+                        <div class="fuel-sort-bar">
+                            <label for="fuelSortSelect" class="fuel-sort-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="7" y1="12" x2="17" y2="12"></line>
+                                    <line x1="10" y1="18" x2="14" y2="18"></line>
+                                </svg>
+                                Sort By
+                            </label>
+                            <select id="fuelSortSelect" class="fuel-sort-select" onchange="handleSortChange(this.value)">
+                                <option value="curated" <%= (typeof activeSort !== 'undefined' && activeSort === 'curated') ? 'selected' : '' %>>Curated Atelier Sequence</option>
+                                <option value="price_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_asc') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price_desc" <%= (typeof activeSort !== 'undefined' && activeSort === 'price_desc') ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="name_asc" <%= (typeof activeSort !== 'undefined' && activeSort === 'name_asc') ? 'selected' : '' %>>Name: A — Z</option>
+                                <option value="newest" <%= (typeof activeSort !== 'undefined' && activeSort === 'newest') ? 'selected' : '' %>>Newest Editions</option>
+                            </select>
+                        </div>
+                        <div class="fuel-hero-badge">
+                            <span>6 BESPOKE PIECES</span> &nbsp;|&nbsp; NUMBERED ATELIER EDITIONS
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmarks Ribbon -->
+                <div class="fuel-metrics-strip">
+                    <div class="fuel-metric-item">
+                        <span class="fuel-metric-num">6</span>
+                        <span class="fuel-metric-label">Numbered Editions</span>
+                        <span class="fuel-metric-sub">Bespoke Horology Chassis</span>
+                    </div>
+                    <div class="fuel-metric-item">
+                        <span class="fuel-metric-num">925</span>
+                        <span class="fuel-metric-label">Silver & Naval Brass</span>
+                        <span class="fuel-metric-sub">Solid Billet Craftsmanship</span>
+                    </div>
+                    <div class="fuel-metric-item">
+                        <span class="fuel-metric-num">100%</span>
+                        <span class="fuel-metric-label">Organic Cotton Wick</span>
+                        <span class="fuel-metric-sub">Clean Atmospheric Flame</span>
+                    </div>
+                    <div class="fuel-metric-item">
+                        <span class="fuel-metric-num">0</span>
+                        <span class="fuel-metric-label">Electronic Parts</span>
+                        <span class="fuel-metric-sub">Pure Mechanical Longevity</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CURATED 6-PIECE ATELIER SHOWCASE -->
+        <section class="fuel-collection-section" id="models">
+            <div class="fuel-container">
+                <div class="fuel-section-header">
+                    <div>
+                        <span class="kicker">Atelier Masterpieces</span>
+                        <h2 class="fuel-section-title">The Mechanical <span class="italic-gold">Editions</span></h2>
+                    </div>
+                    <p class="fuel-section-subtext">
+                        Select any creation to inspect its multi-angle views, horological mechanism, and archival provenance.
+                    </p>
+                </div>
+
+                <!-- Structured 3-Column Luxury Grid -->
+                <div class="fuel-cards-grid">
+                    <% products.forEach(function(product, index) { 
+                        const frontImg = (product.images && product.images[0]) || '/uploads/monarch_lighter.png';
+                        const editionNum = `0${index + 1} / 06`;
+                    %>
+                        <article class="fuel-card" data-id="<%= product._id %>" data-price="<%= product.effectivePrice %>">
+                            <!-- Top Card Meta Bar -->
+                            <div class="fuel-card-header">
+                                <span class="fuel-card-badge"><%= product.editionTag || `EDITION 0${index + 1}` %></span>
+                                <span class="fuel-card-edition-num"><%= editionNum %></span>
+                            </div>
+
+                            <!-- Controlled Image Stage (Well-Proportioned) -->
+                            <div class="fuel-card-stage">
+                                <a href="/products/<%= product._id %>" class="fuel-card-link" title="Inspect <%= product.name %>">
+                                    <img src="<%= frontImg %>" alt="<%= product.name %>" class="fuel-card-img" loading="lazy" onerror="this.src='/uploads/monarch_lighter.png';" />
+                                </a>
+                                <div class="fuel-card-ambient-glow"></div>
+                            </div>
+
+                            <!-- Card Body Information -->
+                            <div class="fuel-card-body">
+                                <span class="fuel-card-kicker"><%= product.subTag || 'MECHANICAL BILLET' %></span>
+                                <h3 class="fuel-card-title">
+                                    <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="fuel-card-desc"><%= product.description %></p>
+
+                                <div class="fuel-card-specs">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 6v6l4 2"></path>
+                                    </svg>
+                                    <span><%= product.specs || 'SOLID NAVAL BRASS / DUAL COTTON WICK' %></span>
+                                </div>
+
+                                <div class="fuel-card-footer">
+                                    <div class="fuel-pricing-col">
+                                        <span class="fuel-price-kicker">Atelier Price</span>
+                                        <div class="fuel-price-values">
+                                            <span class="fuel-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                            <% if (product.salePrice && product.regularPrice > product.salePrice) { %>
+                                                <span class="fuel-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="fuel-card-actions">
+                                        <a href="/products/<%= product._id %>" class="fuel-acquire-btn">Acquire Edition →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    <% }); %>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ATELIER MECHANISM & BLUEPRINT FEATURE -->
+        <section class="fuel-blueprint-section">
+            <div class="fuel-container">
+                <div class="fuel-blueprint-grid">
+                    <div class="fuel-blueprint-content">
+                        <span class="kicker">Anatomy of Combustion</span>
+                        <h2 class="fuel-blueprint-title">Crafted to endure for <span class="italic-gold">generations</span>.</h2>
+                        <p class="fuel-blueprint-lead">
+                            Unlike disposable devices, every Royal Ignite fuel lighter is conceived as a mechanical heirloom. Each component is serviceable, replaceable, and calibrated by hand.
+                        </p>
+
+                        <div class="fuel-anatomy-list">
+                            <div class="fuel-anatomy-item">
+                                <div class="fuel-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                        <path d="M12 3v18"></path>
+                                        <path d="M3 12h18"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Precision Knurled Spark Roller</h4>
+                                    <p>Hardened ferromanganese roller wheel engineered for instantaneous spark generation at minimal finger pressure.</p>
+                                </div>
+                            </div>
+
+                            <div class="fuel-anatomy-item">
+                                <div class="fuel-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"></path>
+                                        <path d="m4.93 4.93 4.24 4.24"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Leakproof Acoustic O-Ring Chamber</h4>
+                                    <p>Hermetically sealed fluid reservoir prevents fuel evaporation, maintaining immediate ignition readiness for weeks.</p>
+                                </div>
+                            </div>
+
+                            <div class="fuel-anatomy-item">
+                                <div class="fuel-anatomy-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4>Organic Japanese Cotton & Brass Wick</h4>
+                                    <p>Dual-core woven wick enveloped by copper micro-strands to stabilize the flame against gusting mountain wind.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fuel-blueprint-visual">
+                        <div class="fuel-spec-card">
+                            <span class="fuel-spec-card-badge">ARCHIVAL SPECIFICATION</span>
+                            <h3 class="fuel-spec-card-title">The Mechanical Patent</h3>
+                            <ul class="fuel-spec-checklist">
+                                <li><strong>Chassis Alloy:</strong> Naval Admiralty Brass (CuZn39Pb2)</li>
+                                <li><strong>Ignition Mechanism:</strong> Spring-tensioned Flint Plunger</li>
+                                <li><strong>Cap Acoustics:</strong> 64 dB Harmonic Chime at 440 Hz</li>
+                                <li><strong>Fuel Chamber:</strong> High-density wool wadding with bottom screw cap</li>
+                                <li><strong>Surface Finish:</strong> Hand-turned Barleycorn & 24K Regalia Gold</li>
+                            </ul>
+                            <div class="fuel-spec-card-footer">
+                                <span>Certificate of Authenticity with each serial edition</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. RITUALS OF RESTORATION & CARE -->
+        <section class="fuel-rituals-section">
+            <div class="fuel-container">
+                <div class="fuel-rituals-header">
+                    <span class="kicker">Ownership Rituals</span>
+                    <h2 class="fuel-rituals-title">The Art of <span class="italic-gold">Preservation</span></h2>
+                    <p class="fuel-rituals-desc">
+                        A mechanical lighter rewards attentiveness. Three essential protocols to ensure your timepiece ignites impeccably for generations.
+                    </p>
+                </div>
+
+                <div class="fuel-rituals-grid">
+                    <div class="fuel-ritual-card">
+                        <span class="fuel-ritual-step">01</span>
+                        <h3>The Sacred Refuel</h3>
+                        <p>Unscrew the bottom knurled brass plug. Saturate the Japanese cotton reservoir slowly until a subtle droplet appears at the chimney wick base.</p>
+                        <a href="/refills-and-care" class="fuel-ritual-link">View Refills & Care →</a>
+                    </div>
+                    <div class="fuel-ritual-card">
+                        <span class="fuel-ritual-step">02</span>
+                        <h3>Flint Renewal</h3>
+                        <p>Rotate the thumbwheel in reverse to clear residual flint dust. Replace the ferromanganese cartridge when spring tension reaches its calibrated stop.</p>
+                        <a href="/refills-and-care" class="fuel-ritual-link">View Archival Flints →</a>
+                    </div>
+                    <div class="fuel-ritual-card">
+                        <span class="fuel-ritual-step">03</span>
+                        <h3>Brass Patina</h3>
+                        <p>Raw naval brass absorbs the unique oils of your hands, developing a deep, golden-brown vintage patina that charts your shared journey over the years.</p>
+                        <a href="/products" class="fuel-ritual-link">Learn Atelier Care →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 6. FOOTER -->
+    <%- include('./partials/footer.ejs') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Sorting & Wishlist Handler Scripts -->
+    <script>
+        function handleSortChange(sortValue) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortValue);
+            window.location.href = url.toString();
+        }
+
+        async function handleCategoryWishlistToggle(event, productId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const btn = event.currentTarget || event.target.closest('.cat-wishlist-btn');
+            if (!btn) return;
+            const svg = btn.querySelector('svg');
+
+            try {
+                const response = await fetch('/wishlist/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || data.redirect) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sign In Required',
+                            text: 'Please sign in to save creations to your wishlist.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64',
+                            confirmButtonText: 'Sign In'
+                        }).then(() => {
+                            window.location.href = data.redirect || `/user/login?redirect=/fuel-lighters`;
+                        });
+                    } else {
+                        window.location.href = data.redirect || `/user/login?redirect=/fuel-lighters`;
+                    }
+                    return;
+                }
+
+                if (data.success) {
+                    if (data.inWishlist) {
+                        btn.classList.add('active');
+                        btn.setAttribute('title', 'Remove from Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', '#E5A93C');
+                            svg.setAttribute('stroke', '#E5A93C');
+                        }
+                    } else {
+                        btn.classList.remove('active');
+                        btn.setAttribute('title', 'Add to Wishlist');
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    const headerBadge = document.querySelector('.wishlist-badge-count');
+                    if (headerBadge) {
+                        if (data.count > 0) {
+                            headerBadge.textContent = data.count;
+                            headerBadge.style.display = 'inline-block';
+                        } else {
+                            headerBadge.style.display = 'none';
+                        }
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 2400,
+                            timerProgressBar: true,
+                            background: '#141312',
+                            color: '#eae6df',
+                            iconColor: '#F6BD64'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Category wishlist error:", err);
+            }
+        }
+
+        // Fetch Wishlist Counter on load
+        <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
+        (function() {
+            fetch('/wishlist/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.wishlist-badge-count');
+                    if (data && data.success && data.count > 0) {
+                        badges.forEach(b => {
+                            b.textContent = data.count;
+                            b.style.display = 'inline-block';
+                        });
+                    } else {
+                        badges.forEach(b => {
+                            b.style.display = 'none';
+                        });
+                    }
+                })
+                .catch(() => {});
+        })();
+        <% } %>
+    </script>
+</body>
+</html>

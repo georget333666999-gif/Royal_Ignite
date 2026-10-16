@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Atelier Checkout — ROYAL IGNITE' %></title>
+    <meta name="description" content="Secure your reserved Royal Ignite luxury lighters and connoisseur editions with complimentary insured delivery." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/checkout.css" />
+
+    <!-- SweetAlert2 for Quiet Luxury Notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'Bodoni Moda', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 22px !important;
+            background: #F6BD64 !important;
+            color: #0E0E12 !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-toast {
+            border: 1px solid rgba(246, 189, 100, 0.25) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+        }
+    </style>
+</head>
+
+<body class="checkout-body">
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Main Content -->
+    <main class="checkout-main">
+        <div class="checkout-container">
+
+            <!-- Breadcrumbs & Title -->
+            <div class="checkout-header">
+                <div class="checkout-breadcrumbs">
+                    <a href="/cart">Atelier Bag</a>
+                    <span>/</span>
+                    <span>Secure Acquisition</span>
+                </div>
+                <h1 class="checkout-title">
+                    Secure <span class="italic-gold">Acquisition</span>
+                </h1>
+                <p class="checkout-subtitle">
+                    Select your delivery destination and confirm your acquisition with complimentary insured air courier.
+                </p>
+            </div>
+
+            <form id="checkoutForm" onsubmit="handlePlaceOrder(event)">
+                <!-- Hidden inputs for active selections -->
+                <input type="hidden" name="addressId" id="selectedAddressId" value="<%= selectedAddress ? selectedAddress._id : '' %>" />
+                <input type="hidden" name="paymentMethod" value="COD" />
+
+                <div class="checkout-grid">
+
+                    <!-- LEFT COLUMN: Addresses and Payment -->
+                    <div class="checkout-sections">
+
+                        <!-- SECTION 1: DELIVERY ADDRESS (b.i) -->
+                        <section class="checkout-section-card">
+                            <div class="section-header-row">
+                                <div class="section-title-wrap">
+                                    <span class="section-step-num">1</span>
+                                    <h2 class="section-title">Delivery Destination</h2>
+                                </div>
+                                <button type="button" class="btn-add-address-trigger" onclick="openAddAddressModal()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    <span>Add Address</span>
+                                </button>
+                            </div>
+
+                            <div id="addressListContainer">
+                                <% if (Array.isArray(addresses) && addresses.length > 0) { %>
+                                    <div class="addresses-grid" id="addressesGrid">
+                                        <% addresses.forEach(function(addr) { 
+                                            const isCurrentSelected = selectedAddress && String(selectedAddress._id) === String(addr._id);
+                                        %>
+                                            <div class="address-select-card <%= isCurrentSelected ? 'selected' : '' %>"
+                                                 id="addr-card-<%= addr._id %>"
+                                                 onclick="selectAddress('<%= addr._id %>', this)"
+                                                 data-address-id="<%= addr._id %>">
+                                                
+                                                <div class="address-card-top">
+                                                    <div class="address-radio-wrap">
+                                                        <div class="custom-radio">
+                                                            <div class="custom-radio-inner"></div>
+                                                        </div>
+                                                        <span class="address-name"><%= addr.fullName %></span>
+                                                    </div>
+
+                                                    <div class="address-badges-wrap">
+                                                        <span class="badge-addr-type"><%= addr.addressType || 'Home' %></span>
+                                                        <% if (addr.isDefault) { %>
+                                                            <span class="badge-addr-default">DEFAULT</span>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+
+                                                <p class="address-details-text">
+                                                    <%= addr.addressLine %><br>
+                                                    <%= addr.city %>, <%= addr.state %> — <%= addr.pincode %><br>
+                                                    <%= addr.country || 'India' %>
+                                                </p>
+
+                                                <div class="address-phone-line">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                                    </svg>
+                                                    <span><%= addr.phone %></span>
+                                                </div>
+
+                                                <div class="address-card-actions">
+                                                    <button type="button" 
+                                                            class="btn-edit-addr" 
+                                                            onclick="event.stopPropagation(); openEditAddressModal('<%= addr._id %>', <%- JSON.stringify(addr).replace(/"/g, '&quot;') %>)">
+                                                        Edit Address
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="no-address-box" id="noAddressBox">
+                                        <p>You have not registered any delivery destinations in your atelier profile yet.</p>
+                                        <button type="button" class="btn-add-address-trigger" onclick="openAddAddressModal()">
+                                            <span>+ Register Delivery Address</span>
+                                        </button>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </section>
+
+                        <!-- SECTION 2: PAYMENT METHOD (b.iii) -->
+                        <section class="checkout-section-card">
+                            <div class="section-header-row">
+                                <div class="section-title-wrap">
+                                    <span class="section-step-num">2</span>
+                                    <h2 class="section-title">Payment Concierge</h2>
+                                </div>
+                            </div>
+
+                            <div class="payment-methods-list">
+                                <div class="payment-method-item">
+                                    <div class="custom-radio" style="border-color: var(--co-gold); margin-top: 2px;">
+                                        <div class="custom-radio-inner" style="background: var(--co-gold);"></div>
+                                    </div>
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title-row">
+                                            <span class="payment-method-name">Cash on Delivery (COD)</span>
+                                            <span class="payment-method-badge">SELECTED</span>
+                                        </div>
+                                        <p class="payment-method-desc">
+                                            Pay via cash, UPI, or card on physical delivery. Our white-glove air courier provides complete tamper-evident serial inspection before handoff.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- RIGHT COLUMN: ORDER SUMMARY & TOTALS (b.ii) -->
+                    <aside class="checkout-summary-wrap">
+                        <div class="checkout-summary-card">
+                            <h3 class="summary-title">Acquisition Summary</h3>
+
+                            <!-- Reserved Pieces List -->
+                            <div class="summary-items-list">
+                                <% if (Array.isArray(items) && items.length > 0) { %>
+                                    <% items.forEach(function(item) { %>
+                                        <div class="summary-item-row">
+                                            <div class="summary-item-thumb">
+                                                <img src="<%= (item.images && item.images[0]) || '/uploads/hero_lighter.png' %>" 
+                                                     alt="<%= item.name %>" 
+                                                     loading="lazy"
+                                                     onerror="this.src='/uploads/hero_lighter.png';" />
+                                            </div>
+                                            <div class="summary-item-details">
+                                                <div class="summary-item-name" title="<%= item.name %>"><%= item.name %></div>
+                                                <div class="summary-item-qty">Qty: <%= item.quantity %> × ₹<%= Number(item.price).toLocaleString('en-IN') %></div>
+                                            </div>
+                                            <div class="summary-item-price">
+                                                ₹<%= Number(item.lineTotal).toLocaleString('en-IN') %>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } %>
+                            </div>
+
+                            <!-- Financial Ledger Breakdown -->
+                            <div class="summary-ledger">
+                                <% if (financials && financials.savings > 0) { %>
+                                    <div class="ledger-line">
+                                        <span>Catalog Value (<%= cart ? cart.itemCount : 0 %> pieces)</span>
+                                        <span>₹<%= Number(financials.catalogTotal || financials.regularTotal).toLocaleString('en-IN') %></span>
+                                    </div>
+
+                                    <div class="ledger-line savings">
+                                        <span>Atelier Courtesy Discount</span>
+                                        <span>− ₹<%= Number(financials.savings).toLocaleString('en-IN') %></span>
+                                    </div>
+
+                                    <div class="ledger-line">
+                                        <span>Net Subtotal</span>
+                                        <span>₹<%= Number(financials.subtotal).toLocaleString('en-IN') %></span>
+                                    </div>
+                                <% } else { %>
+                                    <div class="ledger-line">
+                                        <span>Bag Subtotal (<%= cart ? cart.itemCount : 0 %> pieces)</span>
+                                        <span>₹<%= Number(financials ? financials.subtotal : 0).toLocaleString('en-IN') %></span>
+                                    </div>
+                                <% } %>
+
+                                <div class="ledger-line">
+                                    <span>Insured Air Delivery</span>
+                                    <span style="color: var(--co-gold);">COMPLIMENTARY</span>
+                                </div>
+
+                                <div class="ledger-line">
+                                    <span>Taxes & Duties</span>
+                                    <span>INCLUDED</span>
+                                </div>
+
+                                <div class="ledger-line total">
+                                    <span>Total Payable</span>
+                                    <span class="total-amount">₹<%= Number(financials ? financials.totalAmount : 0).toLocaleString('en-IN') %></span>
+                                </div>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <button type="submit" class="btn-place-order" id="btnPlaceOrder">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <span>Place Order (COD)</span>
+                            </button>
+
+                            <!-- Trust Perks -->
+                            <div class="summary-trust-perks">
+                                <div class="trust-perk-item">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    </svg>
+                                    <span>Numbered authenticity certificate enclosed</span>
+                                </div>
+                                <div class="trust-perk-item">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                    <span>Dispatched in sealed tamper-proof freight</span>
+                                </div>
+                                <div class="trust-perk-item">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span>Pay upon physical delivery and inspection</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </aside>
+
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- ADD ADDRESS MODAL -->
+    <div class="checkout-modal-overlay" id="addAddressModal">
+        <div class="checkout-modal-card">
+            <div class="modal-header-row">
+                <h3 class="modal-title">New Delivery Destination</h3>
+                <button type="button" class="btn-close-modal" onclick="closeAddAddressModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="addAddressForm" novalidate onsubmit="handleAddAddressSubmit(event)">
+                <div class="modal-form-grid">
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addFullName">Recipient Full Name *</label>
+                        <input type="text" name="fullName" id="addFullName" class="modal-input" placeholder="e.g. Lord Julian Vance" autocomplete="name" />
+                        <div class="js-error-message" id="err-addFullName" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addPhone">10-Digit Mobile *</label>
+                        <input type="tel" name="phone" id="addPhone" maxlength="10" class="modal-input" placeholder="e.g. 9876543210" autocomplete="tel" />
+                        <div class="js-error-message" id="err-addPhone" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group full-width">
+                        <label class="modal-label" for="addAddressLine">Street / Estate Address *</label>
+                        <input type="text" name="addressLine" id="addAddressLine" class="modal-input" placeholder="Building, Street, Landmark details" autocomplete="street-address" />
+                        <div class="js-error-message" id="err-addAddressLine" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addCity">City *</label>
+                        <input type="text" name="city" id="addCity" class="modal-input" placeholder="e.g. Mumbai" autocomplete="address-level2" />
+                        <div class="js-error-message" id="err-addCity" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addState">State *</label>
+                        <input type="text" name="state" id="addState" class="modal-input" placeholder="e.g. Maharashtra" autocomplete="address-level1" />
+                        <div class="js-error-message" id="err-addState" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addPincode">PIN / Postal Code *</label>
+                        <input type="text" name="pincode" id="addPincode" maxlength="6" class="modal-input" placeholder="e.g. 400001" autocomplete="postal-code" />
+                        <div class="js-error-message" id="err-addPincode" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="addAddressType">Address Category *</label>
+                        <select name="addressType" id="addAddressType" class="modal-select">
+                            <option value="Home">Home / Residence</option>
+                            <option value="Work">Office / Atelier</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="js-error-message" id="err-addAddressType" style="display: none;"></div>
+                    </div>
+
+                    <label class="modal-checkbox-row">
+                        <input type="checkbox" name="isDefault" id="addIsDefault" value="true" />
+                        <span>Set as primary default address</span>
+                    </label>
+                </div>
+
+                <div class="modal-actions-row">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAddAddressModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-save" id="btnSaveNewAddress">Save & Select Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT ADDRESS MODAL -->
+    <div class="checkout-modal-overlay" id="editAddressModal">
+        <div class="checkout-modal-card">
+            <div class="modal-header-row">
+                <h3 class="modal-title">Edit Delivery Address</h3>
+                <button type="button" class="btn-close-modal" onclick="closeEditAddressModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="editAddressForm" novalidate onsubmit="handleEditAddressSubmit(event)">
+                <input type="hidden" name="addressId" id="editAddressId" />
+
+                <div class="modal-form-grid">
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editFullName">Recipient Full Name *</label>
+                        <input type="text" name="fullName" id="editFullName" class="modal-input" placeholder="e.g. Julian Vance" autocomplete="name" />
+                        <div class="js-error-message" id="err-editFullName" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editPhone">10-Digit Mobile *</label>
+                        <input type="tel" name="phone" id="editPhone" maxlength="10" class="modal-input" placeholder="e.g. 9876543210" autocomplete="tel" />
+                        <div class="js-error-message" id="err-editPhone" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group full-width">
+                        <label class="modal-label" for="editAddressLine">Street / Estate Address *</label>
+                        <input type="text" name="addressLine" id="editAddressLine" class="modal-input" placeholder="Building, Street, Landmark details" autocomplete="street-address" />
+                        <div class="js-error-message" id="err-editAddressLine" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editCity">City *</label>
+                        <input type="text" name="city" id="editCity" class="modal-input" placeholder="e.g. Mumbai" autocomplete="address-level2" />
+                        <div class="js-error-message" id="err-editCity" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editState">State *</label>
+                        <input type="text" name="state" id="editState" class="modal-input" placeholder="e.g. Maharashtra" autocomplete="address-level1" />
+                        <div class="js-error-message" id="err-editState" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editPincode">PIN / Postal Code *</label>
+                        <input type="text" name="pincode" id="editPincode" maxlength="6" class="modal-input" placeholder="e.g. 400001" autocomplete="postal-code" />
+                        <div class="js-error-message" id="err-editPincode" style="display: none;"></div>
+                    </div>
+
+                    <div class="modal-form-group">
+                        <label class="modal-label" for="editAddressType">Address Category *</label>
+                        <select name="addressType" id="editAddressType" class="modal-select">
+                            <option value="Home">Home / Residence</option>
+                            <option value="Work">Office / Atelier</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="js-error-message" id="err-editAddressType" style="display: none;"></div>
+                    </div>
+
+                    <label class="modal-checkbox-row">
+                        <input type="checkbox" name="isDefault" id="editIsDefault" value="true" />
+                        <span>Set as primary default address</span>
+                    </label>
+                </div>
+
+                <div class="modal-actions-row">
+                    <button type="button" class="btn-modal-cancel" onclick="closeEditAddressModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-save" id="btnSaveEditedAddress">Update Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- Checkout Scripts -->
+    <script>
+        // BFCache handling: Force fresh state if user navigated back
+        window.addEventListener('pageshow', function (event) {
+            const isBackForward = event.persisted || 
+                (window.performance && window.performance.navigation && window.performance.navigation.type === 2) ||
+                (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward");
+
+            if (isBackForward) {
+                window.location.reload();
+            }
+        });
+
+        // Select an address card
+        function selectAddress(addressId, cardElement) {
+            document.getElementById('selectedAddressId').value = addressId;
+            document.querySelectorAll('.address-select-card').forEach(card => card.classList.remove('selected'));
+            if (cardElement) cardElement.classList.add('selected');
+        }
+
+        // Add Address Modal controls
+        function openAddAddressModal() {
+            if (typeof checkoutAddressValidator !== 'undefined') {
+                checkoutAddressValidator.clearAll('add');
+            }
+            const form = document.getElementById('addAddressForm');
+            if (form) form.reset();
+            document.getElementById('addAddressModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddAddressModal() {
+            if (typeof checkoutAddressValidator !== 'undefined') {
+                checkoutAddressValidator.clearAll('add');
+            }
+            document.getElementById('addAddressModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Edit Address Modal controls
+        function openEditAddressModal(addressId, addrData) {
+            if (typeof checkoutAddressValidator !== 'undefined') {
+                checkoutAddressValidator.clearAll('edit');
+            }
+            document.getElementById('editAddressId').value = addressId;
+            document.getElementById('editFullName').value = addrData.fullName || '';
+            document.getElementById('editPhone').value = addrData.phone || '';
+            document.getElementById('editAddressLine').value = addrData.addressLine || '';
+            document.getElementById('editCity').value = addrData.city || '';
+            document.getElementById('editState').value = addrData.state || '';
+            document.getElementById('editPincode').value = addrData.pincode || '';
+            document.getElementById('editAddressType').value = addrData.addressType || 'Home';
+            document.getElementById('editIsDefault').checked = Boolean(addrData.isDefault);
+
+            document.getElementById('editAddressModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditAddressModal() {
+            if (typeof checkoutAddressValidator !== 'undefined') {
+                checkoutAddressValidator.clearAll('edit');
+            }
+            document.getElementById('editAddressModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ==========================================
+        // Unified Checkout Address Validation
+        // ==========================================
+        const checkoutAddressValidator = {
+            nameRegex: /^[a-zA-Z\s]{2,50}$/,
+            phoneRegex: /^[6-9]\d{9}$/,
+            placeRegex: /^[a-zA-Z\s.'-]{2,50}$/,
+            pincodeRegex: /^[1-9][0-9]{5}$/,
+            fields: ['FullName', 'Phone', 'AddressLine', 'City', 'State', 'Pincode', 'AddressType'],
+
+            showError(prefix, field, message) {
+                const inputId = prefix + field;
+                const errId = 'err-' + inputId;
+                const inputEl = document.getElementById(inputId);
+                const errorEl = document.getElementById(errId);
+                if (inputEl) {
+                    inputEl.classList.add('input-error');
+                }
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                }
+            },
+
+            clearError(prefix, field) {
+                const inputId = prefix + field;
+                const errId = 'err-' + inputId;
+                const inputEl = document.getElementById(inputId);
+                const errorEl = document.getElementById(errId);
+                if (inputEl) {
+                    inputEl.classList.remove('input-error');
+                }
+                if (errorEl) {
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+            },
+
+            clearAll(prefix) {
+                this.fields.forEach(f => this.clearError(prefix, f));
+            },
+
+            validateFullName(prefix) {
+                const el = document.getElementById(prefix + 'FullName');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'FullName', 'Recipient full name is required.');
+                    return false;
+                }
+                if (val.length < 2 || val.length > 50) {
+                    this.showError(prefix, 'FullName', 'Name must be between 2 and 50 characters.');
+                    return false;
+                }
+                if (!this.nameRegex.test(val)) {
+                    this.showError(prefix, 'FullName', 'Full name must contain only letters and spaces.');
+                    return false;
+                }
+                this.clearError(prefix, 'FullName');
+                return true;
+            },
+
+            validatePhone(prefix) {
+                const el = document.getElementById(prefix + 'Phone');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'Phone', '10-digit mobile number is required.');
+                    return false;
+                }
+                if (!this.phoneRegex.test(val)) {
+                    this.showError(prefix, 'Phone', 'Must be a valid 10-digit mobile starting with 6-9.');
+                    return false;
+                }
+                if (/^(\d)\1{9}$/.test(val)) {
+                    this.showError(prefix, 'Phone', 'Please enter a valid, non-repetitive phone number.');
+                    return false;
+                }
+                this.clearError(prefix, 'Phone');
+                return true;
+            },
+
+            validateAddressLine(prefix) {
+                const el = document.getElementById(prefix + 'AddressLine');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'AddressLine', 'Street / estate address is required.');
+                    return false;
+                }
+                if (val.length < 5) {
+                    this.showError(prefix, 'AddressLine', 'Address must be at least 5 characters.');
+                    return false;
+                }
+                if (val.length > 200) {
+                    this.showError(prefix, 'AddressLine', 'Address cannot exceed 200 characters.');
+                    return false;
+                }
+                if (!/[a-zA-Z0-9]/.test(val)) {
+                    this.showError(prefix, 'AddressLine', 'Address must contain valid building or street details.');
+                    return false;
+                }
+                this.clearError(prefix, 'AddressLine');
+                return true;
+            },
+
+            validateCity(prefix) {
+                const el = document.getElementById(prefix + 'City');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'City', 'City is required.');
+                    return false;
+                }
+                if (val.length < 2 || val.length > 50) {
+                    this.showError(prefix, 'City', 'City must be between 2 and 50 characters.');
+                    return false;
+                }
+                if (!this.placeRegex.test(val)) {
+                    this.showError(prefix, 'City', 'City must contain only letters and valid punctuation.');
+                    return false;
+                }
+                this.clearError(prefix, 'City');
+                return true;
+            },
+
+            validateState(prefix) {
+                const el = document.getElementById(prefix + 'State');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'State', 'State is required.');
+                    return false;
+                }
+                if (val.length < 2 || val.length > 50) {
+                    this.showError(prefix, 'State', 'State must be between 2 and 50 characters.');
+                    return false;
+                }
+                if (!this.placeRegex.test(val)) {
+                    this.showError(prefix, 'State', 'State must contain only letters and valid punctuation.');
+                    return false;
+                }
+                this.clearError(prefix, 'State');
+                return true;
+            },
+
+            validatePincode(prefix) {
+                const el = document.getElementById(prefix + 'Pincode');
+                const val = (el?.value || '').trim();
+                if (!val) {
+                    this.showError(prefix, 'Pincode', 'Postal PIN code is required.');
+                    return false;
+                }
+                if (!this.pincodeRegex.test(val)) {
+                    this.showError(prefix, 'Pincode', 'Must be a valid 6-digit postal code (cannot start with 0).');
+                    return false;
+                }
+                this.clearError(prefix, 'Pincode');
+                return true;
+            },
+
+            validateAddressType(prefix) {
+                const el = document.getElementById(prefix + 'AddressType');
+                const val = (el?.value || '').trim();
+                if (!['Home', 'Work', 'Other'].includes(val)) {
+                    this.showError(prefix, 'AddressType', 'Please select a valid address category.');
+                    return false;
+                }
+                this.clearError(prefix, 'AddressType');
+                return true;
+            },
+
+            validateForm(prefix) {
+                const validName = this.validateFullName(prefix);
+                const validPhone = this.validatePhone(prefix);
+                const validAddress = this.validateAddressLine(prefix);
+                const validCity = this.validateCity(prefix);
+                const validState = this.validateState(prefix);
+                const validPincode = this.validatePincode(prefix);
+                const validType = this.validateAddressType(prefix);
+
+                // Focus first failing field
+                if (!validName) document.getElementById(prefix + 'FullName')?.focus();
+                else if (!validPhone) document.getElementById(prefix + 'Phone')?.focus();
+                else if (!validAddress) document.getElementById(prefix + 'AddressLine')?.focus();
+                else if (!validCity) document.getElementById(prefix + 'City')?.focus();
+                else if (!validState) document.getElementById(prefix + 'State')?.focus();
+                else if (!validPincode) document.getElementById(prefix + 'Pincode')?.focus();
+
+                return validName && validPhone && validAddress && validCity && validState && validPincode && validType;
+            },
+
+            attachListeners(prefix) {
+                const phoneInput = document.getElementById(prefix + 'Phone');
+                if (phoneInput) {
+                    phoneInput.addEventListener('input', () => {
+                        phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+                        this.clearError(prefix, 'Phone');
+                    });
+                    phoneInput.addEventListener('blur', () => this.validatePhone(prefix));
+                }
+
+                const pincodeInput = document.getElementById(prefix + 'Pincode');
+                if (pincodeInput) {
+                    pincodeInput.addEventListener('input', () => {
+                        pincodeInput.value = pincodeInput.value.replace(/\D/g, '').slice(0, 6);
+                        this.clearError(prefix, 'Pincode');
+                    });
+                    pincodeInput.addEventListener('blur', () => this.validatePincode(prefix));
+                }
+
+                const nameInput = document.getElementById(prefix + 'FullName');
+                if (nameInput) {
+                    nameInput.addEventListener('input', () => this.clearError(prefix, 'FullName'));
+                    nameInput.addEventListener('blur', () => this.validateFullName(prefix));
+                }
+
+                const addressInput = document.getElementById(prefix + 'AddressLine');
+                if (addressInput) {
+                    addressInput.addEventListener('input', () => this.clearError(prefix, 'AddressLine'));
+                    addressInput.addEventListener('blur', () => this.validateAddressLine(prefix));
+                }
+
+                const cityInput = document.getElementById(prefix + 'City');
+                if (cityInput) {
+                    cityInput.addEventListener('input', () => this.clearError(prefix, 'City'));
+                    cityInput.addEventListener('blur', () => this.validateCity(prefix));
+                }
+
+                const stateInput = document.getElementById(prefix + 'State');
+                if (stateInput) {
+                    stateInput.addEventListener('input', () => this.clearError(prefix, 'State'));
+                    stateInput.addEventListener('blur', () => this.validateState(prefix));
+                }
+
+                const typeSelect = document.getElementById(prefix + 'AddressType');
+                if (typeSelect) {
+                    typeSelect.addEventListener('change', () => this.validateAddressType(prefix));
+                }
+            }
+        };
+
+        const editAddressValidators = checkoutAddressValidator;
+
+        // Attach live input and blur validation for both modals
+        document.addEventListener('DOMContentLoaded', function () {
+            checkoutAddressValidator.attachListeners('add');
+            checkoutAddressValidator.attachListeners('edit');
+        });
+
+        // Handle Add Address Submission (AJAX)
+        async function handleAddAddressSubmit(event) {
+            event.preventDefault();
+
+            // Client-side JS validation
+            const isValid = checkoutAddressValidator.validateForm('add');
+            if (!isValid) {
+                return;
+            }
+
+            const form = event.target;
+            const btn = document.getElementById('btnSaveNewAddress');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/checkout/address/add', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataObj)
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.address) {
+                    closeAddAddressModal();
+                    form.reset();
+                    // Reload page with new address selected
+                    window.location.reload();
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Save & Select Address';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Notice',
+                        text: data.message || 'Unable to save address.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
+            } catch (err) {
+                console.error("Add address error:", err);
+                btn.disabled = false;
+                btn.textContent = 'Save & Select Address';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Notice',
+                    text: 'An error occurred while saving your address.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
+        }
+
+        // Handle Edit Address Submission (AJAX)
+        async function handleEditAddressSubmit(event) {
+            event.preventDefault();
+
+            // Client-side JS validation
+            const isValid = checkoutAddressValidator.validateForm('edit');
+            if (!isValid) {
+                return;
+            }
+
+            const form = event.target;
+            const addressId = document.getElementById('editAddressId').value;
+            const btn = document.getElementById('btnSaveEditedAddress');
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(`/checkout/address/edit/${addressId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataObj)
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.address) {
+                    closeEditAddressModal();
+                    window.location.reload();
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Update Address';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Notice',
+                        text: data.message || 'Unable to update address.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
+            } catch (err) {
+                console.error("Edit address error:", err);
+                btn.disabled = false;
+                btn.textContent = 'Update Address';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Notice',
+                    text: 'An error occurred while updating your address.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
+        }
+
+        // Handle Place Order Submission
+        async function handlePlaceOrder(event) {
+            event.preventDefault();
+
+            const selectedAddressId = document.getElementById('selectedAddressId').value;
+            if (!selectedAddressId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Address Required',
+                    text: 'Please choose or add a delivery address before placing your order.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+                return;
+            }
+
+            const btn = document.getElementById('btnPlaceOrder');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                </svg>
+                <span>Securing Acquisition...</span>
+            `;
+
+            try {
+                const response = await fetch('/checkout/place-order', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        addressId: selectedAddressId,
+                        paymentMethod: 'COD'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Place Order (COD)</span>
+                    `;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acquisition Error',
+                        text: data.message || 'Unable to complete order.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
+            } catch (err) {
+                console.error("Place order error:", err);
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Place Order (COD)</span>
+                `;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Notice',
+                    text: 'Unable to connect to the atelier server. Please try again.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
+        }
+    </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+</body>
+</html>

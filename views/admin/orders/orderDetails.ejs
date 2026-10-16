@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : `Order #${order.orderId} — ROYAL IGNITE Admin` %></title>
+    <link rel="stylesheet" href="/css/admin/orderDetails.css" />
+
+    <!-- SweetAlert2 for Quiet Luxury Confirmation -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <a href="/admin/dashboard" class="sidebar-logo">ROYAL IGNITE</a>
+            </div>
+
+            <!-- Overview Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="/admin/dashboard" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/analytics" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <span class="nav-text">Analytics</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Management Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="/admin/categories" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span class="nav-text">Categories</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/products" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                            <span class="nav-text">Products</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/inventory" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span class="nav-text">Inventory</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/users" class="nav-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span class="nav-text">Customers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/orders" class="nav-link active">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="nav-text">Orders</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div>
+            <form action="/admin/logout" method="POST">
+                <button type="submit" class="btn-logout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="nav-text">Sign Out</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+
+        <!-- Top Navbar Header -->
+        <header class="top-navbar">
+            <div class="top-navbar-title">
+                <a href="/admin/orders" style="color: var(--text-muted); text-decoration: none;">Orders</a>
+                <span style="font-size: 13px; color: var(--text-muted);">/</span>
+                <span>#<%= order.orderId %></span>
+            </div>
+            <div class="top-navbar-right">
+                <div class="avatar-circle">
+                    <%= typeof adminUser !== 'undefined' && adminUser.username ? adminUser.username.charAt(0).toUpperCase() : 'A' %>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-padding">
+
+            <!-- Alerts -->
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert-box alert-success">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span><%= success %></span>
+                </div>
+            <% } %>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert-box alert-error">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <!-- Order Header Card (a.ii) -->
+            <% const statusSlug = (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-'); %>
+            <div class="order-header-card">
+                <div class="header-left-col">
+                    <h1 class="order-headline">
+                        Acquisition Dossier <span class="order-headline-code">#<%= order.orderId %></span>
+                        <span class="status-badge <%= statusSlug %>">
+                            <span class="status-dot"></span>
+                            <span><%= order.orderStatus %></span>
+                        </span>
+                    </h1>
+                    <div class="order-meta-info">
+                        <span>Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+                        <span class="meta-dot"></span>
+                        <span><%= new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %></span>
+                        <span class="meta-dot"></span>
+                        <span>Payment: <%= order.paymentMethod %> (<%= order.paymentStatus %>)</span>
+                    </div>
+                </div>
+
+                <div>
+                    <a href="/admin/orders" class="btn-back-orders">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        <span>Back to Orders</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Fulfillment Status Transition Controller (a.iii) -->
+            <div class="status-controller-card">
+                <div class="controller-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>Update Order Fulfillment Status</span>
+                </div>
+
+                <form action="/admin/orders/<%= order.orderId %>/status" method="POST" id="statusUpdateForm">
+                    <div class="status-form-row">
+                        <select name="status" class="status-select-lg">
+                            <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="Placed" <%= order.orderStatus === 'Placed' ? 'selected' : '' %>>Placed</option>
+                            <option value="Processing" <%= order.orderStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
+                            <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                            <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            <option value="Returned" <%= order.orderStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
+                        </select>
+
+                        <input type="text" 
+                               name="notes" 
+                               placeholder="Administrative notes (e.g., dispatch tracking ID, cancellation reason)..." 
+                               class="status-notes-input" />
+
+                        <button type="submit" class="btn-save-status">Update Status</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Main Dossier Grid -->
+            <div class="dossier-grid">
+
+                <!-- Left Column: Itemized Creations & Activity Timeline -->
+                <div class="dossier-col-main">
+
+                    <!-- Creations Card -->
+                    <div class="dossier-card">
+                        <div class="dossier-card-header">
+                            <h2 class="dossier-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <span>Reserved Creations (<%= order.items ? order.items.length : 0 %>)</span>
+                            </h2>
+                        </div>
+
+                        <div class="dossier-card-body" style="padding: 0;">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th style="padding-left: 22px;">Edition</th>
+                                        <th>Unit Price</th>
+                                        <th>Qty</th>
+                                        <th>Line Total</th>
+                                        <th style="padding-right: 22px; text-align: right;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (order.items && order.items.length > 0) { %>
+                                        <% order.items.forEach(function(item) { %>
+                                            <tr>
+                                                <td style="padding-left: 22px;">
+                                                    <div class="item-product-flex">
+                                                        <div class="item-thumb-box">
+                                                            <img src="<%= item.image || '/uploads/hero_lighter.png' %>" 
+                                                                 alt="<%= item.name %>" 
+                                                                 onerror="this.src='/uploads/hero_lighter.png';" />
+                                                        </div>
+                                                        <div class="item-details-col">
+                                                            <a href="/products/<%= item.product && item.product._id ? item.product._id : item.product %>" 
+                                                               class="item-name-link" 
+                                                               target="_blank">
+                                                                <%= item.name %>
+                                                            </a>
+                                                            <span class="item-cat-sub"><%= item.categoryName || 'Royal Edition' %></span>
+                                                            <% if (item.status === 'Cancelled' && item.cancelReason) { %>
+                                                                <span class="item-cancelled-callout">Cancelled: <%= item.cancelReason %></span>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>₹<%= Number(item.price).toLocaleString('en-IN') %></td>
+                                                <td><strong><%= item.quantity %></strong></td>
+                                                <td><strong>₹<%= Number(item.lineTotal).toLocaleString('en-IN') %></strong></td>
+                                                <td style="padding-right: 22px; text-align: right;">
+                                                    <% const itemSlug = (item.status || order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-'); %>
+                                                    <span class="status-badge <%= itemSlug %>" style="font-size: 11px; padding: 3px 8px;">
+                                                        <span class="status-dot"></span>
+                                                        <span><%= item.status || order.orderStatus %></span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Order Activity Timeline Card -->
+                    <div class="dossier-card">
+                        <div class="dossier-card-header">
+                            <h2 class="dossier-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>Atelier Fulfillment Milestones</span>
+                            </h2>
+                        </div>
+
+                        <div class="dossier-card-body">
+                            <div class="timeline-list">
+                                <!-- Step: Placed -->
+                                <div class="timeline-item active">
+                                    <span class="timeline-heading">Acquisition Reserved</span>
+                                    <span class="timeline-timestamp"><%= new Date(order.createdAt).toLocaleString('en-IN') %></span>
+                                    <div class="timeline-note">Order confirmed and reserved in the atelier vault via <%= order.paymentMethod %>.</div>
+                                </div>
+
+                                <!-- Step: Delivered if reached -->
+                                <% if (order.deliveredAt) { %>
+                                    <div class="timeline-item active">
+                                        <span class="timeline-heading">Delivered to Client</span>
+                                        <span class="timeline-timestamp"><%= new Date(order.deliveredAt).toLocaleString('en-IN') %></span>
+                                        <div class="timeline-note">Package handed over to client possession.</div>
+                                    </div>
+                                <% } %>
+
+                                <!-- Step: Cancelled if reached -->
+                                <% if (order.orderStatus === 'Cancelled') { %>
+                                    <div class="timeline-item" style="color: #ef4444;">
+                                        <span class="timeline-heading">Acquisition Cancelled</span>
+                                        <span class="timeline-timestamp"><%= order.cancelledAt ? new Date(order.cancelledAt).toLocaleString('en-IN') : 'Recorded' %></span>
+                                        <div class="timeline-note" style="color: #b91c1c; background: #fee2e2;">
+                                            Reason: <%= order.cancellationReason || 'Cancelled by client or admin' %>
+                                        </div>
+                                    </div>
+                                <% } %>
+
+                                <!-- Step: Returned if reached -->
+                                <% if (order.orderStatus === 'Returned') { %>
+                                    <div class="timeline-item" style="color: #f97316;">
+                                        <span class="timeline-heading">Creation Returned</span>
+                                        <span class="timeline-timestamp"><%= order.returnedAt ? new Date(order.returnedAt).toLocaleString('en-IN') : 'Recorded' %></span>
+                                        <div class="timeline-note" style="color: #c2410c; background: #ffedd5;">
+                                            Return Reason: <%= order.returnReason || 'Client return recorded' %>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Customer Profile, Delivery Address, Financials -->
+                <div class="dossier-col-side">
+
+                    <!-- Customer Profile Card (a.ii) -->
+                    <div class="dossier-card">
+                        <div class="dossier-card-header">
+                            <h2 class="dossier-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Client Profile</span>
+                            </h2>
+                        </div>
+
+                        <div class="dossier-card-body">
+                            <% 
+                                const clientName = (order.user && order.user.name) || order.shippingAddress.fullName;
+                                const clientEmail = (order.user && order.user.email) || 'Not provided';
+                                const clientPhone = (order.user && order.user.phone) || order.shippingAddress.phone;
+                                const clientInitial = clientName.charAt(0).toUpperCase();
+                            %>
+                            <div class="customer-card-header">
+                                <div class="customer-avatar-lg"><%= clientInitial %></div>
+                                <div>
+                                    <div style="font-size: 15px; font-weight: 700; color: var(--text-dark);"><%= clientName %></div>
+                                    <div style="font-size: 12.5px; color: var(--text-muted);"><%= clientEmail %></div>
+                                </div>
+                            </div>
+
+                            <div class="info-row-flex">
+                                <span class="info-label">Contact Phone</span>
+                                <span class="info-val"><%= clientPhone %></span>
+                            </div>
+
+                            <% if (order.user) { %>
+                                <div class="info-row-flex">
+                                    <span class="info-label">Account Status</span>
+                                    <span class="info-val" style="color: <%= order.user.isBlocked ? '#ef4444' : '#10b981' %>;">
+                                        <%= order.user.isBlocked ? 'Blocked' : 'Active Client' %>
+                                    </span>
+                                </div>
+
+                                <div class="info-row-flex">
+                                    <span class="info-label">Client Since</span>
+                                    <span class="info-val">
+                                        <%= order.user.createdAt ? new Date(order.user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '—' %>
+                                    </span>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Destination Card -->
+                    <div class="dossier-card">
+                        <div class="dossier-card-header">
+                            <h2 class="dossier-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>Delivery Destination</span>
+                            </h2>
+                        </div>
+
+                        <div class="dossier-card-body">
+                            <div class="info-block-text">
+                                <strong style="color: var(--text-dark);"><%= order.shippingAddress.fullName %></strong>
+                                <span style="font-size: 11px; background: #f4f4f5; padding: 2px 6px; border-radius: 4px; margin-left: 6px; text-transform: uppercase; font-weight: 600;">
+                                    <%= order.shippingAddress.addressType || 'Home' %>
+                                </span>
+                                <br>
+                                Phone: <%= order.shippingAddress.phone %><br>
+                                <%= order.shippingAddress.addressLine %><br>
+                                <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> — <%= order.shippingAddress.pincode %><br>
+                                <%= order.shippingAddress.country || 'India' %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing & Payment Card -->
+                    <div class="dossier-card">
+                        <div class="dossier-card-header">
+                            <h2 class="dossier-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                                <span>Pricing & Financials</span>
+                            </h2>
+                        </div>
+
+                        <div class="dossier-card-body">
+                            <div class="info-row-flex">
+                                <span class="info-label">Subtotal</span>
+                                <span class="info-val">₹<%= Number(order.pricing ? order.pricing.subtotal : 0).toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <% if (order.pricing && order.pricing.discount > 0) { %>
+                                <div class="info-row-flex" style="color: #10b981;">
+                                    <span class="info-label" style="color: #10b981;">Privilege Discount</span>
+                                    <span class="info-val">-₹<%= Number(order.pricing.discount).toLocaleString('en-IN') %></span>
+                                </div>
+                            <% } %>
+
+                            <div class="info-row-flex">
+                                <span class="info-label">Concierge Shipping</span>
+                                <span class="info-val"><%= (order.pricing && order.pricing.shippingFee > 0) ? `₹${order.pricing.shippingFee}` : 'Complimentary' %></span>
+                            </div>
+
+                            <div class="info-row-flex" style="padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--border-color);">
+                                <span class="info-label" style="font-weight: 700; color: var(--text-dark);">Total Amount</span>
+                                <span class="pricing-total-highlight">₹<%= Number(order.pricing ? order.pricing.totalAmount : 0).toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <div class="info-row-flex">
+                                <span class="info-label">Payment Channel</span>
+                                <span class="info-val"><%= order.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : order.paymentMethod %></span>
+                            </div>
+
+                            <div class="info-row-flex">
+                                <span class="info-label">Payment Status</span>
+                                <span class="info-val" style="color: <%= order.paymentStatus === 'Completed' ? '#10b981' : '#f59e0b' %>;">
+                                    <%= order.paymentStatus %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

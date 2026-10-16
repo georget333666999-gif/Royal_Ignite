@@ -1,0 +1,1163 @@
+/* ========================================================
+   ROYAL IGNITE — The Gas Collection Stylesheet
+   Dual-Ceramic Jet Flame & Haute Briquet Atelier Aesthetic
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --gas-bg: #000000;
+    --gas-surface: #0E0F14;
+    --gas-card: #0E0F14;
+    --gas-card-border: rgba(255, 255, 255, 0.08);
+    --gas-card-hover: rgba(56, 189, 248, 0.55);
+    --gas-gold: #E5A93C;
+    --gas-gold-bright: #F6BD64;
+    --gas-gold-light: #F7D08A;
+    --gas-flame-blue: #38BDF8;
+    --gas-blue-glow: rgba(56, 189, 248, 0.22);
+    --gas-gold-glow: rgba(229, 169, 60, 0.18);
+    --gas-text: #F5F7FA;
+    --gas-text-muted: #9BA3AF;
+    --gas-text-subtle: #5C6573;
+    --gas-border-subtle: rgba(255, 255, 255, 0.08);
+    --gas-font-serif: 'Bodoni Moda', Georgia, serif;
+    --gas-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --gas-font-mono: 'JetBrains Mono', monospace;
+    --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    caret-color: transparent;
+}
+
+body.gas-body {
+    background-color: #000000;
+    color: var(--gas-text);
+    font-family: var(--gas-font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+    caret-color: var(--gas-gold) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    cursor: text !important;
+}
+
+.gas-container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.italic-gold {
+    font-family: var(--gas-font-serif);
+    font-style: italic;
+    color: var(--gas-gold);
+}
+
+.kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gas-gold);
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+/* ========================================================
+   1. NAVIGATION HEADER
+   ======================================================== */
+.gas-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(7, 7, 7, 0.88);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--gas-border-subtle);
+    transition: var(--transition);
+}
+
+.gas-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+}
+
+.gas-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--gas-text);
+}
+
+.gas-brand-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--gas-gold);
+}
+
+.gas-brand-name {
+    font-family: var(--gas-font-serif);
+    font-size: 1.25rem;
+    letter-spacing: 4px;
+    font-weight: 600;
+    color: var(--gas-text);
+}
+
+.gas-nav {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+}
+
+.gas-nav-link {
+    color: var(--gas-text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    position: relative;
+    padding: 6px 0;
+}
+
+.gas-nav-link:hover,
+.gas-nav-link.active {
+    color: var(--gas-gold-bright);
+}
+
+.gas-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gas-gold);
+    border-radius: 1px;
+}
+
+.gas-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.gas-icon-btn {
+    background: none;
+    border: none;
+    color: var(--gas-text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.gas-icon-btn:hover {
+    color: var(--gas-flame-blue);
+    background: rgba(56, 189, 248, 0.08);
+}
+
+/* ========================================================
+   2. HERO & BENCHMARKS
+   ======================================================== */
+.gas-hero-section {
+    padding-top: 130px;
+    padding-bottom: 50px;
+    position: relative;
+    background: radial-gradient(circle at 75% 20%, rgba(56, 189, 248, 0.06) 0%, rgba(229, 169, 60, 0.03) 40%, transparent 65%);
+}
+
+.gas-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gas-text-subtle);
+    margin-bottom: 24px;
+}
+
+.gas-breadcrumb a {
+    color: var(--gas-text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.gas-breadcrumb a:hover {
+    color: var(--gas-flame-blue);
+}
+
+.gas-breadcrumb .sep {
+    color: rgba(56, 189, 248, 0.6);
+}
+
+.gas-breadcrumb span.active-crumb {
+    color: var(--gas-gold);
+}
+
+.gas-hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.gas-hero-title {
+    font-family: var(--gas-font-serif);
+    font-size: 3.8rem;
+    font-weight: 400;
+    line-height: 1.08;
+    margin-bottom: 12px;
+    color: var(--gas-text);
+}
+
+.gas-hero-subheadline {
+    font-family: var(--gas-font-serif);
+    font-size: 1.35rem;
+    color: var(--gas-gold-light);
+    margin-bottom: 16px;
+    font-weight: 400;
+}
+
+.gas-hero-desc {
+    color: var(--gas-text-muted);
+    font-size: 1rem;
+    max-width: 620px;
+    line-height: 1.7;
+}
+
+.gas-hero-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.gas-sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--gas-card);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.75);
+    padding: 10px 20px;
+    border-radius: 30px;
+    transition: var(--transition);
+}
+
+.gas-sort-bar:focus-within,
+.gas-sort-bar:hover {
+    border-color: var(--gas-flame-blue);
+    box-shadow: 0 0 20px var(--gas-blue-glow);
+}
+
+.gas-sort-label {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gas-flame-blue);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gas-sort-select {
+    background: transparent;
+    border: none;
+    color: var(--gas-text);
+    font-family: var(--gas-font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+}
+
+.gas-sort-select option {
+    background: #11141B;
+    color: #fff;
+    padding: 8px;
+}
+
+.gas-hero-badge {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    color: var(--gas-text-muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gas-live-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gas-flame-blue);
+    box-shadow: 0 0 8px var(--gas-flame-blue);
+    animation: gasPulse 2s infinite;
+}
+
+@keyframes gasPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+    }
+}
+
+.gas-hero-badge span {
+    color: var(--gas-gold);
+    font-weight: 700;
+}
+
+/* Metrics Ribbon */
+.gas-metrics-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--gas-border-subtle);
+    border-bottom: 1px solid var(--gas-border-subtle);
+}
+
+.gas-metric-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.gas-metric-num {
+    font-family: var(--gas-font-serif);
+    font-size: 2rem;
+    color: var(--gas-flame-blue);
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.gas-metric-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gas-text);
+    margin-bottom: 2px;
+}
+
+.gas-metric-sub {
+    font-size: 0.7rem;
+    color: var(--gas-text-subtle);
+}
+
+/* ========================================================
+   3. CURATED 6-PIECE ATELIER SHOWCASE GRID
+   ======================================================== */
+.gas-collection-section {
+    padding: 60px 0 90px;
+}
+
+.gas-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.gas-section-title {
+    font-family: var(--gas-font-serif);
+    font-size: 2.8rem;
+    font-weight: 400;
+    color: var(--gas-text);
+}
+
+.gas-section-subtext {
+    max-width: 440px;
+    color: var(--gas-text-muted);
+    font-size: 0.95rem;
+    text-align: right;
+    line-height: 1.6;
+}
+
+/* The Core 3-Column Grid */
+.gas-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+/* Individual Luxury Card */
+.gas-card {
+    background: var(--gas-card);
+    border: 1px solid var(--gas-card-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 36px rgba(0, 0, 0, 0.9);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+    position: relative;
+}
+
+.gas-card:hover {
+    border-color: var(--gas-flame-blue);
+    transform: translateY(-5px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 24px 50px rgba(0, 0, 0, 0.95), 0 0 25px var(--gas-blue-glow);
+}
+
+/* Top Meta Bar */
+.gas-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 10px;
+    z-index: 2;
+}
+
+.gas-card-badge {
+    background: rgba(17, 20, 27, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--gas-flame-blue);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gas-dot-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gas-flame-blue);
+    box-shadow: 0 0 6px var(--gas-flame-blue);
+}
+
+.gas-card-edition-num {
+    font-family: var(--gas-font-mono);
+    font-size: 0.68rem;
+    color: var(--gas-text-subtle);
+    letter-spacing: 1px;
+}
+
+/* CONTROLLED IMAGE VIEWPORT (Crisp, Contained, Proportional) */
+.gas-card-stage {
+    width: 100%;
+    height: 290px;
+    background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.09) 0%, rgba(18, 22, 30, 0.85) 60%, #08090C 100%);
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.gas-card-link {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    z-index: 2;
+}
+
+.gas-card-img {
+    max-width: 82%;
+    max-height: 82%;
+    object-fit: contain;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+    filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.95)) brightness(1.02);
+}
+
+.gas-card:hover .gas-card-img {
+    transform: scale(1.06) translateY(-4px);
+    filter: drop-shadow(0 24px 30px rgba(56, 189, 248, 0.25)) brightness(1.08);
+}
+
+.gas-card-flame-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 60%, rgba(56, 189, 248, 0.08) 0%, rgba(229, 169, 60, 0.04) 50%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Card Body Content */
+.gas-card-body {
+    padding: 22px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gas-card-kicker {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gas-gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.gas-card-title {
+    font-family: var(--gas-font-serif);
+    font-size: 1.55rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+
+.gas-card-title a {
+    color: #fff;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.gas-card:hover .gas-card-title a {
+    color: var(--gas-flame-blue);
+}
+
+.gas-card-desc {
+    color: var(--gas-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 44px;
+}
+
+.gas-card-specs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--gas-font-mono);
+    font-size: 0.68rem;
+    color: var(--gas-text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 22px;
+}
+
+.gas-card-specs svg {
+    color: var(--gas-flame-blue);
+}
+
+.gas-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gas-pricing-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.gas-price-kicker {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gas-text-subtle);
+}
+
+.gas-price-values {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.gas-price-val {
+    font-family: var(--gas-font-serif);
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--gas-gold);
+}
+
+.gas-price-orig {
+    font-size: 0.85rem;
+    color: var(--gas-text-subtle);
+    text-decoration: line-through;
+}
+
+.gas-acquire-btn {
+    background: transparent;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: var(--gas-flame-blue);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.gas-acquire-btn:hover {
+    background: var(--gas-flame-blue);
+    color: #000;
+    border-color: var(--gas-flame-blue);
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35);
+}
+
+/* ========================================================
+   4. BLUEPRINT & ANATOMY SECTION
+   ======================================================== */
+.gas-blueprint-section {
+    padding: 80px 0;
+    border-top: 1px solid var(--gas-border-subtle);
+    border-bottom: 1px solid var(--gas-border-subtle);
+    background: radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 60%);
+}
+
+.gas-blueprint-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.gas-blueprint-title {
+    font-family: var(--gas-font-serif);
+    font-size: 3rem;
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 16px;
+}
+
+.gas-blueprint-lead {
+    color: var(--gas-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 32px;
+}
+
+.gas-anatomy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.gas-anatomy-item {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.gas-anatomy-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: var(--gas-flame-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.gas-anatomy-item h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gas-text);
+    margin-bottom: 4px;
+}
+
+.gas-anatomy-item p {
+    font-size: 0.85rem;
+    color: var(--gas-text-muted);
+    line-height: 1.5;
+}
+
+.gas-spec-card {
+    background: var(--gas-card);
+    border: 1px solid var(--gas-card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 8px;
+    padding: 36px 32px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.gas-spec-card-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--gas-flame-blue);
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.gas-spec-card-title {
+    font-family: var(--gas-font-serif);
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin-bottom: 24px;
+    color: #fff;
+}
+
+.gas-spec-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.gas-spec-checklist li {
+    font-size: 0.85rem;
+    color: var(--gas-text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+}
+
+.gas-spec-checklist li strong {
+    color: var(--gas-text);
+}
+
+.gas-spec-card-footer {
+    font-size: 0.75rem;
+    color: var(--gas-flame-blue);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========================================================
+   5. RITUALS OF REFILLING & MAINTENANCE
+   ======================================================== */
+.gas-rituals-section {
+    padding: 80px 0 100px;
+}
+
+.gas-rituals-header {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 50px;
+}
+
+.gas-rituals-title {
+    font-family: var(--gas-font-serif);
+    font-size: 2.8rem;
+    font-weight: 400;
+    margin-bottom: 14px;
+}
+
+.gas-rituals-desc {
+    color: var(--gas-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.gas-rituals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.gas-ritual-card {
+    background: var(--gas-card);
+    border: 1px solid var(--gas-card-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 8px;
+    padding: 32px 28px;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.gas-ritual-card:hover {
+    border-color: var(--gas-card-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.gas-ritual-step {
+    font-family: var(--gas-font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gas-flame-blue);
+    margin-bottom: 16px;
+    display: inline-block;
+}
+
+.gas-ritual-card h3 {
+    font-family: var(--gas-font-serif);
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.gas-ritual-card p {
+    color: var(--gas-text-muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    flex: 1;
+}
+
+.gas-ritual-link {
+    color: var(--gas-flame-blue);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: var(--transition);
+}
+
+.gas-ritual-link:hover {
+    color: #fff;
+    transform: translateX(4px);
+}
+
+/* ========================================================
+   RESPONSIVE DESIGN
+   ======================================================== */
+@media (max-width: 1200px) {
+    .gas-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+
+    .gas-hero-grid,
+    .gas-blueprint-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gas-hero-actions {
+        align-items: flex-start;
+    }
+
+    .gas-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .gas-section-subtext {
+        text-align: left;
+    }
+
+    .gas-metrics-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .gas-rituals-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .gas-container {
+        padding: 0 20px;
+    }
+
+    .gas-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gas-hero-title {
+        font-size: 2.8rem;
+    }
+
+    .gas-section-title {
+        font-size: 2.2rem;
+    }
+
+    .gas-metrics-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================================
+   UNIFIED LUXURY FOOTER (GAS LIGHTERS)
+   ======================================================== */
+.royal-footer {
+    background: #060608;
+    border-top: 1px solid rgba(229, 169, 60, 0.16);
+    padding: 72px 0 36px;
+    color: #EAE6DF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1.3fr;
+    gap: 48px;
+    margin-bottom: 50px;
+}
+
+.footer-col-brand {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #F0ECE1;
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-brand:hover {
+    color: #E5A93C;
+}
+
+.footer-brand-icon {
+    width: 20px;
+    height: 20px;
+    color: #E5A93C;
+    flex-shrink: 0;
+}
+
+.footer-desc {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #9A9488;
+    margin-bottom: 16px;
+    max-width: 340px;
+}
+
+.footer-hallmark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: rgba(229, 169, 60, 0.65);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.footer-title {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: #E5A93C;
+    margin-bottom: 20px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-links li {
+    list-style: none;
+}
+
+.footer-links a {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #B5AEA3;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-links a:hover {
+    color: #FFFFFF;
+    transform: translateX(4px);
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.newsletter-input {
+    flex: 1;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(229, 169, 60, 0.24);
+    border-radius: 6px;
+    padding: 0 14px;
+    color: #FFFFFF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.newsletter-input:focus {
+    border-color: #E5A93C;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 14px rgba(229, 169, 60, 0.2);
+}
+
+.newsletter-input::placeholder {
+    color: #6F685E;
+}
+
+.newsletter-btn {
+    height: 42px;
+    background: rgba(229, 169, 60, 0.12);
+    border: 1px solid rgba(229, 169, 60, 0.38);
+    border-radius: 6px;
+    color: #E5A93C;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newsletter-btn:hover {
+    background: #E5A93C;
+    color: #0E0E12;
+    box-shadow: 0 4px 18px rgba(229, 169, 60, 0.35);
+    transform: translateY(-1px);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.74rem;
+    color: #7D7569;
+}
+
+.footer-copy {
+    color: #7D7569;
+}
+
+.footer-legal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-legal a {
+    color: #7D7569;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-legal a:hover {
+    color: #E5A93C;
+}
+
+.footer-dot {
+    color: rgba(229, 169, 60, 0.4);
+    font-size: 0.6rem;
+}
+
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 36px;
+    }
+}
+
+@media (max-width: 640px) {
+    .royal-footer {
+        padding: 50px 0 30px;
+    }
+
+    .footer-container {
+        padding: 0 20px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        margin-bottom: 36px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+    }
+
+    .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

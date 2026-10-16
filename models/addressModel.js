@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema(
     {
@@ -8,56 +8,47 @@ const addressSchema = new mongoose.Schema(
             required: true,
             index: true
         },
-
         fullName: {
             type: String,
             required: true,
             trim: true
         },
-
         phone: {
             type: String,
             required: true,
             trim: true
         },
-
         addressLine: {
             type: String,
             required: true,
             trim: true
         },
-
         city: {
             type: String,
             required: true,
             trim: true
         },
-
         state: {
             type: String,
             required: true,
             trim: true
         },
-
         pincode: {
             type: String,
             required: true,
             trim: true
         },
-
         country: {
             type: String,
             required: true,
             trim: true,
             default: "India"
         },
-
         addressType: {
             type: String,
             enum: ["Home", "Work", "Other"],
             default: "Home"
         },
-
         isDefault: {
             type: Boolean,
             default: false
@@ -68,4 +59,5 @@ const addressSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Address", addressSchema);
+const Address = mongoose.model("Address", addressSchema);
+export default Address;

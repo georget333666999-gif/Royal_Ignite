@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Your Wishlist Vault — ROYAL IGNITE' %></title>
+    <meta name="description" content="View and manage your private vault of saved luxury lighters and accessories at Royal Ignite." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/user/index.css" />
+    <link rel="stylesheet" href="/css/user/shop.css" />
+    <link rel="stylesheet" href="/css/user/wishlist.css" />
+
+    <!-- SweetAlert2 for Quiet Luxury Notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(229, 169, 60, 0.35) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+        .royal-swal-title {
+            font-family: 'Bodoni Moda', serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+        .royal-swal-confirm-btn {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 22px !important;
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: opacity 0.2s ease !important;
+        }
+        .royal-swal-cancel-btn {
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            cursor: pointer !important;
+        }
+        .royal-swal-toast {
+            border: 1px solid rgba(246, 189, 100, 0.25) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+        }
+    </style>
+</head>
+
+<body class="wishlist-body">
+
+    <!-- Header Navigation -->
+    <%- include('./partials/header.ejs') %>
+
+    <!-- Main Content -->
+    <main class="wishlist-main">
+        <div class="wishlist-container">
+
+            <!-- Breadcrumbs & Header Banner -->
+            <div class="wishlist-header-banner">
+                <div>
+                    <div class="wishlist-breadcrumbs">
+                        <a href="/">Atelier</a>
+                        <span>/</span>
+                        <span>Saved Creations</span>
+                    </div>
+                    <h1 class="wishlist-header-title">
+                        The Wishlist <span class="italic-gold">Vault</span>
+                    </h1>
+                    <p class="wishlist-header-desc">
+                        Curated heirlooms and precision lighters reserved for your private collection.
+                    </p>
+                </div>
+
+                <div class="wishlist-count-badge" id="vaultCountBadge">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span><span id="vaultCountNum"><%= count %></span> <%= count === 1 ? 'Piece Saved' : 'Pieces Saved' %></span>
+                </div>
+            </div>
+
+            <!-- Content Area: List or Empty -->
+            <div id="wishlistContentArea">
+                <% if (Array.isArray(products) && products.length > 0) { %>
+                    <div class="wishlist-grid" id="wishlistGrid">
+                        <% products.forEach(function(product) { %>
+                            <article class="wishlist-card" id="wishlist-card-<%= product._id %>" data-product-id="<%= product._id %>">
+                                
+                                <!-- Floating Quick Remove Button -->
+                                <button type="button" 
+                                        class="btn-quick-remove" 
+                                        title="Remove from Vault"
+                                        onclick="confirmRemoveWishlist('<%= product._id %>', '<%= product.name.replace(/'/g, '\\\'') %>')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+
+                                <!-- Image Stage -->
+                                <div class="wishlist-card-stage">
+                                    <div class="wishlist-card-badges">
+                                        <% if (product.isOutOfStock) { %>
+                                            <span class="wl-badge-soldout">Sold Out</span>
+                                        <% } else if (product.hasDiscount) { %>
+                                            <span class="wl-badge-sale">-<%= product.discountPercent %>% OFF</span>
+                                        <% } %>
+                                    </div>
+
+                                    <a href="/products/<%= product._id %>">
+                                        <img src="<%= product.primaryImage %>" 
+                                             alt="<%= product.name %>" 
+                                             class="wishlist-card-img" 
+                                             loading="lazy"
+                                             onerror="this.src='/uploads/hero_lighter.png';" />
+                                    </a>
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="wishlist-card-body">
+                                    <div class="wishlist-card-category">
+                                        <%= (product.category && product.category.name) ? product.category.name : 'Royal Ignite' %>
+                                    </div>
+
+                                    <h3 class="wishlist-card-title">
+                                        <a href="/products/<%= product._id %>"><%= product.name %></a>
+                                    </h3>
+
+                                    <p class="wishlist-card-desc">
+                                        <%= product.description %>
+                                    </p>
+
+                                    <!-- Price & Stock Status -->
+                                    <div class="wishlist-card-meta">
+                                        <div class="wishlist-price-box">
+                                            <span class="wl-price-current">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
+                                            <% if (product.hasDiscount) { %>
+                                                <span class="wl-price-original">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
+
+                                        <div class="wl-stock-status <%= product.isOutOfStock ? 'out-of-stock' : 'in-stock' %>">
+                                            <span class="wl-stock-dot"></span>
+                                            <span><%= product.isOutOfStock ? 'Sold Out' : 'In Stock' %></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Row -->
+                                    <div class="wishlist-card-actions">
+                                        <button type="button" 
+                                                class="btn-move-to-bag" 
+                                                <%= product.isOutOfStock ? 'disabled' : '' %>
+                                                onclick="handleMoveToBag('<%= product._id %>', this)">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                            </svg>
+                                            <span><%= product.isOutOfStock ? 'Unavailable' : 'Move to Bag' %></span>
+                                        </button>
+
+                                        <button type="button" 
+                                                class="btn-card-remove" 
+                                                title="Remove from Wishlist"
+                                                onclick="confirmRemoveWishlist('<%= product._id %>', '<%= product.name.replace(/'/g, '\\\'') %>')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </article>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <!-- Empty State -->
+                    <div class="wishlist-empty-state" id="wishlistEmptyState">
+                        <div class="wishlist-empty-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="wishlist-empty-title">Your Atelier Vault is Empty</h2>
+                        <p class="wishlist-empty-desc">
+                            No creations have been reserved in your wishlist yet. Discover our curated collections of precision torches and collector heirlooms.
+                        </p>
+                        <a href="/products" class="btn-explore-catalogue">
+                            <span>Explore The Collection</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    <%- include('./partials/footer.ejs') %>
+
+    <!-- Wishlist Logic Script -->
+    <script>
+        // BFCache handling
+        window.addEventListener('pageshow', function (event) {
+            const isBackForward = event.persisted || 
+                (window.performance && window.performance.navigation && window.performance.navigation.type === 2) ||
+                (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward");
+
+            if (isBackForward) {
+                window.location.reload();
+            }
+        });
+
+        // Luxury Toast Notification Helper
+        function showToast(message, icon = 'success') {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: icon,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 2600,
+                    timerProgressBar: true,
+                    background: '#141312',
+                    color: '#eae6df',
+                    iconColor: icon === 'success' ? '#F6BD64' : '#ef4444',
+                    customClass: {
+                        popup: 'royal-swal-toast'
+                    }
+                });
+            } else {
+                alert(message);
+            }
+        }
+
+        // Update count badge across page
+        function updateWishlistCount(newCount) {
+            const badge = document.getElementById('vaultCountBadge');
+            const countNum = document.getElementById('vaultCountNum');
+            if (countNum) countNum.textContent = newCount;
+            if (badge) {
+                const textSpan = badge.querySelector('span');
+                if (textSpan) {
+                    textSpan.innerHTML = `<span id="vaultCountNum">${newCount}</span> ${newCount === 1 ? 'Piece Saved' : 'Pieces Saved'}`;
+                }
+            }
+
+            // Also update header badge if present
+            const headerBadge = document.querySelector('.wishlist-badge-count');
+            if (headerBadge) {
+                if (newCount > 0) {
+                    headerBadge.textContent = newCount;
+                    headerBadge.style.display = 'inline-block';
+                } else {
+                    headerBadge.style.display = 'none';
+                }
+            }
+
+            // If count reached 0, transition to empty state
+            if (newCount <= 0) {
+                const area = document.getElementById('wishlistContentArea');
+                if (area) {
+                    area.innerHTML = `
+                        <div class="wishlist-empty-state" id="wishlistEmptyState">
+                            <div class="wishlist-empty-icon">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </div>
+                            <h2 class="wishlist-empty-title">Your Atelier Vault is Empty</h2>
+                            <p class="wishlist-empty-desc">
+                                No creations have been reserved in your wishlist yet. Discover our curated collections of precision torches and collector heirlooms.
+                            </p>
+                            <a href="/products" class="btn-explore-catalogue">
+                                <span>Explore The Collection</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Luxury Confirm Remove Dialog
+        function confirmRemoveWishlist(productId, productName) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Remove From Vault?',
+                    html: `Remove <strong>${productName}</strong> from your saved creations?<br><span style="font-size: 13px; color: #9A9388; display: block; margin-top: 8px;">You can always add it back from the collection at any time.</span>`,
+                    icon: 'warning',
+                    iconColor: '#F6BD64',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Remove',
+                    cancelButtonText: 'Keep in Vault',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn',
+                        cancelButton: 'royal-swal-cancel-btn'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        executeRemoveWishlist(productId);
+                    }
+                });
+            } else {
+                if (confirm(`Remove ${productName} from your wishlist?`)) {
+                    executeRemoveWishlist(productId);
+                }
+            }
+        }
+
+        // Remove item from Wishlist (AJAX)
+        async function executeRemoveWishlist(productId) {
+            const card = document.getElementById(`wishlist-card-${productId}`);
+            if (card) {
+                card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                card.style.opacity = '0.35';
+                card.style.transform = 'scale(0.96)';
+                card.style.pointerEvents = 'none';
+            }
+
+            try {
+                const response = await fetch(`/wishlist/remove/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    if (card) {
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            updateWishlistCount(data.count);
+                        }, 220);
+                    } else {
+                        updateWishlistCount(data.count);
+                    }
+                    showToast(data.message || 'Piece removed from your wishlist.');
+                } else {
+                    if (card) {
+                        card.style.opacity = '1';
+                        card.style.transform = 'none';
+                        card.style.pointerEvents = 'auto';
+                    }
+                    showToast(data.message || 'Could not remove item.', 'error');
+                }
+            } catch (err) {
+                console.error("Wishlist remove error:", err);
+                if (card) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'none';
+                    card.style.pointerEvents = 'auto';
+                }
+                showToast('Unable to connect to atelier server.', 'error');
+            }
+        }
+
+        // Move to Bag: Calls /wishlist/move-to-cart/:productId (a.ii)
+        async function handleMoveToBag(productId, btn) {
+            if (!btn || btn.disabled) return;
+
+            const card = document.getElementById(`wishlist-card-${productId}`);
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin" style="animation: spin 1s linear infinite;">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                </svg>
+                <span>Moving...</span>
+            `;
+
+            try {
+                const response = await fetch(`/wishlist/move-to-cart/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message || 'Creation added to your atelier bag.');
+                    if (card) {
+                        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(-10px) scale(0.95)';
+                        setTimeout(() => {
+                            card.remove();
+                            updateWishlistCount(data.count);
+                        }, 250);
+                    } else {
+                        updateWishlistCount(data.count);
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        showToast(data.message || 'Could not move piece to bag.', 'error');
+                    }
+                }
+            } catch (err) {
+                console.error("Move to bag error:", err);
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                showToast('Unable to move creation to bag.', 'error');
+            }
+        }
+    </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>

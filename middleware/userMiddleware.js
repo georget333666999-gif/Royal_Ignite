@@ -1,22 +1,16 @@
-const User = require("../models/userModel");
+import User from "../models/userModel.js";
+import { getAuthenticatedUserId, handleBlockedUser } from "../utils/authSession.js";
 
-const userMiddleware = async (req, res, next) => {
+export const userMiddleware = async (req, res, next) => {
     try {
-        const userId = req.session?.userId || (req.user ? req.user._id.toString() : null);
-        const isUserLoggedIn = Boolean((req.session?.isUserLoggedIn || (typeof req.isAuthenticated === "function" && req.isAuthenticated())) && userId);
-
-        if (!userId || !isUserLoggedIn) {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
             return res.redirect("/user/login");
         }
 
         const user = await User.findById(userId);
-
         if (!user || user.isBlocked) {
-            req.session.destroy(() => {
-                res.clearCookie("user.sid", { path: "/" });
-                return res.redirect("/user/login?error=" + encodeURIComponent("Your account has been blocked."));
-            });
-            return;
+            return handleBlockedUser(req, res);
         }
 
         req.user = user;
@@ -27,17 +21,19 @@ const userMiddleware = async (req, res, next) => {
     }
 };
 
-const redirectIfUserLoggedIn = (req, res, next) => {
-    const userId = req.session?.userId || (req.user ? req.user._id.toString() : null);
-    const isUserLoggedIn = Boolean((req.session?.isUserLoggedIn || (typeof req.isAuthenticated === "function" && req.isAuthenticated())) && userId);
-
-    if (isUserLoggedIn) {
-        return res.redirect("/");
+export const redirectIfUserLoggedIn = (req, res, next) => {
+    try {
+        if (getAuthenticatedUserId(req)) {
+            return res.redirect("/");
+        }
+        next();
+    } catch (err) {
+        console.error("redirectIfUserLoggedIn error:", err);
+        next();
     }
-    next();
 };
 
-module.exports = {
+export default {
     userMiddleware,
     redirectIfUserLoggedIn
 };

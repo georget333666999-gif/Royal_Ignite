@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two-Step Verification - ROYAL IGNITE</title>
+    <link rel="stylesheet" href="/css/user/auth.css" />
+</head>
+
+<body>
+
+    <%- include('partials/header') %>
+
+    <main class="auth-wrapper">
+        <div class="gold-card" style="text-align: center;">
+            
+            <h1 class="auth-title">Two-Step Verification</h1>
+            <p class="auth-subtitle">
+                Enter the 6-digit verification code sent to your registered email
+            </p>
+
+            <% if (typeof success !== "undefined" && success) { %>
+                <div class="success-badge">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <div class="error-badge" id="serverErrorBadge" style="display: <%= (typeof error !== 'undefined' && error) ? 'block' : 'none' %>;">
+                <%= (typeof error !== 'undefined' && error) ? error : '' %>
+            </div>
+
+            <div id="expiredNotice" class="error-badge" style="display: <%= typeof isExpired !== 'undefined' && isExpired ? 'block' : 'none' %>; margin-bottom: 16px;">
+                ⏱️ Your OTP has expired. Please click <strong>Resend Code</strong> below to receive a fresh verification code.
+            </div>
+
+            <!-- Hidden Meta to Sync Exact Server State -->
+            <div id="otpMeta" 
+                data-remaining="<%= typeof remainingSeconds !== 'undefined' ? remainingSeconds : 60 %>"
+                data-expired="<%= typeof isExpired !== 'undefined' && isExpired ? 'true' : 'false' %>"
+                style="display: none;">
+            </div>
+
+            <form action="/user/verify-otp" method="POST" id="verifyOtpForm" novalidate>
+                
+                <div class="form-group" style="text-align: left;">
+                    <input
+                        type="text"
+                        id="otpCode"
+                        name="otpCode"
+                        class="form-input"
+                        placeholder="Enter 6-digit OTP"
+                        maxlength="6"
+                        minlength="6"
+                        pattern="[0-9]{6}"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        style="text-align: center; font-size: 22px; letter-spacing: 6px; font-weight: bold;"
+                        data-validate="otp"
+                        required
+                        <%= typeof isExpired !== 'undefined' && isExpired ? 'disabled' : '' %>
+                    />
+                </div>
+
+                <button type="submit" id="verifyBtn" class="primary-btn" <%= typeof isExpired !== 'undefined' && isExpired ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
+                    VERIFY IDENTITY &rarr;
+                </button>
+
+            </form>
+
+            <div class="auth-switch" style="margin-top: 24px;">
+                Didn't receive the code?
+                <form action="/user/resend-otp" method="POST" id="resendForm" style="display: inline;">
+                    <button type="submit" id="resendButton" class="resend-btn" <%= typeof isExpired !== 'undefined' && isExpired ? '' : 'disabled' %>>
+                        Resend Code
+                    </button>
+                </form>
+            </div>
+
+            <div id="timerContainer" class="otp-timer-container">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>EXPIRES IN <strong id="timer">01:00</strong></span>
+            </div>
+
+        </div>
+    </main>
+
+    <%- include('partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/validation.js"></script>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: <%- JSON.stringify(success) %>,
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                background: '#141312',
+                color: '#f0ece6',
+                iconColor: '#d48833'
+            });
+        });
+    </script>
+    <% } %>
+
+    <script>
+        const metaEl = document.getElementById("otpMeta");
+        let serverRemaining = parseInt(metaEl.getAttribute("data-remaining"), 10);
+        let isExpiredInitial = metaEl.getAttribute("data-expired") === "true";
+
+        let otpTimeLeft = isNaN(serverRemaining) ? 60 : serverRemaining;
+
+        const timerElement = document.getElementById("timer");
+        const resendButton = document.getElementById("resendButton");
+        const verifyBtn = document.getElementById("verifyBtn");
+        const otpInput = document.getElementById("otpCode");
+        const expiredNotice = document.getElementById("expiredNotice");
+        const serverErrorBadge = document.getElementById("serverErrorBadge");
+        const verifyOtpForm = document.getElementById("verifyOtpForm");
+        const resendForm = document.getElementById("resendForm");
+
+        let otpTimer = null;
+
+        function markOtpExpired() {
+            if (timerElement) timerElement.textContent = "00:00";
+            if (expiredNotice) expiredNotice.style.display = "block";
+            if (verifyBtn) {
+                verifyBtn.disabled = true;
+                verifyBtn.style.opacity = "0.5";
+                verifyBtn.style.cursor = "not-allowed";
+            }
+            if (otpInput) {
+                otpInput.disabled = true;
+            }
+            if (resendButton) {
+                resendButton.disabled = false;
+                resendButton.textContent = "Resend Code";
+            }
+            if (otpTimer) {
+                clearInterval(otpTimer);
+                otpTimer = null;
+            }
+        }
+
+        function startOtpTimer() {
+            if (otpTimer) clearInterval(otpTimer);
+
+            // While OTP is active, Resend button is inaccessible
+            if (resendButton) {
+                resendButton.disabled = true;
+                resendButton.textContent = "Resend Code";
+            }
+
+            function updateOtpTimer() {
+                if (otpTimeLeft <= 0) {
+                    clearInterval(otpTimer);
+                    otpTimer = null;
+                    markOtpExpired();
+                    return;
+                }
+
+                const minutes = Math.floor(otpTimeLeft / 60);
+                const seconds = otpTimeLeft % 60;
+
+                if (timerElement) {
+                    timerElement.textContent =
+                        String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+                }
+
+                otpTimeLeft--;
+            }
+
+            updateOtpTimer();
+            otpTimer = setInterval(updateOtpTimer, 1000);
+        }
+
+        if (isExpiredInitial || otpTimeLeft <= 0) {
+            markOtpExpired();
+        } else {
+            startOtpTimer();
+        }
+
+        // AJAX Verification Submission (Timer stays smooth without resetting on wrong OTP)
+        if (verifyOtpForm) {
+            verifyOtpForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const code = otpInput.value.trim();
+                if (!/^\d{6}$/.test(code)) {
+                    if (serverErrorBadge) {
+                        serverErrorBadge.textContent = "Please enter the 6-digit OTP code.";
+                        serverErrorBadge.style.display = "block";
+                    }
+                    return;
+                }
+
+                if (serverErrorBadge) {
+                    serverErrorBadge.style.display = "none";
+                }
+
+                const originalBtnText = verifyBtn.innerHTML;
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = "VERIFYING...";
+
+                try {
+                    const response = await fetch("/user/verify-otp", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({ otpCode: code })
+                    });
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = originalBtnText;
+
+                        if (serverErrorBadge) {
+                            serverErrorBadge.textContent = data.message || "Invalid OTP code.";
+                            serverErrorBadge.style.display = "block";
+                        }
+
+                        if (data.isExpired) {
+                            markOtpExpired();
+                        }
+                        // Important: Notice that resendTimer and otpTimer continue ticking uninterrupted!
+                        return;
+                    }
+
+                    // OTP Verified successfully!
+                    if (typeof Swal !== "undefined") {
+                        Swal.fire({
+                            toast: true,
+                            position: "top-end",
+                            icon: "success",
+                            title: data.message || "Account verified successfully!",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            background: "#141312",
+                            color: "#f0ece6",
+                            iconColor: "#d48833"
+                        });
+                        setTimeout(() => {
+                            window.location.href = data.redirectUrl || "/user/login?verified=true";
+                        }, 1200);
+                    } else {
+                        window.location.href = data.redirectUrl || "/user/login?verified=true";
+                    }
+                } catch (err) {
+                    console.error("Verification network error:", err);
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = originalBtnText;
+                    if (serverErrorBadge) {
+                        serverErrorBadge.textContent = "Network error. Please try again.";
+                        serverErrorBadge.style.display = "block";
+                    }
+                }
+            });
+        }
+
+        // AJAX Resend Code
+        if (resendForm) {
+            resendForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                if (resendButton.disabled) return;
+
+                resendButton.disabled = true;
+                resendButton.textContent = "Sending...";
+
+                try {
+                    const response = await fetch("/user/resend-otp", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        if (serverErrorBadge) {
+                            serverErrorBadge.textContent = data.message || "Unable to resend OTP.";
+                            serverErrorBadge.style.display = "block";
+                        }
+                        resendButton.disabled = false;
+                        resendButton.textContent = "Resend Code";
+                        return;
+                    }
+
+                    // Clean reset after successful resend
+                    if (serverErrorBadge) serverErrorBadge.style.display = "none";
+                    if (expiredNotice) expiredNotice.style.display = "none";
+
+                    otpInput.disabled = false;
+                    otpInput.value = "";
+                    verifyBtn.disabled = false;
+                    verifyBtn.style.opacity = "1";
+                    verifyBtn.style.cursor = "pointer";
+
+                    otpTimeLeft = data.remainingSeconds || 60;
+                    startOtpTimer();
+
+                    if (typeof Swal !== "undefined") {
+                        Swal.fire({
+                            toast: true,
+                            position: "top-end",
+                            icon: "success",
+                            title: data.message || "A fresh 6-digit verification code has been sent.",
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                            background: "#141312",
+                            color: "#f0ece6",
+                            iconColor: "#d48833"
+                        });
+                    }
+                } catch (err) {
+                    console.error("Resend error:", err);
+                    resendButton.disabled = false;
+                    resendButton.textContent = "Resend Code";
+                    if (serverErrorBadge) {
+                        serverErrorBadge.textContent = "Network error. Please try again.";
+                        serverErrorBadge.style.display = "block";
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
