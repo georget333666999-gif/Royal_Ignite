@@ -135,15 +135,27 @@
                         catName.includes('CARE')
                     );
 
+                    const isGasOrElectric = Boolean(
+                        (product.category && (
+                            (typeof product.category === 'string' && /gas|electric/i.test(product.category)) ||
+                            (product.category.name && /gas|electric/i.test(product.category.name))
+                        )) ||
+                        catName.includes('GAS') ||
+                        catName.includes('ELECTRIC')
+                    );
+
+                    const isSingleImage = isRefillsOrCare || isGasOrElectric;
+
                     // Prepare list of gallery images
                     let galleryImages = [];
                     if (Array.isArray(product.images) && product.images.length > 0) {
-                        if (isRefillsOrCare) {
-                            // Refills & Care products need only 1 image - side profile removed
+                        if (isSingleImage) {
+                            // Gas Lighters, Electric Lighters, and Refills & Care keep only the first image
                             galleryImages = [product.images[0]];
                         } else {
+                            // Fuel Lighters retain multiple angles
                             galleryImages = product.images.slice(0, 2);
-                            // Fallback: If only 1 image exists on lighters, duplicate so both Front View and Side Profile are available
+                            // Fallback for Fuel Lighters if only 1 image exists
                             if (galleryImages.length === 1) {
                                 galleryImages = [galleryImages[0], galleryImages[0]];
                             }
@@ -152,7 +164,7 @@
                         galleryImages = ['/uploads/products/monarch/angle_front.jpg', '/uploads/products/monarch/angle_side.jpg'];
                     }
 
-                    const angleLabels = isRefillsOrCare ? ["Product View"] : ["Front View", "Side Profile"];
+                    const angleLabels = isSingleImage ? ["Product View"] : ["Front View", "Side Profile"];
                 %>
 
                 <div class="dt-gallery-wrap <%= galleryImages.length <= 1 ? 'dt-gallery-single' : '' %>">
