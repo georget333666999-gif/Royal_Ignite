@@ -115,14 +115,14 @@ export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) =
             });
 
             if (!liveProduct) {
-                const err = new Error(`"${item.name}" is no longer available in the catalog.`);
+                const err = new Error(`"${item.name}" is no longer available. Please remove it from your bag to proceed.`);
                 err.code = "PRODUCT_UNAVAILABLE";
                 throw err;
             }
 
             if (liveProduct.stock < item.quantity) {
                 const err = new Error(
-                    `Only ${liveProduct.stock} pieces of "${liveProduct.name}" are available in the atelier.`
+                    `Only ${liveProduct.stock} units of "${liveProduct.name}" are available. Please adjust your quantity.`
                 );
                 err.code = "STOCK_EXCEEDED";
                 throw err;

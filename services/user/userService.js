@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../../models/userModel.js";
 import OTP from "../../models/otpModel.js";
 import { sendOtpEmail } from "../../utils/sendEmail.js";
+import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
 // ========================================
 // Helper Utilities & Terminal OTP Display
@@ -75,7 +76,7 @@ const checkOtpCooldown = async (userId, purpose) => {
             const remainingTime = Math.ceil(remainingMs / 1000);
             return {
                 onCooldown: true,
-                message: `Please wait ${remainingTime} seconds until your current OTP expires before requesting a new one.`
+                message: `Please wait ${remainingTime} seconds before requesting a new verification code.`
             };
         }
         return { onCooldown: false };
@@ -89,14 +90,14 @@ const verifyAndDeleteOtp = async (query, enteredOTP) => {
     try {
         const otpDocument = await OTP.findOne(query);
         if (!otpDocument) {
-            return { success: false, isExpired: true, message: "OTP expired or not found. Please click 'Resend Code'." };
+            return { success: false, isExpired: true, message: RESPONSE_MESSAGES.OTP.EXPIRED_OR_NOT_FOUND };
         }
         if (new Date() > new Date(otpDocument.expiredAt)) {
             await OTP.deleteOne({ _id: otpDocument._id });
-            return { success: false, isExpired: true, message: "OTP has expired. Please click 'Resend Code' to get a new code." };
+            return { success: false, isExpired: true, message: RESPONSE_MESSAGES.OTP.EXPIRED };
         }
         if (otpDocument.otpCode !== enteredOTP) {
-            return { success: false, isExpired: false, message: "Invalid OTP code. Please check and try again." };
+            return { success: false, isExpired: false, message: RESPONSE_MESSAGES.OTP.INVALID_CODE };
         }
         await OTP.deleteOne({ _id: otpDocument._id });
         return { success: true };
@@ -130,7 +131,7 @@ const createUser = async ({ name, email, phone, password }) => {
                 return existingUser;
             }
 
-            const error = new Error("User already exists");
+            const error = new Error(RESPONSE_MESSAGES.AUTH.EMAIL_PHONE_EXISTS);
             error.code = 11000;
             throw error;
         }
@@ -193,11 +194,11 @@ const loginUser = async (email, password) => {
         });
 
         if (!user) {
-            return { success: false, message: "Invalid email or password." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.INVALID_CREDENTIALS };
         }
 
         if (user.isBlocked) {
-            return { success: false, message: "Your account has been blocked." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.ACCOUNT_BLOCKED };
         }
 
         if (!user.isVerified) {
@@ -207,13 +208,13 @@ const loginUser = async (email, password) => {
                 userId: user._id,
                 userEmail: user.email,
                 userName: user.name,
-                message: "Please verify your account first."
+                message: RESPONSE_MESSAGES.AUTH.ACCOUNT_UNVERIFIED
             };
         }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            return { success: false, message: "Invalid email or password." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.INVALID_CREDENTIALS };
         }
 
         return { success: true, user };
@@ -230,10 +231,10 @@ const resendOTP = async (userId) => {
     try {
         const user = await User.findById(userId);
         if (!user) {
-            return { success: false, message: "User not found." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.USER_NOT_FOUND };
         }
         if (user.isVerified) {
-            return { success: false, message: "User is already verified." };
+            return { success: false, message: RESPONSE_MESSAGES.OTP.USER_ALREADY_VERIFIED };
         }
 
         const cooldown = await checkOtpCooldown(userId, "signup", 30);
@@ -261,15 +262,15 @@ const forgotPassword = async (email) => {
         });
 
         if (!user) {
-            return { success: false, message: "No account found with this email." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.NO_ACCOUNT_WITH_EMAIL };
         }
         if (user.isBlocked) {
-            return { success: false, message: "Your account has been blocked." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.ACCOUNT_BLOCKED };
         }
         if (user.googleId) {
             return {
                 success: false,
-                message: "This account is registered with Google Sign-In. Please sign in directly using Google."
+                message: RESPONSE_MESSAGES.AUTH.GOOGLE_ACCOUNT_REGISTERED
             };
         }
 
@@ -315,26 +316,26 @@ const changePassword = async (userId, currentPassword, newPassword) => {
     try {
         const user = await User.findById(userId);
         if (!user) {
-            return { success: false, message: "User not found." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.USER_NOT_FOUND };
         }
 
         if (user.googleId) {
             return {
                 success: false,
-                message: "Password change is disabled for accounts authenticated with Google Sign-In."
+                message: RESPONSE_MESSAGES.AUTH.GOOGLE_PASSWORD_CHANGE_DISABLED
             };
         }
 
         if (!user.password) {
             return {
                 success: false,
-                message: "This account does not have a local password set."
+                message: RESPONSE_MESSAGES.AUTH.LOCAL_PASSWORD_NOT_SET
             };
         }
 
         const passwordMatch = await bcrypt.compare(currentPassword, user.password);
         if (!passwordMatch) {
-            return { success: false, message: "Current password is incorrect." };
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.CURRENT_PASSWORD_INCORRECT };
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -354,17 +355,17 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 const validateEmailChangePrerequisites = async (user, formattedEmail) => {
     try {
         if (!user) {
-            return "User not found.";
+            return RESPONSE_MESSAGES.AUTH.USER_NOT_FOUND;
         }
         if (user.googleId) {
-            return "Email change is disabled for accounts registered with Google Sign-In.";
+            return RESPONSE_MESSAGES.AUTH.GOOGLE_EMAIL_CHANGE_DISABLED;
         }
         if (user.email === formattedEmail) {
-            return "New email must be different from current email.";
+            return RESPONSE_MESSAGES.AUTH.NEW_EMAIL_DIFFERENT;
         }
         const existingUser = await User.findOne({ email: formattedEmail });
         if (existingUser) {
-            return "This email address is already in use.";
+            return RESPONSE_MESSAGES.AUTH.EMAIL_IN_USE;
         }
         return null;
     } catch (error) {

@@ -654,13 +654,15 @@ a:visited {
 }
 
 .product-card-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 1.25rem;
-    color: var(--text-headline);
+    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.22rem;
+    color: #FFFFFF;
     margin-bottom: 10px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.35;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.035em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 .product-card-title a {

@@ -81,7 +81,7 @@ const postEditProfile = async (req, res) => {
             const user = await User.findById(req.session.userId).select("-password");
             return res.status(HTTP_STATUS.BAD_REQUEST).render("editProfile", {
                 user,
-                error: "Name and phone are required.",
+                error: "Please provide both your name and phone number.",
                 success: null
             });
         }
@@ -100,7 +100,7 @@ const postEditProfile = async (req, res) => {
             const user = await User.findById(req.session.userId).select("-password");
             return res.status(HTTP_STATUS.BAD_REQUEST).render("editProfile", {
                 user,
-                error: "Please enter a valid 10-digit phone number.",
+                error: "Please enter a valid 10-digit mobile number.",
                 success: null
             });
         }

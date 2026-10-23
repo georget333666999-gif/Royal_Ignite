@@ -69,8 +69,7 @@ const seedData = async () => {
                 stock: 15,
                 images: [
                     "/uploads/fuel/heritage_1924.jpg",
-                    "/uploads/heritage_lighter.png",
-                    "/uploads/monarch_lighter.png"
+                    "/uploads/fuel/heritage_1924_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -127,8 +126,7 @@ const seedData = async () => {
                 stock: 18,
                 images: [
                     "/uploads/fuel/aeronaut_streamline.png",
-                    "/uploads/heritage_lighter.png",
-                    "/uploads/signature_lighter.png"
+                    "/uploads/fuel/aeronaut_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -157,7 +155,8 @@ const seedData = async () => {
                 salePrice: 3500,
                 stock: 25,
                 images: [
-                    "/uploads/gas/apex_lighter.jpg"
+                    "/uploads/gas/apex_front.jpg",
+                    "/uploads/gas/apex_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -170,7 +169,8 @@ const seedData = async () => {
                 salePrice: 15500,
                 stock: 12,
                 images: [
-                    "/uploads/gas/titan_lighter.jpg"
+                    "/uploads/gas/titan_front.jpg",
+                    "/uploads/gas/titan_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -183,7 +183,8 @@ const seedData = async () => {
                 salePrice: 6000,
                 stock: 18,
                 images: [
-                    "/uploads/gas/vanguard_lighter.jpg"
+                    "/uploads/gas/vanguard_front.jpg",
+                    "/uploads/gas/vanguard_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -196,7 +197,8 @@ const seedData = async () => {
                 salePrice: 9999,
                 stock: 14,
                 images: [
-                    "/uploads/gas/vertex_lighter.jpg"
+                    "/uploads/gas/vertex_front.jpg",
+                    "/uploads/gas/vertex_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -209,7 +211,8 @@ const seedData = async () => {
                 salePrice: null,
                 stock: 8,
                 images: [
-                    "/uploads/gas/orion_lighter.jpg"
+                    "/uploads/gas/orion_front.jpg",
+                    "/uploads/gas/orion_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -222,7 +225,8 @@ const seedData = async () => {
                 salePrice: 5400,
                 stock: 20,
                 images: [
-                    "/uploads/gas/eclipse_lighter.jpg"
+                    "/uploads/gas/eclipse_front.jpg",
+                    "/uploads/gas/eclipse_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -237,7 +241,8 @@ const seedData = async () => {
                 salePrice: 18990,
                 stock: 10,
                 images: [
-                    "/uploads/electric/aether_lighter.jpg"
+                    "/uploads/electric/aether_lighter.jpg",
+                    "/uploads/electric/aether_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -250,7 +255,8 @@ const seedData = async () => {
                 salePrice: 12500,
                 stock: 14,
                 images: [
-                    "/uploads/electric/tether_lighter.jpg"
+                    "/uploads/electric/tether_lighter.jpg",
+                    "/uploads/electric/tether_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -263,7 +269,8 @@ const seedData = async () => {
                 salePrice: 8900,
                 stock: 22,
                 images: [
-                    "/uploads/electric/zenith_lighter.jpg"
+                    "/uploads/electric/zenith_lighter.jpg",
+                    "/uploads/electric/zenith_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -276,7 +283,8 @@ const seedData = async () => {
                 salePrice: 10500,
                 stock: 16,
                 images: [
-                    "/uploads/electric/solis_lighter.jpg"
+                    "/uploads/electric/solis_front.jpg",
+                    "/uploads/electric/solis_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false
@@ -289,7 +297,8 @@ const seedData = async () => {
                 salePrice: 14200,
                 stock: 12,
                 images: [
-                    "/uploads/electric/lumina_lighter.jpg"
+                    "/uploads/electric/lumina_lighter.jpg",
+                    "/uploads/electric/lumina_side.jpg"
                 ],
                 isListed: true,
                 isDeleted: false

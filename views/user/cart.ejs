@@ -10,7 +10,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/css/user/index.css" />
@@ -116,7 +116,15 @@
             </div>
 
             <!-- Flash Error / Success Alerts -->
-            <% if (typeof error !== 'undefined' && error) { %>
+            <% 
+                const hasNoticeList = cart && cart.hasBlockingIssues && Array.isArray(cart.blockingReasons) && cart.blockingReasons.length > 0;
+                const isDuplicateError = hasNoticeList && (
+                    cart.blockingReasons.includes(error) || 
+                    (error && cart.blockingReasons.some(r => r.includes(error) || error.includes(r))) ||
+                    (error && /unlisted|unavailable|out of stock|sold out|inventory/i.test(error))
+                );
+            %>
+            <% if (typeof error !== 'undefined' && error && !isDuplicateError) { %>
                 <div class="cart-alert error" role="alert">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -146,7 +154,7 @@
                             <line x1="12" y1="9" x2="12" y2="13"></line>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span>Inventory Attention Required Before Checkout</span>
+                        <span>Items in Your Bag Require Attention</span>
                     </div>
                     <ul class="blocking-reasons-list">
                         <% cart.blockingReasons.forEach(function(reason) { %>
@@ -183,7 +191,7 @@
 
                                 <!-- Information -->
                                 <div class="cart-item-info">
-                                    <div class="cart-item-cat"><%= item.categoryName || 'Archived' %></div>
+                                    <div class="cart-item-cat"><%= item.isUnavailable ? 'Unavailable' : (item.categoryName || 'Exclusive Edition') %></div>
                                     <h2 class="cart-item-title">
                                         <% if (item.productId && !item.isUnavailable) { %>
                                             <a href="/products/<%= item.productId %>"><%= item.name %></a>
@@ -204,11 +212,11 @@
                                     <!-- Status Warnings -->
                                     <% if (item.isOutOfStock) { %>
                                         <div class="cart-item-warning sold-out">
-                                            <span>Sold Out — Unavailable for Purchase</span>
+                                            <span>Sold Out — Please remove from your bag</span>
                                         </div>
                                     <% } else if (item.isInsufficientStock) { %>
                                         <div class="cart-item-warning low-stock">
-                                            <span>Only <%= item.stock %> remaining in the atelier</span>
+                                            <span>Only <%= item.stock %> remaining in stock</span>
                                         </div>
                                     <% } else if (item.isUnavailable) { %>
                                         <div class="cart-item-warning sold-out">
@@ -308,10 +316,10 @@
                         <!-- Checkout Action -->
                         <div id="checkout-btn-wrap" style="margin-top: 18px;">
                             <button type="button" class="btn-checkout disabled" id="btnCheckoutRestricted" style="<%= cart.hasBlockingIssues ? 'display: flex;' : 'display: none;' %>" disabled>
-                                <span>Checkout Restricted</span>
+                                <span>Unavailable Items in Bag</span>
                             </button>
                             <p class="checkout-restricted-hint" id="checkout-restricted-hint" style="<%= cart.hasBlockingIssues ? 'display: block;' : 'display: none;' %>">
-                                Resolve sold-out or unavailable items in your bag before proceeding to payment.
+                                Please remove sold-out or unavailable items from your bag to continue.
                             </p>
 
                             <a href="/checkout" class="btn-checkout" id="btnProceedCheckout" style="<%= !cart.hasBlockingIssues ? 'display: inline-flex;' : 'display: none;' %>">

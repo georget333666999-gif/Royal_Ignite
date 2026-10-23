@@ -528,11 +528,14 @@ input, textarea, [contenteditable="true"] {
 }
 
 .elec-card-title {
-    font-family: var(--elec-font-serif);
-    font-size: 1.55rem;
-    font-weight: 400;
-    line-height: 1.2;
+    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.03em;
     margin-bottom: 10px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 .elec-card-title a {

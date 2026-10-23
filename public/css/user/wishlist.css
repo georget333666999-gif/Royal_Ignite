@@ -273,12 +273,14 @@ input, textarea, [contenteditable="true"] {
 }
 
 .wishlist-card-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 20px;
-    font-weight: 400;
+    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
     color: #FFFFFF;
     margin: 0 0 8px;
     line-height: 1.25;
+    letter-spacing: 0.03em;
+    -webkit-font-smoothing: antialiased;
 }
 
 .wishlist-card-title a {

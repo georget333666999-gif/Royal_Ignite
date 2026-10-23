@@ -215,11 +215,13 @@
 }
 
 .cart-item-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 1.18rem;
-    color: var(--text-headline);
-    font-weight: 500;
+    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.15rem;
+    color: #FFFFFF;
+    font-weight: 600;
     line-height: 1.35;
+    letter-spacing: 0.03em;
+    -webkit-font-smoothing: antialiased;
 }
 
 .cart-item-title a {

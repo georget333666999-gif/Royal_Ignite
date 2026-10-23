@@ -19,11 +19,8 @@ export const validateProductForCart = async (productId) => {
         }
 
         // Check product listed & delete state
-        if (product.isDeleted) {
-            return { valid: false, message: "This masterpiece is no longer available in the atelier." };
-        }
-        if (!product.isListed) {
-            return { valid: false, message: "This masterpiece has been unlisted from public acquisition." };
+        if (product.isDeleted || !product.isListed) {
+            return { valid: false, message: "This item is currently unavailable." };
         }
 
         // Check category listed & delete state
@@ -33,7 +30,7 @@ export const validateProductForCart = async (productId) => {
 
         // Check stock
         if (product.stock <= 0) {
-            return { valid: false, message: "This numbered edition is currently out of stock." };
+            return { valid: false, message: "This item is currently out of stock." };
         }
 
         // Calculate effective price
@@ -69,7 +66,7 @@ export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow 
         const qtyToAdd = Math.max(1, parseInt(requestedQty, 10) || 1);
 
         if (qtyToAdd > maxAllowedPerItem) {
-            throw new Error(`Maximum ${maxAllowedPerItem} units allowed for this piece.`);
+            throw new Error(`You can add up to ${maxAllowedPerItem} units of this item.`);
         }
 
         // 3. Find or create user cart
@@ -178,10 +175,10 @@ export const getCart = async (userId) => {
                     quantity: item.quantity,
                     price: item.price,
                     isUnavailable: true,
-                    unavailableReason: "This product is no longer in our catalog."
+                    unavailableReason: "This item is no longer available in our collection."
                 });
                 hasBlockingIssues = true;
-                blockingReasons.push("An item in your bag has been removed from the catalog.");
+                blockingReasons.push("An item in your bag is no longer available. Please remove it to proceed.");
                 continue;
             }
 
@@ -198,10 +195,10 @@ export const getCart = async (userId) => {
                     quantity: item.quantity,
                     price: item.price,
                     isUnavailable: true,
-                    unavailableReason: "This creation or its collection has been archived or unlisted."
+                    unavailableReason: "This item is currently unavailable."
                 });
                 hasBlockingIssues = true;
-                blockingReasons.push(`"${prod.name}" has been unlisted and cannot be purchased.`);
+                blockingReasons.push(`"${prod.name}" is currently unavailable. Please remove it from your bag to proceed.`);
                 continue;
             }
 
@@ -216,12 +213,12 @@ export const getCart = async (userId) => {
             let unavailableReason = null;
             if (isOutOfStock) {
                 hasBlockingIssues = true;
-                unavailableReason = "This creation is now completely sold out.";
-                blockingReasons.push(`"${prod.name}" is sold out. Please remove it to proceed.`);
+                unavailableReason = "This item is currently out of stock.";
+                blockingReasons.push(`"${prod.name}" is out of stock. Please remove it to proceed.`);
             } else if (isInsufficientStock) {
                 hasBlockingIssues = true;
-                unavailableReason = `Only ${prod.stock} left in the atelier. Please reduce your quantity.`;
-                blockingReasons.push(`"${prod.name}" has only ${prod.stock} pieces remaining.`);
+                unavailableReason = `Only ${prod.stock} left in stock. Please reduce your quantity.`;
+                blockingReasons.push(`"${prod.name}" only has ${prod.stock} units available. Please adjust your quantity.`);
             }
 
             const maxItemLimit = Math.min(CART.MAX_QUANTITY_PER_ITEM, prod.stock);
@@ -304,16 +301,16 @@ export const updateCartItemQuantity = async (userId, productId, requestedQty) =>
         // Verify product stock & status
         const product = await Product.findById(productId).populate("category");
         if (!product || product.isDeleted || !product.isListed) {
-            throw new Error("This piece is no longer available.");
+            throw new Error("This item is currently unavailable.");
         }
         if (!product.category || product.category.isDeleted || !product.category.isListed) {
-            throw new Error("This collection has been archived.");
+            throw new Error("This collection is currently unavailable.");
         }
 
         const maxAllowed = Math.min(CART.MAX_QUANTITY_PER_ITEM, product.stock);
         if (qty > maxAllowed) {
             throw new Error(
-                `Cannot add ${qty} units. Maximum allowed for this piece is ${maxAllowed}.`
+                `Only ${maxAllowed} units are available for this item.`
             );
         }
 

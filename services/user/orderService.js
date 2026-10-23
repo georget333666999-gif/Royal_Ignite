@@ -170,13 +170,13 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
 
         const item = order.items.id(itemId) || order.items.find((i) => String(i._id) === String(itemId));
         if (!item) {
-            const err = new Error("Piece could not be found in this order.");
+            const err = new Error("Item could not be found in this order.");
             err.code = "ITEM_NOT_FOUND";
             throw err;
         }
 
         if (item.status === "Cancelled") {
-            const err = new Error("This piece has already been cancelled.");
+            const err = new Error("This item has already been cancelled.");
             err.code = "ALREADY_CANCELLED";
             throw err;
         }
@@ -189,14 +189,14 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
 
         // 2. Mark item as cancelled
         item.status = "Cancelled";
-        item.cancelReason = reason.trim() || "Piece cancelled by client";
+        item.cancelReason = reason.trim() || "Item cancelled by customer";
         item.cancelledAt = new Date();
 
         // 3. Check if all items in the order are now cancelled
         const allCancelled = order.items.every((i) => i.status === "Cancelled");
         if (allCancelled) {
             order.orderStatus = "Cancelled";
-            order.cancellationReason = reason.trim() || "All pieces cancelled by client";
+            order.cancellationReason = reason.trim() || "All items cancelled by customer";
             order.cancelledAt = new Date();
             order.pricing.totalAmount = 0;
         } else {
@@ -245,7 +245,7 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
 
         // Requirement (c.iv): Return order when delivered
         if (order.orderStatus !== "Delivered") {
-            const err = new Error("Return requests can only be submitted for delivered creations.");
+            const err = new Error("Return requests can only be submitted after your order has been delivered.");
             err.code = "CANNOT_RETURN";
             throw err;
         }
