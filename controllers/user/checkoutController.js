@@ -1,8 +1,59 @@
 import User from "../../models/userModel.js";
+import Product from "../../models/productModel.js";
 import checkoutService from "../../services/user/checkoutService.js";
 import addressService from "../../services/user/addressService.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
 import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
+
+/**
+ * Initiate Buy Now direct checkout (stores item in session and redirects to checkout)
+ */
+export const postBuyNow = async (req, res, next) => {
+    const isAjax = Boolean(
+        req.xhr || req.headers.accept?.includes("application/json") || req.body.format === "json"
+    );
+    try {
+        const userId = getAuthenticatedUserId(req);
+        const { productId, quantity = 1 } = req.body;
+
+        if (!userId) {
+            const redirectUrl = `/user/login?redirect=/products/${productId}`;
+            if (isAjax) {
+                return res.status(HTTP_STATUS.OK).json({ success: false, redirect: redirectUrl });
+            }
+            return res.redirect(redirectUrl);
+        }
+
+        const user = await User.findById(userId);
+        if (!user || user.isBlocked) {
+            return handleBlockedUser(req, res);
+        }
+
+        const product = await Product.findOne({ _id: productId, isDeleted: false, isListed: true });
+        if (!product || product.stock < 1) {
+            const message = "This creation is currently unavailable.";
+            if (isAjax) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+            }
+            return res.redirect(`/products/${productId}?error=` + encodeURIComponent(message));
+        }
+
+        const qty = Math.max(1, Math.min(parseInt(quantity, 10) || 1, product.stock, 5));
+        req.session.buyNow = { productId, quantity: qty };
+
+        const checkoutUrl = "/checkout?buyNow=1";
+        if (isAjax) {
+            return res.status(HTTP_STATUS.OK).json({ success: true, redirect: checkoutUrl });
+        }
+        return res.redirect(checkoutUrl);
+    } catch (err) {
+        console.error("checkoutController postBuyNow error:", err);
+        if (isAjax) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: err.message });
+        }
+        return next(err);
+    }
+};
 
 /**
  * Render the Bespoke Checkout Page (b.i, b.ii, b.iii)
@@ -22,18 +73,31 @@ export const getCheckoutPage = async (req, res, next) => {
             return handleBlockedUser(req, res);
         }
 
-        const checkoutData = await checkoutService.getCheckoutDetails(userId);
+        const isBuyNow = (req.query.buyNow === "true" || req.query.buyNow === "1") && Boolean(req.session?.buyNow);
+        if (!isBuyNow && req.session?.buyNow && !req.query.buyNow) {
+            req.session.buyNow = null;
+        }
+
+        let checkoutData;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity);
+        } else {
+            checkoutData = await checkoutService.getCheckoutDetails(userId);
+        }
 
         if (checkoutData.isEmpty) {
             return res.redirect(
-                "/cart?error=" + encodeURIComponent(RESPONSE_MESSAGES.CHECKOUT.EMPTY_BAG)
+                isBuyNow
+                    ? "/shop?error=" + encodeURIComponent("Selected product is sold out.")
+                    : "/cart?error=" + encodeURIComponent(RESPONSE_MESSAGES.CHECKOUT.EMPTY_BAG)
             );
         }
 
         if (checkoutData.hasBlockingIssues) {
             const firstReason =
                 checkoutData.blockingReasons?.[0] || RESPONSE_MESSAGES.CHECKOUT.ITEMS_BLOCKED;
-            return res.redirect("/cart?error=" + encodeURIComponent(firstReason));
+            return res.redirect((isBuyNow ? "/shop" : "/cart") + "?error=" + encodeURIComponent(firstReason));
         }
 
         res.set({
@@ -44,8 +108,9 @@ export const getCheckoutPage = async (req, res, next) => {
         });
 
         return res.status(HTTP_STATUS.OK).render("checkout", {
-            pageTitle: "Atelier Checkout — ROYAL IGNITE",
+            pageTitle: isBuyNow ? "Instant Acquisition — ROYAL IGNITE" : "Atelier Checkout — ROYAL IGNITE",
             isUserLoggedIn: true,
+            isBuyNow,
             userId,
             user,
             cart: checkoutData.cart,
@@ -88,12 +153,26 @@ export const postPlaceOrder = async (req, res, next) => {
         }
 
         const { addressId, paymentMethod = "COD" } = req.body;
+        const isBuyNow = Boolean(req.session?.buyNow);
 
-        const order = await checkoutService.placeOrder({
-            userId,
-            addressId,
-            paymentMethod
-        });
+        let order;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            order = await checkoutService.placeBuyNowOrder({
+                userId,
+                addressId,
+                productId,
+                quantity,
+                paymentMethod
+            });
+            req.session.buyNow = null; // Clean up Buy Now session
+        } else {
+            order = await checkoutService.placeOrder({
+                userId,
+                addressId,
+                paymentMethod
+            });
+        }
 
         const successRedirect = `/checkout/success/${order.orderId}`;
 
@@ -283,6 +362,7 @@ export const postEditAddressCheckout = async (req, res, next) => {
 };
 
 export default {
+    postBuyNow,
     getCheckoutPage,
     postPlaceOrder,
     getOrderSuccessPage,

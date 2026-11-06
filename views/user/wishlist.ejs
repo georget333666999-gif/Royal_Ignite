@@ -418,7 +418,27 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showToast(data.message || 'Creation added to your atelier bag.');
+                    const countSuffix = (typeof data.cartCount !== 'undefined' && data.cartCount > 0)
+                        ? ` (${data.cartCount} ${data.cartCount === 1 ? 'item' : 'items'} in bag)`
+                        : '';
+                    showToast((data.message || 'Creation added to your atelier bag.') + countSuffix);
+
+                    // Update header cart badges
+                    if (typeof data.cartCount !== 'undefined') {
+                        const headerCartBadges = document.querySelectorAll('.cart-badge-count');
+                        headerCartBadges.forEach(function (badge) {
+                            if (data.cartCount > 0) {
+                                badge.textContent = data.cartCount;
+                                badge.style.display = 'inline-block';
+                                badge.classList.remove('badge-pop');
+                                void badge.offsetWidth;
+                                badge.classList.add('badge-pop');
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        });
+                    }
+
                     if (card) {
                         card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                         card.style.opacity = '0';

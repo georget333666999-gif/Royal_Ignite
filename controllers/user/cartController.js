@@ -70,7 +70,9 @@ export const postAddToCart = async (req, res, next) => {
             return res.status(HTTP_STATUS.OK).json({
                 success: true,
                 message: RESPONSE_MESSAGES.CART.ADDED_SUCCESS,
-                cart: updatedCart
+                cart: updatedCart,
+                count: updatedCart ? (updatedCart.itemCount || 0) : 0,
+                wishlistCount: updatedCart?.wishlistCount
             });
         }
 
@@ -201,10 +203,28 @@ export const getCheckout = async (req, res, next) => {
     }
 };
 
+/**
+ * Get count of items in cart for header badges
+ */
+export const getCartCount = async (req, res, next) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.OK).json({ success: true, count: 0 });
+        }
+        const count = await cartService.getCartCount(userId);
+        return res.status(HTTP_STATUS.OK).json({ success: true, count });
+    } catch (err) {
+        console.error("User cartController getCartCount error:", err);
+        return res.status(HTTP_STATUS.OK).json({ success: true, count: 0 });
+    }
+};
+
 export default {
     getCartPage,
     postAddToCart,
     postUpdateQuantity,
     postRemoveFromCart,
-    getCheckout
+    getCheckout,
+    getCartCount
 };

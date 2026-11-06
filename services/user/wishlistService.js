@@ -245,11 +245,13 @@ export const moveToCart = async (userId, productId) => {
         // Fetch remaining count
         const updatedWishlist = await Wishlist.findOne({ user: userId });
         const count = updatedWishlist ? updatedWishlist.products.length : 0;
+        const cartCount = await cartService.getCartCount(userId);
 
         return {
             success: true,
             alreadyInCart,
             count,
+            cartCount,
             message: alreadyInCart
                 ? "This piece was already in your bag. Removed from wishlist."
                 : RESPONSE_MESSAGES.WISHLIST.MOVED_TO_CART

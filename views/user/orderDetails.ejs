@@ -86,7 +86,8 @@
                     <div class="order-heading-group">
                         <h1 class="order-details-title">
                             Edition <span class="order-id-highlight">#<%= order.orderId %></span>
-                            <span class="status-badge <%= order.orderStatus.toLowerCase() %>">
+                            <% const statusSlug = (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-'); %>
+                            <span class="status-badge <%= statusSlug %>">
                                 <span class="status-dot"></span>
                                 <span><%= order.orderStatus %></span>
                             </span>
@@ -266,8 +267,67 @@
                             <% if (order.returnedAt) { %>
                                 on <%= new Date(order.returnedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
                             <% } %>
-                            <div style="margin-top: 4px; font-size: 13px; color: #fdba74;">
+                            <div style="margin-top: 4px; font-size: 13px; color: #a7f3d0;">
                                 Return Reason: <%= order.returnReason %>
+                            </div>
+                        </div>
+                    </div>
+                <% } else if (isReturnRequested) { %>
+                    <!-- Return Requested Banner -->
+                    <div class="order-notice-banner notice-return-requested">
+                        <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <div style="flex: 1;">
+                            <div class="notice-header-line">
+                                <strong>Return Request Under Review</strong>
+                                <% if (order.returnRequestedAt) { %>
+                                    <span class="notice-timestamp">
+                                        Submitted on <%= new Date(order.returnRequestedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                    </span>
+                                <% } %>
+                            </div>
+                            <div class="notice-subtext">
+                                Our atelier concierge is reviewing your return request.
+                            </div>
+                            <% if (order.returnReason) { %>
+                                <div class="notice-reason-box">
+                                    <span class="notice-reason-label">Your Reason:</span>
+                                    <span class="notice-reason-val"><%= order.returnReason %></span>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } else if (isReturnRejected) { %>
+                    <!-- Return Rejected Outcome Banner -->
+                    <div class="order-notice-banner notice-return-rejected">
+                        <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        <div style="flex: 1;">
+                            <div class="notice-header-line">
+                                <strong>Return Request Declined</strong>
+                                <% if (order.returnRejectedAt) { %>
+                                    <span class="notice-timestamp">
+                                        Reviewed on <%= new Date(order.returnRejectedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                    </span>
+                                <% } %>
+                            </div>
+                            <div class="user-rejection-card">
+                                <div class="rejection-card-header">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span>Atelier Review Note & Reason</span>
+                                </div>
+                                <div class="rejection-card-body">
+                                    <%= order.returnRejectReason || 'Return request criteria were not met under our policy guidelines.' %>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -307,7 +367,8 @@
                                                 <span>Unit: ₹<%= Number(item.price).toLocaleString('en-IN') %></span>
                                                 <% if (item.status && item.status !== order.orderStatus) { %>
                                                     <span>•</span>
-                                                    <span class="status-badge <%= item.status.toLowerCase() %>" style="padding: 2px 8px; font-size: 10.5px;">
+                                                    <% const itemStatusSlug = item.status.toLowerCase().replace(/\s+/g, '-'); %>
+                                                    <span class="status-badge <%= itemStatusSlug %>" style="padding: 2px 8px; font-size: 10.5px;">
                                                         <span class="status-dot"></span>
                                                         <span><%= item.status %></span>
                                                     </span>

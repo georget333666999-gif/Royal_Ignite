@@ -900,37 +900,69 @@
             if (plusBtn) plusBtn.disabled = (val >= maxStock);
         }
 
-        // 6. Buy Now Handler (Submits and sets redirect flag)
-        function triggerBuyNow() {
-            const form = document.getElementById("productPurchaseForm");
-            if (!form) return;
-
-            // Update gift packaging state
-            const toggle = document.getElementById("giftPackagingToggle");
-            const giftInput = document.getElementById("hiddenGiftPackagingInput");
-            if (toggle && giftInput) {
-                giftInput.value = toggle.checked ? "true" : "false";
+        // 6. Buy Now Handler (Direct Checkout without touching Cart)
+        async function triggerBuyNow() {
+            const btn = document.getElementById("btnBuyNow");
+            const originalHtml = btn ? btn.innerHTML : "";
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span>Processing...</span>`;
             }
 
-            // Create temporary input for direct checkout redirect
-            const buyNowInput = document.createElement("input");
-            buyNowInput.type = "hidden";
-            buyNowInput.name = "buyNow";
-            buyNowInput.value = "true";
-            form.appendChild(buyNowInput);
+            const qtyInput = document.getElementById("productQuantityInput");
+            const qty = qtyInput ? (parseInt(qtyInput.value, 10) || 1) : 1;
+            const productId = "<%= product._id %>";
 
-            form.submit();
+            try {
+                const response = await fetch("/checkout/buy-now", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ productId, quantity: qty })
+                });
+
+                const data = await response.json();
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else if (data.success) {
+                    window.location.href = "/checkout?buyNow=1";
+                } else {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                    Swal.fire({
+                        icon: "error",
+                        title: "Notice",
+                        text: data.message || "Could not proceed with instant acquisition.",
+                        background: "#141312",
+                        color: "#f0ece6",
+                        confirmButtonColor: "#F6BD64"
+                    });
+                }
+            } catch (err) {
+                console.error("Buy Now error:", err);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+                Swal.fire({
+                    icon: "error",
+                    title: "Notice",
+                    text: "An error occurred while connecting to the atelier.",
+                    background: "#141312",
+                    color: "#f0ece6",
+                    confirmButtonColor: "#F6BD64"
+                });
+            }
         }
 
         // 6b. Add to Cart AJAX Form Submission (Quiet Luxury In-Page Feedback)
         const productForm = document.getElementById("productPurchaseForm");
         if (productForm) {
             productForm.addEventListener("submit", async function(e) {
-                // If it is Buy Now action, allow standard submission to proceed directly to checkout
-                if (productForm.querySelector('input[name="buyNow"]')) {
-                    return;
-                }
-
                 e.preventDefault();
 
                 // Synchronize gift packaging and engraving state
@@ -1064,13 +1096,59 @@
                         return;
                     }
 
+                    // Determine item count from response
+                    const cartItemCount = (data.cart && typeof data.cart.itemCount !== 'undefined')
+                        ? data.cart.itemCount
+                        : (typeof data.count !== 'undefined' ? data.count : null);
+
+                    // Update header shopping bag badges
+                    if (cartItemCount !== null) {
+                        const headerCartBadges = document.querySelectorAll('.cart-badge-count');
+                        headerCartBadges.forEach(function (badge) {
+                            if (cartItemCount > 0) {
+                                badge.textContent = cartItemCount;
+                                badge.style.display = 'inline-block';
+                                badge.classList.remove('badge-pop');
+                                void badge.offsetWidth;
+                                badge.classList.add('badge-pop');
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    // Update wishlist badges if returned (item removed from wishlist upon cart add)
+                    if (typeof data.wishlistCount !== 'undefined') {
+                        const headerWishlistBadges = document.querySelectorAll('.wishlist-badge-count');
+                        headerWishlistBadges.forEach(function (badge) {
+                            if (data.wishlistCount > 0) {
+                                badge.textContent = data.wishlistCount;
+                                badge.style.display = 'inline-block';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        });
+                        const wishlistHeartBtn = document.getElementById("btnWishlist");
+                        if (wishlistHeartBtn) {
+                            wishlistHeartBtn.classList.remove("active");
+                            wishlistHeartBtn.setAttribute("data-in-wishlist", "false");
+                            const targetPath = wishlistHeartBtn.querySelector("svg path");
+                            if (targetPath) {
+                                targetPath.setAttribute("fill", "none");
+                                targetPath.setAttribute("stroke", "currentColor");
+                                targetPath.style.fill = "none";
+                                targetPath.style.stroke = "currentColor";
+                            }
+                        }
+                    }
+
                     // Success visual feedback on Add to Cart button
                     if (btn) {
                         btn.innerHTML = `
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            <span style="color: #22c55e;">Added to Bag</span>
+                            <span style="color: #22c55e;">Added to Bag ${cartItemCount ? `(${cartItemCount})` : ''}</span>
                         `;
                     }
 
@@ -1082,13 +1160,17 @@
                         headerCartIcon.classList.add("cart-pulse-active");
                     }
 
-                    // Quiet Luxury success toast notification on product details page
+                    // Quiet Luxury success toast notification on product details page displaying item count
                     if (typeof Swal !== 'undefined') {
+                        const countText = cartItemCount 
+                            ? `${cartItemCount} ${cartItemCount === 1 ? 'item' : 'items'} in your bag` 
+                            : '';
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
                             icon: 'success',
                             title: data.message || 'Creation added to your atelier bag successfully.',
+                            text: countText,
                             showConfirmButton: false,
                             timer: 3500,
                             timerProgressBar: true,

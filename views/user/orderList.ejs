@@ -137,11 +137,42 @@
                                     </span>
                                 </div>
 
-                                <div class="status-badge <%= order.orderStatus.toLowerCase() %>">
+                                <div class="status-badge <%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
                                     <span class="status-dot"></span>
                                     <span><%= order.orderStatus %></span>
                                 </div>
                             </div>
+
+                            <% if (order.orderStatus === 'Return Requested') { %>
+                                <div class="order-notice-ribbon ribbon-requested">
+                                    <div class="ribbon-icon-wrapper">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="ribbon-text-group">
+                                        <span class="ribbon-tag-label">Review in Progress</span>
+                                        <span class="ribbon-tag-desc">Return request submitted & awaiting atelier concierge evaluation.</span>
+                                    </div>
+                                </div>
+                            <% } else if (order.orderStatus === 'Return Rejected') { %>
+                                <div class="order-notice-ribbon ribbon-rejected">
+                                    <div class="ribbon-rejected-header">
+                                        <div class="ribbon-icon-wrapper ribbon-icon-declined">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </div>
+                                        <span class="ribbon-headline">Atelier Decision: Return Request Declined</span>
+                                    </div>
+                                    <div class="ribbon-rejected-quote">
+                                        <span class="ribbon-quote-label">Concierge Note:</span>
+                                        <p class="ribbon-quote-text">“<%= order.returnRejectReason || 'The acquisition does not meet return eligibility criteria under our atelier policies.' %>”</p>
+                                    </div>
+                                </div>
+                            <% } %>
 
                             <!-- Body: Items Preview -->
                             <div class="order-card-body">

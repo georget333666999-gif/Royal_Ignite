@@ -136,6 +136,14 @@ export const updateOrderStatus = async (req, res, next) => {
             return res.redirect(`/admin/orders?error=` + encodeURIComponent(message));
         }
 
+        if (status === "Return Rejected" && (!notes || !notes.trim())) {
+            const message = "Please provide a reason for rejecting the return request.";
+            if (isJson) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+            }
+            return res.redirect(`/admin/orders/${orderId}?error=` + encodeURIComponent(message));
+        }
+
         const result = await orderService.updateAdminOrderStatus(orderId, status, notes);
 
         if (isJson) {
@@ -163,8 +171,70 @@ export const updateOrderStatus = async (req, res, next) => {
     }
 };
 
+/**
+ * Approve Return Request
+ */
+export const approveReturn = async (req, res, next) => {
+    const isJson = isJsonRequest(req);
+    try {
+        const { orderId } = req.params;
+        const { notes = "" } = req.body;
+
+        const result = await orderService.approveReturn(orderId, notes);
+
+        if (isJson) {
+            return res.status(HTTP_STATUS.OK).json(result);
+        }
+
+        return res.redirect(`/admin/orders/${orderId}?success=` + encodeURIComponent(result.message));
+    } catch (err) {
+        console.error("admin orderController approveReturn error:", err);
+        const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        if (isJson) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+        }
+        return res.redirect(`/admin/orders/${req.params.orderId}?error=` + encodeURIComponent(message));
+    }
+};
+
+/**
+ * Reject Return Request with mandatory reason
+ */
+export const rejectReturn = async (req, res, next) => {
+    const isJson = isJsonRequest(req);
+    try {
+        const { orderId } = req.params;
+        const reason = req.body.reason || req.body.notes;
+
+        if (!reason || !reason.trim()) {
+            const message = "Please provide a reason for rejecting the return request.";
+            if (isJson) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+            }
+            return res.redirect(`/admin/orders/${orderId}?error=` + encodeURIComponent(message));
+        }
+
+        const result = await orderService.rejectReturn(orderId, reason.trim());
+
+        if (isJson) {
+            return res.status(HTTP_STATUS.OK).json(result);
+        }
+
+        return res.redirect(`/admin/orders/${orderId}?success=` + encodeURIComponent(result.message));
+    } catch (err) {
+        console.error("admin orderController rejectReturn error:", err);
+        const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        if (isJson) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+        }
+        return res.redirect(`/admin/orders/${req.params.orderId}?error=` + encodeURIComponent(message));
+    }
+};
+
 export default {
     getOrderListPage,
     getOrderDetail,
-    updateOrderStatus
+    updateOrderStatus,
+    approveReturn,
+    rejectReturn
 };

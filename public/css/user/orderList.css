@@ -263,9 +263,131 @@ body.orders-body {
 }
 
 .status-badge.returned {
-    background: rgba(249, 115, 22, 0.12);
-    color: var(--status-returned);
-    border-color: rgba(249, 115, 22, 0.3);
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.return-requested {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.return-rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Ribbons for Return Statuses on Order Cards (Quiet Luxury Aesthetic) */
+.order-notice-ribbon {
+    padding: 14px 24px;
+    font-size: 13px;
+    display: flex;
+    border-bottom: 1px solid var(--ol-border);
+    transition: background 0.25s ease;
+}
+
+.order-notice-ribbon.ribbon-requested {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(20, 20, 24, 0.4) 100%);
+    border-left: 3px solid #f59e0b;
+    align-items: center;
+    gap: 12px;
+}
+
+.ribbon-icon-wrapper {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ribbon-icon-declined {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #ef4444;
+}
+
+.ribbon-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ribbon-tag-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #f59e0b;
+}
+
+.ribbon-tag-desc {
+    color: #d1d5db;
+    font-size: 12.5px;
+    letter-spacing: 0.2px;
+}
+
+/* Declined Ribbon — Elevated Haute Atelier Look */
+.order-notice-ribbon.ribbon-rejected {
+    background: linear-gradient(135deg, rgba(28, 20, 22, 0.85) 0%, rgba(18, 18, 22, 0.95) 100%);
+    border-left: 3px solid #ef4444;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ribbon-rejected-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ribbon-headline {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f87171;
+}
+
+.ribbon-rejected-quote {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 11px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ribbon-quote-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: #fca5a5;
+}
+
+.ribbon-quote-text {
+    margin: 2px 0 0;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: #FFE4A0;
+    letter-spacing: 0.2px;
 }
 
 .status-dot {

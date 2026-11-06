@@ -12,4 +12,8 @@ router.get("/orders/:orderId", orderController.getOrderDetail);
 // Update Order Fulfillment Status (a.iii)
 router.post("/orders/:orderId/status", orderController.updateOrderStatus);
 
+// Approve / Reject Return Requests
+router.post("/orders/:orderId/return/approve", orderController.approveReturn);
+router.post("/orders/:orderId/return/reject", orderController.rejectReturn);
+
 export default router;

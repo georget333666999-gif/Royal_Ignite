@@ -34,12 +34,28 @@ export const getAdminOrders = async ({
 
         // 2. Search Functionality (a.iv: orderID, user details, items)
         if (search && search.trim() !== "") {
+            const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             const cleanSearch = search.trim();
-            const searchRegex = new RegExp(cleanSearch, "i");
+            const tokens = cleanSearch.split(/\s+/).filter(Boolean);
+            const escapedTokens = tokens.map(escapeRegex);
+            const phraseRegex = new RegExp(escapedTokens.join("\\s+"), "i");
+            const tokenRegex = new RegExp(escapedTokens.map((t) => `(?=.*${t})`).join(""), "i");
 
-            // Look up matching users first to enable customer name/email search
+            // Match letters with optional whitespace/dots (e.g. "sk" or "s.k" matches "s     k")
+            const compactLetters = cleanSearch.replace(/[\s.]+/g, "");
+            const compactRegex = compactLetters.length <= 6
+                ? new RegExp(compactLetters.split("").map(escapeRegex).join("[\\s.]*"), "i")
+                : phraseRegex;
+
+            // Look up matching users first to enable customer name/email/phone search
             const matchingUsers = await User.find({
-                $or: [{ name: searchRegex }, { email: searchRegex }, { phone: searchRegex }]
+                $or: [
+                    { name: phraseRegex },
+                    { name: tokenRegex },
+                    { name: compactRegex },
+                    { email: phraseRegex },
+                    { phone: phraseRegex }
+                ]
             })
                 .select("_id")
                 .lean();
@@ -47,16 +63,30 @@ export const getAdminOrders = async ({
             const matchingUserIds = matchingUsers.map((u) => u._id);
 
             query.$or = [
-                { orderId: searchRegex },
-                { "shippingAddress.fullName": searchRegex },
-                { "shippingAddress.phone": searchRegex },
-                { "shippingAddress.city": searchRegex },
-                { "items.name": searchRegex }
+                { orderId: phraseRegex },
+                { "items.name": phraseRegex },
+                { "items.name": tokenRegex },
+                { "shippingAddress.city": phraseRegex }
             ];
 
             if (matchingUserIds.length > 0) {
                 query.$or.push({ user: { $in: matchingUserIds } });
             }
+
+            // For guest orders with no registered user account, match shipping details
+            query.$or.push({
+                $and: [
+                    { user: null },
+                    {
+                        $or: [
+                            { "shippingAddress.fullName": phraseRegex },
+                            { "shippingAddress.fullName": tokenRegex },
+                            { "shippingAddress.fullName": compactRegex },
+                            { "shippingAddress.phone": phraseRegex }
+                        ]
+                    }
+                ]
+            });
         }
 
         // 3. Sorting Criteria (a.i: default descending order date)
@@ -106,6 +136,7 @@ export const getAdminOrders = async ({
         // Compile dashboard summary statistics
         const stats = {
             totalOrdersCount: 0,
+            placedCount: 0,
             pendingCount: 0,
             processingCount: 0,
             shippedCount: 0,
@@ -113,6 +144,8 @@ export const getAdminOrders = async ({
             deliveredCount: 0,
             cancelledCount: 0,
             returnedCount: 0,
+            returnRequestedCount: 0,
+            returnRejectedCount: 0,
             grossRevenue: 0
         };
 
@@ -123,13 +156,18 @@ export const getAdminOrders = async ({
                 stats.totalOrdersCount += count;
                 stats.grossRevenue += group.totalRevenue || 0;
 
-                if (st === "Pending" || st === "Placed") stats.pendingCount += count;
+                if (st === "Pending" || st === "Placed") {
+                    stats.placedCount = (stats.placedCount || 0) + count;
+                    stats.pendingCount += count;
+                }
                 else if (st === "Processing") stats.processingCount += count;
                 else if (st === "Shipped") stats.shippedCount += count;
                 else if (st === "Out for Delivery") stats.outForDeliveryCount += count;
                 else if (st === "Delivered") stats.deliveredCount += count;
                 else if (st === "Cancelled") stats.cancelledCount += count;
                 else if (st === "Returned") stats.returnedCount += count;
+                else if (st === "Return Requested") stats.returnRequestedCount += count;
+                else if (st === "Return Rejected") stats.returnRejectedCount += count;
             });
         }
 
@@ -182,23 +220,6 @@ export const getAdminOrderDetails = async (orderIdentifier) => {
  */
 export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNotes = "") => {
     try {
-        const allowedStatuses = [
-            "Pending",
-            "Placed",
-            "Processing",
-            "Shipped",
-            "Out for Delivery",
-            "Delivered",
-            "Cancelled",
-            "Returned"
-        ];
-
-        if (!allowedStatuses.includes(newStatus)) {
-            const err = new Error(RESPONSE_MESSAGES.ORDER.INVALID_STATUS);
-            err.code = "INVALID_STATUS";
-            throw err;
-        }
-
         const order = await getAdminOrderDetails(orderIdentifier);
         if (!order) {
             const err = new Error(RESPONSE_MESSAGES.ORDER.NOT_FOUND);
@@ -215,6 +236,35 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
                 order,
                 message: "Order is already in this status."
             };
+        }
+
+        // State Machine: Allowed forward and return transitions
+        const ALLOWED_TRANSITIONS = {
+            Placed: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+            Pending: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+            Processing: ["Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+            Shipped: ["Out for Delivery", "Delivered", "Cancelled"],
+            "Out for Delivery": ["Delivered", "Cancelled"],
+            "Return Requested": ["Returned", "Return Rejected"],
+            Delivered: [],
+            Cancelled: [],
+            Returned: [],
+            "Return Rejected": []
+        };
+
+        const validNextStatuses = ALLOWED_TRANSITIONS[oldStatus] || [];
+        if (!validNextStatuses.includes(newStatus)) {
+            let msg = `Cannot change order status from "${oldStatus}" to "${newStatus}".`;
+            if (oldStatus === "Delivered") {
+                msg = "Delivered orders cannot be moved back to previous statuses.";
+            } else if (["Cancelled", "Returned", "Return Rejected"].includes(oldStatus)) {
+                msg = `Orders in "${oldStatus}" status cannot be modified.`;
+            } else if (["Returned", "Return Rejected", "Return Requested"].includes(newStatus)) {
+                msg = "Return options can only be processed after a client requests a return.";
+            }
+            const err = new Error(msg);
+            err.code = "INVALID_STATUS_TRANSITION";
+            throw err;
         }
 
         // 1. Stock Reconciliation on cancellation
@@ -235,20 +285,7 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             order.pricing.totalAmount = 0;
         }
 
-        // 2. Stock Deduction if un-cancelling back to active status
-        if ((oldStatus === "Cancelled" || oldStatus === "Returned") && newStatus !== "Cancelled" && newStatus !== "Returned") {
-            for (const item of order.items) {
-                await Product.updateOne(
-                    { _id: item.product },
-                    { $inc: { stock: -item.quantity } }
-                );
-                item.status = newStatus;
-            }
-            // Recalculate total amount from items
-            order.pricing.totalAmount = order.items.reduce((acc, i) => acc + i.lineTotal, 0);
-        }
-
-        // 3. Delivered timestamp
+        // 2. Delivered timestamp
         if (newStatus === "Delivered") {
             order.deliveredAt = new Date();
             order.paymentStatus = "Completed";
@@ -259,14 +296,58 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             }
         }
 
-        // 4. Update overall status
+        // 4. Return Approved ("Returned") - Stock reconciliation & refund handling
+        if (newStatus === "Returned" && oldStatus !== "Returned") {
+            for (const item of order.items) {
+                if (item.status !== "Cancelled" && item.status !== "Returned") {
+                    await Product.updateOne(
+                        { _id: item.product },
+                        { $inc: { stock: item.quantity } }
+                    );
+                    item.status = "Returned";
+                    item.returnedAt = new Date();
+                }
+            }
+            order.returnedAt = new Date();
+            if (order.paymentStatus === "Completed") {
+                order.paymentStatus = "Refunded";
+            }
+        }
+
+        // 5. Return Rejected - Record admin rejection reason
+        if (newStatus === "Return Rejected") {
+            if (!adminNotes || !adminNotes.trim()) {
+                const err = new Error("Please provide a reason for rejecting the return request.");
+                err.code = "REJECTION_REASON_REQUIRED";
+                throw err;
+            }
+            const cleanReason = adminNotes.trim();
+            order.returnRejectReason = cleanReason;
+            order.returnRejectedAt = new Date();
+            for (const item of order.items) {
+                if (item.status === "Return Requested" || item.status === "Delivered") {
+                    item.status = "Return Rejected";
+                    item.returnRejectReason = cleanReason;
+                    item.returnRejectedAt = new Date();
+                }
+            }
+        }
+
+        // 6. Update overall status
         order.orderStatus = newStatus;
         await order.save();
+
+        let message = RESPONSE_MESSAGES.ORDER.STATUS_UPDATED;
+        if (newStatus === "Returned") {
+            message = "Return request approved. Stock restored to atelier.";
+        } else if (newStatus === "Return Rejected") {
+            message = "Return request rejected successfully.";
+        }
 
         return {
             success: true,
             order,
-            message: RESPONSE_MESSAGES.ORDER.STATUS_UPDATED
+            message
         };
     } catch (error) {
         console.error("admin orderService updateAdminOrderStatus error:", error);
@@ -274,8 +355,35 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
     }
 };
 
+/**
+ * Approve a return request for an order
+ * @param {string} orderIdentifier 
+ * @param {string} adminNotes 
+ * @returns {Promise<Object>}
+ */
+export const approveReturn = async (orderIdentifier, adminNotes = "") => {
+    return updateAdminOrderStatus(orderIdentifier, "Returned", adminNotes || "Return approved by administrator");
+};
+
+/**
+ * Reject a return request for an order with a mandatory reason
+ * @param {string} orderIdentifier 
+ * @param {string} rejectionReason 
+ * @returns {Promise<Object>}
+ */
+export const rejectReturn = async (orderIdentifier, rejectionReason) => {
+    if (!rejectionReason || !rejectionReason.trim()) {
+        const err = new Error("A reason is mandatory to reject a return request.");
+        err.code = "REJECTION_REASON_REQUIRED";
+        throw err;
+    }
+    return updateAdminOrderStatus(orderIdentifier, "Return Rejected", rejectionReason.trim());
+};
+
 export default {
     getAdminOrders,
     getAdminOrderDetails,
-    updateAdminOrderStatus
+    updateAdminOrderStatus,
+    approveReturn,
+    rejectReturn
 };

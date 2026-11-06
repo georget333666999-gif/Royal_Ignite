@@ -53,7 +53,7 @@ const getResetPassword = async (req, res) => {
         }
 
         const otpDoc = await OTP.findOne({ userId: req.session.resetUserId, purpose: "reset-password" });
-        let remainingSeconds = 300;
+        let remainingSeconds = 60;
         let isExpired = false;
 
         if (otpDoc) {
@@ -69,8 +69,12 @@ const getResetPassword = async (req, res) => {
             remainingSeconds = 0;
         }
 
+        const success = req.session.otpSuccessMessage || null;
+        delete req.session.otpSuccessMessage;
+
         return res.status(HTTP_STATUS.OK).render("resetPassword", {
-            error: isExpired ? "Your password reset OTP has expired. Please request a new code." : null,
+            error: isExpired && !success ? "Your password reset OTP has expired. Please click Resend Code to request a new code." : null,
+            success,
             remainingSeconds,
             isExpired
         });
@@ -124,16 +128,77 @@ const postResetPassword = async (req, res) => {
     }
 };
 
+// Handle Resend Reset OTP Submission
+const resendResetOTP = async (req, res) => {
+    const isAjax = Boolean(req.xhr || req.headers?.accept?.includes("application/json") || req.is?.("json"));
+    try {
+        const userId = req.session?.resetUserId;
+        if (!userId) {
+            if (isAjax) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    redirectUrl: "/user/forgot-password",
+                    message: "Reset session expired. Please start over."
+                });
+            }
+            return res.redirect("/user/forgot-password");
+        }
+
+        const result = await userService.resendResetOTP(userId);
+        if (!result.success) {
+            if (isAjax) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: result.message
+                });
+            }
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("resetPassword", {
+                error: result.message,
+                remainingSeconds: 0,
+                isExpired: true,
+                success: null
+            });
+        }
+
+        const successMessage = "A fresh password reset code has been sent to your email.";
+        if (isAjax) {
+            return res.status(HTTP_STATUS.OK).json({
+                success: true,
+                message: successMessage,
+                remainingSeconds: 60,
+                resendCooldownSeconds: 60
+            });
+        }
+
+        req.session.otpSuccessMessage = successMessage;
+        req.session.save((saveErr) => {
+            if (saveErr) console.error("Session save error:", saveErr);
+            res.redirect("/user/reset-password");
+        });
+    } catch (error) {
+        console.error("resendResetOTP error:", error);
+        if (isAjax) {
+            return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: "Unable to resend OTP. Please try again."
+            });
+        }
+        return res.redirect("/user/forgot-password");
+    }
+};
+
 export {
     getForgotPassword,
     postForgotPassword,
     getResetPassword,
-    postResetPassword
+    postResetPassword,
+    resendResetOTP
 };
 
 export default {
     getForgotPassword,
     postForgotPassword,
     getResetPassword,
-    postResetPassword
+    postResetPassword,
+    resendResetOTP
 };

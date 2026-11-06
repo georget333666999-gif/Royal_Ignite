@@ -61,5 +61,6 @@ router.post(
     authValidationMiddleware.validateResetPassword,
     passwordController.postResetPassword
 );
+router.post("/resend-reset-otp", redirectIfUserLoggedIn, passwordController.resendResetOTP);
 
 export default router;

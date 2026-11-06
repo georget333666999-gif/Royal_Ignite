@@ -243,37 +243,37 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
             throw err;
         }
 
-        // Requirement (c.iv): Return order when delivered
+        // Requirement: Return request can only be submitted for delivered orders that are not already returned/cancelled/requested
         if (order.orderStatus !== "Delivered") {
             const err = new Error("Return requests can only be submitted after your order has been delivered.");
             err.code = "CANNOT_RETURN";
             throw err;
         }
 
-        order.orderStatus = "Returned";
+        // Set status to Return Requested (Awaiting Admin Approval)
+        order.orderStatus = "Return Requested";
         order.returnReason = reason.trim();
-        order.returnedAt = new Date();
+        order.returnRequestedAt = new Date();
+        order.returnRejectReason = null;
+        order.returnRejectedAt = null;
 
         for (const item of order.items) {
             if (item.status === "Delivered" || item.status === "Placed") {
-                item.status = "Returned";
+                item.status = "Return Requested";
                 item.returnReason = reason.trim();
-                item.returnedAt = new Date();
-
-                // Re-stock upon return
-                await Product.updateOne(
-                    { _id: item.product },
-                    { $inc: { stock: item.quantity } }
-                );
+                item.returnRequestedAt = new Date();
+                item.returnRejectReason = null;
+                item.returnRejectedAt = null;
             }
         }
 
+        // Note: Inventory is NOT re-stocked now. It will only be re-stocked once the admin approves the return.
         await order.save();
 
         return {
             success: true,
             order,
-            message: RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED
+            message: RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted successfully. We will notify you once approved."
         };
     } catch (error) {
         console.error("orderService returnOrder error:", error);

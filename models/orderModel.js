@@ -41,7 +41,7 @@ const orderItemSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["Pending", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned"],
+            enum: ["Pending", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned", "Return Requested", "Return Rejected"],
             default: "Placed"
         },
         cancelReason: {
@@ -56,7 +56,19 @@ const orderItemSchema = new mongoose.Schema(
             type: String,
             default: null
         },
+        returnRequestedAt: {
+            type: Date,
+            default: null
+        },
         returnedAt: {
+            type: Date,
+            default: null
+        },
+        returnRejectReason: {
+            type: String,
+            default: null
+        },
+        returnRejectedAt: {
             type: Date,
             default: null
         }
@@ -109,7 +121,7 @@ const orderSchema = new mongoose.Schema(
         },
         orderStatus: {
             type: String,
-            enum: ["Pending", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned"],
+            enum: ["Pending", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned", "Return Requested", "Return Rejected"],
             default: "Placed",
             index: true
         },
@@ -125,7 +137,19 @@ const orderSchema = new mongoose.Schema(
             type: String,
             default: null
         },
+        returnRequestedAt: {
+            type: Date,
+            default: null
+        },
         returnedAt: {
+            type: Date,
+            default: null
+        },
+        returnRejectReason: {
+            type: String,
+            default: null
+        },
+        returnRejectedAt: {
             type: Date,
             default: null
         },

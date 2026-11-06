@@ -7,6 +7,9 @@ const router = express.Router();
 router.get("/checkout", checkoutController.getCheckoutPage);
 router.get("/cart/checkout", checkoutController.getCheckoutPage);
 
+// Buy Now Direct Checkout (Bypasses Cart)
+router.post("/checkout/buy-now", checkoutController.postBuyNow);
+
 // Place Order (COD)
 router.post("/checkout/place-order", checkoutController.postPlaceOrder);
 

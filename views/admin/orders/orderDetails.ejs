@@ -184,37 +184,154 @@
             </div>
 
             <!-- Fulfillment Status Transition Controller (a.iii) -->
-            <div class="status-controller-card">
-                <div class="controller-title">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                    </svg>
-                    <span>Update Order Fulfillment Status</span>
-                </div>
+            <%
+                const transitionRules = {
+                    'Placed': ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+                    'Pending': ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+                    'Processing': ['Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+                    'Shipped': ['Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+                    'Out for Delivery': ['Out for Delivery', 'Delivered', 'Cancelled'],
+                    'Return Requested': ['Return Requested', 'Returned', 'Return Rejected']
+                };
+                const availableStatuses = transitionRules[order.orderStatus] || [];
+                const isStatusLocked = availableStatuses.length === 0;
+            %>
 
-                <form action="/admin/orders/<%= order.orderId %>/status" method="POST" id="statusUpdateForm">
-                    <div class="status-form-row">
-                        <select name="status" class="status-select-lg">
-                            <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
-                            <option value="Placed" <%= order.orderStatus === 'Placed' ? 'selected' : '' %>>Placed</option>
-                            <option value="Processing" <%= order.orderStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
-                            <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                            <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                            <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                            <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                            <option value="Returned" <%= order.orderStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
-                        </select>
-
-                        <input type="text" 
-                               name="notes" 
-                               placeholder="Administrative notes (e.g., dispatch tracking ID, cancellation reason)..." 
-                               class="status-notes-input" />
-
-                        <button type="submit" class="btn-save-status">Update Status</button>
+            <% if (isStatusLocked) { %>
+                <!-- Locked Status Card (Terminal / Delivered) -->
+                <div class="status-controller-card status-controller-locked">
+                    <div class="controller-locked-flex">
+                        <div class="locked-icon-pill">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <div class="locked-text-meta">
+                            <span class="locked-main-title">
+                                <% if (order.orderStatus === 'Delivered') { %>
+                                    Delivered to Client — Fulfillment Complete
+                                <% } else if (order.orderStatus === 'Cancelled') { %>
+                                    Acquisition Cancelled & Terminated
+                                <% } else if (order.orderStatus === 'Returned') { %>
+                                    Creation Returned & Stock Reintegrated
+                                <% } else if (order.orderStatus === 'Return Rejected') { %>
+                                    Return Request Declined & Closed
+                                <% } else { %>
+                                    Fulfillment Status Locked
+                                <% } %>
+                            </span>
+                            <span class="locked-sub-title">
+                                <% if (order.orderStatus === 'Delivered') { %>
+                                    Previous fulfillment stages are locked. Return review actions will unlock if the client submits a return request.
+                                <% } else { %>
+                                    This acquisition has reached its final state. Further fulfillment modifications are disabled.
+                                <% } %>
+                            </span>
+                        </div>
                     </div>
-                </form>
+                </div>
+            <% } else { %>
+                <!-- Active Fulfillment Status Controller Form -->
+                <div class="status-controller-card">
+                    <div class="controller-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                        <span>Update Order Fulfillment Status</span>
+                    </div>
+
+                    <form action="/admin/orders/<%= order.orderId %>/status" method="POST" id="statusUpdateForm">
+                        <div class="status-form-row">
+                            <select name="status" class="status-select-lg">
+                                <% availableStatuses.forEach(function(st) { %>
+                                    <% 
+                                        let label = st;
+                                        if (st === 'Returned') label = 'Returned (Approve Return)';
+                                        else if (st === 'Return Rejected') label = 'Return Rejected (Decline Return)';
+                                        else if (st === 'Return Requested') label = 'Return Requested (Under Review)';
+                                        const isSel = (order.orderStatus === st) || (order.orderStatus === 'Pending' && st === 'Placed');
+                                    %>
+                                    <option value="<%= st %>" <%= isSel ? 'selected' : '' %>>
+                                        <%= label %>
+                                    </option>
+                                <% }); %>
+                            </select>
+
+                            <input type="text" 
+                                   name="notes" 
+                                   placeholder="Administrative notes / rejection reason..." 
+                                   class="status-notes-input" />
+
+                            <button type="submit" class="btn-save-status">Update Status</button>
+                        </div>
+                    </form>
+                </div>
+            <% } %>
+
+            <!-- Return Request Pending Review Card -->
+            <% if (order.orderStatus === 'Return Requested') { %>
+            <div class="return-review-card">
+                <div class="return-review-header">
+                    <div class="return-review-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        <span>Customer Return Request Submitted — Action Required</span>
+                    </div>
+                    <% if (order.returnRequestedAt) { %>
+                        <span class="return-review-date">Submitted on <%= new Date(order.returnRequestedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                    <% } %>
+                </div>
+                <div class="return-review-body">
+                    <div class="return-reason-container">
+                        <span class="reason-subheading">Client's Return Reason:</span>
+                        <div class="client-reason-quote">"<%= order.returnReason || 'No reason specified by client.' %>"</div>
+                    </div>
+                    <div class="return-action-buttons">
+                        <button type="button" class="btn-return-action btn-return-approve" onclick="confirmApproveReturn('<%= order.orderId %>')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Approve Return</span>
+                        </button>
+                        <button type="button" class="btn-return-action btn-return-reject" onclick="promptRejectReturn('<%= order.orderId %>')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            <span>Reject Return</span>
+                        </button>
+                    </div>
+                </div>
             </div>
+            <% } %>
+
+            <!-- Return Rejected Outcome Banner -->
+            <% if (order.orderStatus === 'Return Rejected') { %>
+            <div class="return-outcome-banner return-outcome-rejected">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <span style="font-weight: 700; color: #ef4444; font-size: 14.5px;">Return Request Rejected</span>
+                        <% if (order.returnRejectedAt) { %>
+                            <span style="font-size: 12px; color: #a1a1aa;">
+                                Rejected on <%= new Date(order.returnRejectedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                            </span>
+                        <% } %>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 13.5px; color: #fecaca; background: rgba(239, 68, 68, 0.08); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                        <strong style="color: #ffffff;">Rejection Reason (visible to client):</strong> <%= order.returnRejectReason || 'Return conditions not satisfied.' %>
+                    </div>
+                </div>
+            </div>
+            <% } %>
 
             <!-- Main Dossier Grid -->
             <div class="dossier-grid">
@@ -328,13 +445,35 @@
                                     </div>
                                 <% } %>
 
-                                <!-- Step: Returned if reached -->
+                                <!-- Step: Return Requested if submitted -->
+                                <% if (order.returnRequestedAt || order.orderStatus === 'Return Requested') { %>
+                                    <div class="timeline-item" style="color: #f59e0b;">
+                                        <span class="timeline-heading">Return Requested by Client</span>
+                                        <span class="timeline-timestamp"><%= order.returnRequestedAt ? new Date(order.returnRequestedAt).toLocaleString('en-IN') : 'Recorded' %></span>
+                                        <div class="timeline-note" style="color: #b45309; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2);">
+                                            Client Return Reason: <%= order.returnReason || 'Not stated' %>
+                                        </div>
+                                    </div>
+                                <% } %>
+
+                                <!-- Step: Returned (Approved) if reached -->
                                 <% if (order.orderStatus === 'Returned') { %>
-                                    <div class="timeline-item" style="color: #f97316;">
-                                        <span class="timeline-heading">Creation Returned</span>
+                                    <div class="timeline-item" style="color: #10b981;">
+                                        <span class="timeline-heading">Return Approved & Processed</span>
                                         <span class="timeline-timestamp"><%= order.returnedAt ? new Date(order.returnedAt).toLocaleString('en-IN') : 'Recorded' %></span>
-                                        <div class="timeline-note" style="color: #c2410c; background: #ffedd5;">
-                                            Return Reason: <%= order.returnReason || 'Client return recorded' %>
+                                        <div class="timeline-note" style="color: #047857; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                                            Return approved by administrator. Stock restored to atelier.
+                                        </div>
+                                    </div>
+                                <% } %>
+
+                                <!-- Step: Return Rejected if reached -->
+                                <% if (order.orderStatus === 'Return Rejected') { %>
+                                    <div class="timeline-item" style="color: #ef4444;">
+                                        <span class="timeline-heading">Return Request Rejected</span>
+                                        <span class="timeline-timestamp"><%= order.returnRejectedAt ? new Date(order.returnRejectedAt).toLocaleString('en-IN') : 'Recorded' %></span>
+                                        <div class="timeline-note" style="color: #b91c1c; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                                            Decline Reason: <%= order.returnRejectReason || 'Administrative decision' %>
                                         </div>
                                     </div>
                                 <% } %>
@@ -480,5 +619,151 @@
         </div>
     </main>
 
+    <script>
+        // Approve return request
+        function confirmApproveReturn(orderId) {
+            Swal.fire({
+                title: 'Approve Return Request?',
+                html: `Are you sure you wish to <strong>approve</strong> the return for acquisition <strong>#${orderId}</strong>?<br><span style="font-size: 13px; color: #a1a1aa; margin-top: 8px; display: block;">Pieces will be re-stocked into inventory and marked as Returned.</span>`,
+                icon: 'question',
+                iconColor: '#10b981',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve Return',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#3f3f46',
+                background: '#141312',
+                color: '#f0ece6',
+                customClass: {
+                    popup: 'royal-luxury-swal'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/orders/${orderId}/return/approve`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ notes: 'Return approved by admin' })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Return Approved',
+                                text: data.message || 'Order marked as Returned and inventory restored.',
+                                background: '#141312',
+                                color: '#f0ece6',
+                                confirmButtonColor: '#10b981'
+                            }).then(() => window.location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to approve return request.',
+                                background: '#141312',
+                                color: '#f0ece6',
+                                confirmButtonColor: '#D48833'
+                            });
+                        }
+                    } catch (err) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Could not connect to the server.',
+                            background: '#141312',
+                            color: '#f0ece6',
+                            confirmButtonColor: '#D48833'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Reject return request with mandatory reason
+        function promptRejectReturn(orderId) {
+            Swal.fire({
+                title: 'Reject Return Request',
+                html: `Please state the reason for rejecting the return request for <strong>#${orderId}</strong>.<br><span style="font-size: 12.5px; color: #a1a1aa; margin-top: 6px; display: block;">This reason will be displayed to the customer on their order details page.</span>`,
+                input: 'textarea',
+                inputPlaceholder: 'Enter detailed rejection reason (mandatory)...',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'A rejection reason is mandatory.';
+                    }
+                },
+                icon: 'warning',
+                iconColor: '#ef4444',
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Rejection',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#3f3f46',
+                background: '#141312',
+                color: '#f0ece6',
+                customClass: {
+                    popup: 'royal-luxury-swal'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const reason = result.value.trim();
+                    try {
+                        const response = await fetch(`/admin/orders/${orderId}/return/reject`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ reason })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Return Rejected',
+                                text: data.message || 'Return request has been declined.',
+                                background: '#141312',
+                                color: '#f0ece6',
+                                confirmButtonColor: '#dc2626'
+                            }).then(() => window.location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to reject return request.',
+                                background: '#141312',
+                                color: '#f0ece6',
+                                confirmButtonColor: '#D48833'
+                            });
+                        }
+                    } catch (err) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Could not connect to the server.',
+                            background: '#141312',
+                            color: '#f0ece6',
+                            confirmButtonColor: '#D48833'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Intercept form submit if "Return Rejected" is selected in dropdown to require reason
+        const statusForm = document.getElementById('statusUpdateForm');
+        if (statusForm) {
+            statusForm.addEventListener('submit', function(e) {
+                const select = statusForm.querySelector('select[name="status"]');
+                const notes = statusForm.querySelector('input[name="notes"]');
+                if (select && select.value === 'Return Rejected' && (!notes || !notes.value.trim())) {
+                    e.preventDefault();
+                    promptRejectReturn('<%= order.orderId %>');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

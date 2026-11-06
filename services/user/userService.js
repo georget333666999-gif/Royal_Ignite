@@ -279,12 +279,40 @@ const forgotPassword = async (email) => {
             return { success: false, message: cooldown.message };
         }
 
-        const otpDocument = await createOtpDocument(user._id, "reset-password", 5);
+        const otpDocument = await createOtpDocument(user._id, "reset-password", 1);
         await sendOtpEmail(user.email, otpDocument.otpCode, "reset-password", user.name);
 
         return { success: true, userId: user._id };
     } catch (error) {
         console.error("forgotPassword error:", error.message);
+        throw error;
+    }
+};
+
+// ========================================
+// Resend Reset Password OTP (1 Minute Validity)
+// ========================================
+const resendResetOTP = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.USER_NOT_FOUND };
+        }
+        if (user.isBlocked) {
+            return { success: false, message: RESPONSE_MESSAGES.AUTH.ACCOUNT_BLOCKED };
+        }
+
+        const cooldown = await checkOtpCooldown(userId, "reset-password");
+        if (cooldown.onCooldown) {
+            return { success: false, message: cooldown.message };
+        }
+
+        const otpDocument = await createOtpDocument(userId, "reset-password", 1);
+        await sendOtpEmail(user.email, otpDocument.otpCode, "reset-password", user.name);
+
+        return { success: true, userId: user._id };
+    } catch (error) {
+        console.error("resendResetOTP error:", error.message);
         throw error;
     }
 };
@@ -453,6 +481,7 @@ export {
     loginUser,
     resendOTP,
     forgotPassword,
+    resendResetOTP,
     resetPassword,
     changePassword,
     requestEmailChange,
@@ -468,6 +497,7 @@ export default {
     loginUser,
     resendOTP,
     forgotPassword,
+    resendResetOTP,
     resetPassword,
     changePassword,
     requestEmailChange,

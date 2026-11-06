@@ -111,7 +111,14 @@ export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow 
             console.warn("Could not update wishlist after adding to cart:", wishlistErr);
         }
 
-        return getCart(userId);
+        const cartData = await getCart(userId);
+        let wishlistCount = 0;
+        try {
+            const wl = await Wishlist.findOne({ user: userId }, { products: 1 }).lean();
+            wishlistCount = wl && Array.isArray(wl.products) ? wl.products.length : 0;
+        } catch (_) {}
+        cartData.wishlistCount = wishlistCount;
+        return cartData;
     } catch (error) {
         console.error("addToCart error:", error.message);
         throw error;
@@ -369,11 +376,28 @@ export const clearCart = async (userId) => {
     }
 };
 
+/**
+ * Get total item count in user's cart (sum of quantities of valid items)
+ * @param {string} userId
+ * @returns {Promise<number>}
+ */
+export const getCartCount = async (userId) => {
+    try {
+        if (!userId) return 0;
+        const cartData = await getCart(userId);
+        return cartData ? (cartData.itemCount || 0) : 0;
+    } catch (error) {
+        console.error("cartService getCartCount error:", error);
+        return 0;
+    }
+};
+
 export default {
     validateProductForCart,
     addToCart,
     getCart,
     updateCartItemQuantity,
     removeFromCart,
-    clearCart
+    clearCart,
+    getCartCount
 };

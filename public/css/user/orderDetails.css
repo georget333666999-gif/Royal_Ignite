@@ -247,11 +247,25 @@ body.order-details-body {
 .status-badge.cancelled .status-dot { background: var(--status-cancelled); }
 
 .status-badge.returned {
-    background: rgba(249, 115, 22, 0.12);
-    color: var(--status-returned);
-    border: 1px solid rgba(249, 115, 22, 0.25);
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
-.status-badge.returned .status-dot { background: var(--status-returned); }
+.status-badge.returned .status-dot { background: #10b981; }
+
+.status-badge.return-requested {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.status-badge.return-requested .status-dot { background: #f59e0b; }
+
+.status-badge.return-rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-badge.return-rejected .status-dot { background: #ef4444; }
 
 /* ==========================================================================
    Order Stepper / Timeline Card
@@ -386,9 +400,109 @@ body.order-details-body {
 }
 
 .notice-returned {
-    background: rgba(249, 115, 22, 0.08);
-    border: 1px solid rgba(249, 115, 22, 0.3);
-    color: #fdba74;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #a7f3d0;
+}
+
+.notice-return-requested {
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fde68a;
+}
+
+.notice-return-rejected {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+.notice-header-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.notice-timestamp {
+    font-size: 12px;
+    color: var(--od-text-muted);
+    font-weight: 400;
+}
+
+.notice-subtext {
+    font-size: 13px;
+    color: #d1d5db;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+.notice-reason-box {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    border-left: 3px solid var(--od-gold);
+    font-size: 13px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.notice-reason-muted {
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+.notice-reason-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--od-text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.notice-reason-val {
+    color: #f3f4f6;
+    font-style: italic;
+}
+
+/* User Rejection Reason Card */
+.user-rejection-card {
+    margin-top: 14px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(28, 20, 22, 0.85) 0%, rgba(18, 18, 22, 0.95) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-left: 3px solid #ef4444;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.rejection-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f87171;
+    margin-bottom: 8px;
+}
+
+.rejection-card-body {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 15px;
+    color: #FFE4A0;
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 14px 18px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .notice-icon {

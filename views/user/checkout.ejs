@@ -66,12 +66,22 @@
             <!-- Breadcrumbs & Title -->
             <div class="checkout-header">
                 <div class="checkout-breadcrumbs">
-                    <a href="/cart">Atelier Bag</a>
-                    <span>/</span>
-                    <span>Secure Acquisition</span>
+                    <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                        <a href="/shop">Atelier Collection</a>
+                        <span>/</span>
+                        <span>Instant Acquisition</span>
+                    <% } else { %>
+                        <a href="/cart">Atelier Bag</a>
+                        <span>/</span>
+                        <span>Secure Acquisition</span>
+                    <% } %>
                 </div>
                 <h1 class="checkout-title">
-                    Secure <span class="italic-gold">Acquisition</span>
+                    <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                        Instant <span class="italic-gold">Acquisition</span>
+                    <% } else { %>
+                        Secure <span class="italic-gold">Acquisition</span>
+                    <% } %>
                 </h1>
                 <p class="checkout-subtitle">
                     Select your delivery destination and confirm your acquisition with complimentary insured air courier.
@@ -197,7 +207,7 @@
                     <!-- RIGHT COLUMN: ORDER SUMMARY & TOTALS (b.ii) -->
                     <aside class="checkout-summary-wrap">
                         <div class="checkout-summary-card">
-                            <h3 class="summary-title">Acquisition Summary</h3>
+                            <h3 class="summary-title"><%= (typeof isBuyNow !== 'undefined' && isBuyNow) ? 'Instant Acquisition Summary' : 'Acquisition Summary' %></h3>
 
                             <!-- Reserved Pieces List -->
                             <div class="summary-items-list">
@@ -224,7 +234,12 @@
 
                             <!-- Financial Ledger Breakdown -->
                             <div class="summary-ledger">
-                                <% if (financials && financials.savings > 0) { %>
+                                <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
+                                    <div class="ledger-line">
+                                        <span>Direct Acquisition (<%= cart ? cart.itemCount : 1 %> <%= (cart && cart.itemCount === 1) ? 'piece' : 'pieces' %>)</span>
+                                        <span>₹<%= Number(financials ? financials.subtotal : 0).toLocaleString('en-IN') %></span>
+                                    </div>
+                                <% } else if (financials && financials.savings > 0) { %>
                                     <div class="ledger-line">
                                         <span>Catalog Value (<%= cart ? cart.itemCount : 0 %> pieces)</span>
                                         <span>₹<%= Number(financials.catalogTotal || financials.regularTotal).toLocaleString('en-IN') %></span>

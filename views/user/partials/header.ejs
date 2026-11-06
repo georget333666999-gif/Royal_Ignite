@@ -29,12 +29,13 @@
             </a>
 
             <!-- Shopping Bag Icon -->
-            <a href="/cart" class="header-icon" title="Cart">
+            <a href="/cart" class="header-icon header-cart-icon" title="Cart">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <path d="M16 10a4 4 0 0 1-8 0"></path>
                 </svg>
+                <span class="header-badge-count cart-badge-count" style="<%= (typeof cart !== 'undefined' && cart && cart.itemCount > 0) ? 'display: inline-block;' : 'display: none;' %>"><%= (typeof cart !== 'undefined' && cart && cart.itemCount > 0) ? cart.itemCount : 0 %></span>
             </a>
 
             <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
@@ -81,6 +82,23 @@
             .then(res => res.json())
             .then(data => {
                 const badges = document.querySelectorAll('.wishlist-badge-count');
+                if (data && data.success && data.count > 0) {
+                    badges.forEach(b => {
+                        b.textContent = data.count;
+                        b.style.display = 'inline-block';
+                    });
+                } else {
+                    badges.forEach(b => {
+                        b.style.display = 'none';
+                    });
+                }
+            })
+            .catch(() => {});
+
+        fetch('/cart/count')
+            .then(res => res.json())
+            .then(data => {
+                const badges = document.querySelectorAll('.cart-badge-count');
                 if (data && data.success && data.count > 0) {
                     badges.forEach(b => {
                         b.textContent = data.count;

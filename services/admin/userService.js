@@ -14,13 +14,23 @@ const getStatusFilter = (status) => statusFilterMap[status] || {};
 
 const getSearchFilter = (trimmedSearch) => {
     if (!trimmedSearch) return {};
-    const safeSearch = escapeRegex(trimmedSearch);
-    const searchRegex = new RegExp(safeSearch, "i");
+    const tokens = trimmedSearch.split(/\s+/).filter(Boolean);
+    const escapedTokens = tokens.map(escapeRegex);
+    const phraseRegex = new RegExp(escapedTokens.join("\\s+"), "i");
+    const tokenRegex = new RegExp(escapedTokens.map((t) => `(?=.*${t})`).join(""), "i");
+
+    const compactLetters = trimmedSearch.replace(/[\s.]+/g, "");
+    const compactRegex = compactLetters.length <= 6
+        ? new RegExp(compactLetters.split("").map(escapeRegex).join("[\\s.]*"), "i")
+        : phraseRegex;
+
     return {
         $or: [
-            { name: searchRegex },
-            { email: searchRegex },
-            { phone: searchRegex }
+            { name: phraseRegex },
+            { name: tokenRegex },
+            { name: compactRegex },
+            { email: phraseRegex },
+            { phone: phraseRegex }
         ]
     };
 };
@@ -40,36 +50,13 @@ const fetchUserMetrics = async () => {
     }
 };
 
-const fetchUsersWithPrioritySearch = (filter, safeSearch, skip, limit) => {
-    return User.aggregate([
-        { $match: filter },
-        {
-            $addFields: {
-                searchPriority: {
-                    $switch: {
-                        branches: [
-                            { case: { $regexMatch: { input: "$name", regex: "^" + safeSearch, options: "i" } }, then: 1 },
-                            { case: { $regexMatch: { input: "$email", regex: "^" + safeSearch, options: "i" } }, then: 2 },
-                            { case: { $regexMatch: { input: "$name", regex: safeSearch, options: "i" } }, then: 3 }
-                        ],
-                        default: 4
-                    }
-                }
-            }
-        },
-        { $sort: { searchPriority: 1, name: 1, createdAt: -1 } },
-        { $project: { password: 0 } },
-        { $skip: skip },
-        { $limit: limit }
-    ]);
-};
-
 const fetchUsersStandard = (filter, skip, limit) => {
     return User.find(filter)
         .select("-password")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit);
+        .limit(limit)
+        .lean();
 };
 
 // Get Users with Status Filter & Counts
@@ -91,9 +78,7 @@ const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) 
         const currentPage = Math.min(Math.max(1, page), totalPages);
         const skip = (currentPage - 1) * limit;
 
-        const users = trimmedSearch
-            ? await fetchUsersWithPrioritySearch(filter, escapeRegex(trimmedSearch), skip, limit)
-            : await fetchUsersStandard(filter, skip, limit);
+        const users = await fetchUsersStandard(filter, skip, limit);
 
         return {
             users,

@@ -55,6 +55,7 @@
                         <line x1="3" y1="6" x2="21" y2="6"></line>
                         <path d="M16 10a4 4 0 0 1-8 0"></path>
                     </svg>
+                    <span class="header-badge-count cart-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
                 </a>
             </div>
         </div>
@@ -370,6 +371,23 @@
                 .then(res => res.json())
                 .then(data => {
                     const badges = document.querySelectorAll('.wishlist-badge-count');
+                    if (data && data.success && data.count > 0) {
+                        badges.forEach(b => {
+                            b.textContent = data.count;
+                            b.style.display = 'inline-block';
+                        });
+                    } else {
+                        badges.forEach(b => {
+                            b.style.display = 'none';
+                        });
+                    }
+                })
+                .catch(() => {});
+
+            fetch('/cart/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badges = document.querySelectorAll('.cart-badge-count');
                     if (data && data.success && data.count > 0) {
                         badges.forEach(b => {
                             b.textContent = data.count;
