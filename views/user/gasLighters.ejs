@@ -130,6 +130,23 @@
                         <span class="gas-metric-sub">Zero-Impurity Pressure Tank</span>
                     </div>
                 </div>
+
+                <% if (typeof activeCategoryOffer !== 'undefined' && activeCategoryOffer) { %>
+                    <div class="collection-offer-strip">
+                        <div class="collection-offer-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span>LIVE PRIVILEGE</span>
+                        </div>
+                        <div class="collection-offer-text">
+                            <strong><%= activeCategoryOffer.name %>:</strong> Enjoy <%= activeCategoryOffer.discountType === 'percentage' ? `${activeCategoryOffer.discountValue}% OFF` : `₹${activeCategoryOffer.discountValue} OFF` %> across this entire collection. Reduced rates applied automatically.
+                        </div>
+                        <% if (activeCategoryOffer.endDate) { %>
+                            <div class="collection-offer-date">Expires <%= new Date(activeCategoryOffer.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></div>
+                        <% } %>
+                    </div>
+                <% } %>
             </div>
         </section>
 
@@ -164,6 +181,12 @@
 
                             <!-- Controlled Image Stage (Well-Proportioned) -->
                             <div class="gas-card-stage">
+                                <% if (product.appliedOffer && product.appliedOffer.name) { %>
+                                    <span class="collection-card-offer-badge" title="Live Privilege: <%= product.appliedOffer.name %>">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                        <span><%= product.appliedOffer.name %></span>
+                                    </span>
+                                <% } %>
                                 <a href="/products/<%= product._id %>" class="gas-card-link" title="Inspect <%= product.name %>">
                                     <img src="<%= frontImg %>" alt="<%= product.name %>" class="gas-card-img" loading="lazy" onerror="this.src='/uploads/gas/apex_lighter.jpg';" />
                                 </a>

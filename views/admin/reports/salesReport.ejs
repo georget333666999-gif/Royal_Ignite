@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Sales & Financial Reports — ROYAL IGNITE Admin' %></title>
+    
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="/css/admin/salesReport.css" />
+</head>
+
+<body>
+
+    <!-- Left Universal Sidebar Navigation -->
+    <%- include('../partials/sidebar', { activePage: 'salesReports' }) %>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Top Navbar Header -->
+        <header class="top-navbar">
+            <div class="navbar-left">
+                <div class="breadcrumb-trail">
+                    <span class="crumb-dim">Portal</span>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-dim">Analytics &amp; Reports</span>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-active">Sales &amp; Financial Dossier</span>
+                </div>
+            </div>
+
+            <div class="navbar-right">
+                <a href="/" target="_blank" class="nav-action-btn" title="Open Storefront">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Store</span>
+                </a>
+
+                <div class="user-pill-badge">
+                    <div class="avatar-circle-sm">A</div>
+                    <span class="user-pill-name"><%= (typeof adminUser !== 'undefined' && adminUser && adminUser.name) ? adminUser.name : 'Admin' %></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Canvas -->
+        <main class="content-padding">
+
+            <!-- Page Title Header Row -->
+            <section class="page-title-row">
+                <div>
+                    <h1 class="page-title">Sales &amp; Financial Dossier</h1>
+                    <p class="page-desc">Track net atelier revenues, discount deductions, privilege coupons, and download certified reports.</p>
+                </div>
+
+                <div class="title-actions">
+                    <a href="/admin/reports/sales/pdf?period=<%= period %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>" class="btn-export-pdf" target="_blank" title="Download certified PDF report">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Download PDF</span>
+                    </a>
+                    <a href="/admin/reports/sales/excel?period=<%= period %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>" class="btn-export-excel" title="Download spreadsheet (.xlsx)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        <span>Download Excel</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Filter Period & Custom Date Toolbar -->
+            <section class="report-filter-bar">
+                <div class="filter-left-group">
+                    <div class="filter-pills-track">
+                        <a href="/admin/reports/sales?period=daily" class="filter-pill-btn <%= period === 'daily' ? 'active' : '' %>">Daily</a>
+                        <a href="/admin/reports/sales?period=weekly" class="filter-pill-btn <%= period === 'weekly' ? 'active' : '' %>">Weekly</a>
+                        <a href="/admin/reports/sales?period=monthly" class="filter-pill-btn <%= period === 'monthly' ? 'active' : '' %>">Monthly</a>
+                        <a href="/admin/reports/sales?period=yearly" class="filter-pill-btn <%= period === 'yearly' ? 'active' : '' %>">Yearly</a>
+                        <button type="button" class="filter-pill-btn <%= period === 'custom' ? 'active' : '' %>" onclick="toggleCustomRange()">Custom Range</button>
+                    </div>
+
+                    <!-- Custom Date Range Inline Form -->
+                    <form action="/admin/reports/sales" method="GET" class="custom-date-container" id="customRangeRow" style="<%= (period === 'custom' || startDate) ? 'display: flex;' : 'display: none;' %>">
+                        <input type="hidden" name="period" value="custom" />
+                        <span class="date-label">From</span>
+                        <input type="date" name="startDate" class="date-input" value="<%= startDate || (resolvedStartDate ? new Date(resolvedStartDate).toISOString().slice(0,10) : '') %>" required />
+                        
+                        <span class="date-label">To</span>
+                        <input type="date" name="endDate" class="date-input" value="<%= endDate || (resolvedEndDate ? new Date(resolvedEndDate).toISOString().slice(0,10) : '') %>" required />
+                        
+                        <button type="submit" class="btn-apply-filter">Apply Scope</button>
+                    </form>
+                </div>
+
+                <div class="scope-indicator-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>Scope: <strong><%= resolvedStartDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %> — <%= resolvedEndDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></strong></span>
+                </div>
+            </section>
+
+            <!-- 5 Refined Financial KPI Cards -->
+            <section class="financial-kpi-grid">
+                
+                <!-- Card 1: Total Acquisitions -->
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <span class="kpi-label">Acquisitions (Count)</span>
+                        <div class="kpi-icon-pill icon-pill-orders" title="Order Volume">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value"><%= Number(summary.totalSalesCount || 0).toLocaleString('en-IN') %></div>
+                    <div class="kpi-subtext">Total successful orders</div>
+                </div>
+
+                <!-- Card 2: Gross Order Amount -->
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <span class="kpi-label">Order Amount (Gross)</span>
+                        <div class="kpi-icon-pill icon-pill-gross" title="Gross Order Value">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value">₹<%= Number(summary.totalOrderAmount || 0).toLocaleString('en-IN') %></div>
+                    <div class="kpi-subtext">Before deductions</div>
+                </div>
+
+                <!-- Card 3: Coupon Deductions -->
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <span class="kpi-label">Coupon Deductions</span>
+                        <div class="kpi-icon-pill icon-pill-coupon" title="Privilege Vouchers Applied">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" style="color: var(--status-emerald);">
+                        − ₹<%= Number(summary.totalCouponDiscount || 0).toLocaleString('en-IN') %>
+                    </div>
+                    <div class="kpi-subtext">Privilege vouchers applied</div>
+                </div>
+
+                <!-- Card 4: Total Discounts -->
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <span class="kpi-label">Total Discounts</span>
+                        <div class="kpi-icon-pill icon-pill-discount" title="Catalog & Voucher Savings">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" style="color: var(--status-amber);">
+                        − ₹<%= Number(summary.totalDiscount || 0).toLocaleString('en-IN') %>
+                    </div>
+                    <div class="kpi-subtext">Catalog + coupon savings</div>
+                </div>
+
+                <!-- Card 5: Net Atelier Revenue (Prestige Hero Card) -->
+                <div class="kpi-card kpi-card-hero">
+                    <div class="kpi-card-header">
+                        <span class="kpi-label">Net Atelier Revenue</span>
+                        <div class="kpi-icon-pill icon-pill-net" title="Net Settled Acquisition Total">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value">₹<%= Number(summary.totalNetRevenue || 0).toLocaleString('en-IN') %></div>
+                    <div class="kpi-subtext">Net settled acquisition total</div>
+                </div>
+
+            </section>
+
+            <!-- Sales Report Orders Dossier Table Card -->
+            <section class="dossier-card">
+                <div class="dossier-card-header">
+                    <div class="dossier-title-area">
+                        <h2 class="dossier-card-title">Transactions Ledger</h2>
+                        <span class="badge-record-count"><%= totalOrdersCount %> <%= totalOrdersCount === 1 ? 'Acquisition' : 'Acquisitions' %></span>
+                    </div>
+                    <div style="font-size: 12.5px; color: var(--admin-text-muted);">
+                        Certified Atelier Record
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="ledger-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID &amp; Date</th>
+                                <th>Connoisseur (Client)</th>
+                                <th>Reserved Items</th>
+                                <th>Payment Concierge</th>
+                                <th>Fulfillment Status</th>
+                                <th style="text-align: right;">Gross Subtotal</th>
+                                <th style="text-align: right;">Coupon Discount</th>
+                                <th style="text-align: right;">Net Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (orders && orders.length > 0) { %>
+                                <% orders.forEach(function(ord) { %>
+                                    <tr>
+                                        <!-- 1. Order ID & Date -->
+                                        <td>
+                                            <a href="/admin/orders/<%= ord.orderId %>" class="order-id-link" title="Inspect Order Details">
+                                                #<%= ord.orderId %>
+                                            </a>
+                                            <div class="order-date-text">
+                                                <%= new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                                            </div>
+                                        </td>
+
+                                        <!-- 2. Client Name & Email -->
+                                        <td>
+                                            <div class="client-name-text">
+                                                <%= ord.shippingAddress?.fullName || ord.user?.name || 'Valued Client' %>
+                                            </div>
+                                            <div class="client-contact-text">
+                                                <%= ord.user?.email || ord.shippingAddress?.phone || '—' %>
+                                            </div>
+                                        </td>
+
+                                        <!-- 3. Reserved Items -->
+                                        <td>
+                                            <div class="items-count-pill">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                                </svg>
+                                                <span><%= (ord.items && ord.items.length) || 1 %> <%= ((ord.items && ord.items.length) === 1) ? 'creation' : 'creations' %></span>
+                                            </div>
+                                        </td>
+
+                                        <!-- 4. Payment Concierge -->
+                                        <td>
+                                            <span class="payment-method-badge">
+                                                <%= ord.paymentMethod || 'Online' %>
+                                            </span>
+                                            <% const payCompleted = (ord.paymentStatus === 'Completed' || ord.paymentStatus === 'Paid'); %>
+                                            <div class="payment-status-text <%= payCompleted ? 'status-completed' : 'status-pending' %>">
+                                                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                </svg>
+                                                <span><%= ord.paymentStatus || 'Pending' %></span>
+                                            </div>
+                                        </td>
+
+                                        <!-- 5. Fulfillment Status -->
+                                        <td>
+                                            <% 
+                                                const rawStatus = (ord.orderStatus || 'Placed').toLowerCase();
+                                                let badgeClass = 'badge-placed';
+                                                if (rawStatus.includes('deliver')) badgeClass = 'badge-delivered';
+                                                else if (rawStatus.includes('ship')) badgeClass = 'badge-shipped';
+                                                else if (rawStatus.includes('cancel')) badgeClass = 'badge-cancelled';
+                                            %>
+                                            <span class="fulfillment-badge <%= badgeClass %>">
+                                                <%= ord.orderStatus || 'Placed' %>
+                                            </span>
+                                        </td>
+
+                                        <!-- 6. Gross Subtotal -->
+                                        <td style="text-align: right;">
+                                            <span class="gross-subtotal-val">
+                                                ₹<%= Number(ord.pricing?.subtotal || ord.pricing?.totalAmount || 0).toLocaleString('en-IN') %>
+                                            </span>
+                                        </td>
+
+                                        <!-- 7. Coupon Discount -->
+                                        <td style="text-align: right;">
+                                            <% if (ord.pricing?.couponDiscount > 0) { %>
+                                                <span class="coupon-discount-val">
+                                                    − ₹<%= Number(ord.pricing.couponDiscount).toLocaleString('en-IN') %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="discount-none">—</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- 8. Net Revenue (Pristine High Contrast) -->
+                                        <td style="text-align: right;">
+                                            <span class="net-revenue-val">
+                                                ₹<%= Number(ord.pricing?.totalAmount || 0).toLocaleString('en-IN') %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr class="empty-state-row">
+                                    <td colspan="8">
+                                        <div class="empty-state-box">
+                                            <div class="empty-icon-wrap">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                </svg>
+                                            </div>
+                                            <h3 class="empty-title">No Acquisitions Recorded for this Scope</h3>
+                                            <p class="empty-subtitle">There are no completed or active orders within the selected time window. Try toggling another interval or expanding your custom date range.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Bar -->
+                <% if (totalPages > 1) { %>
+                    <div class="pagination-footer">
+                        <div class="pagination-info">
+                            Page <strong><%= currentPage %></strong> of <strong><%= totalPages %></strong> (<%= totalOrdersCount %> total acquisitions)
+                        </div>
+                        <div class="pagination-actions">
+                            <% if (currentPage > 1) { %>
+                                <a href="/admin/reports/sales?page=<%= currentPage - 1 %>&period=<%= period %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>" class="btn-page-nav">
+                                    &larr; Previous
+                                </a>
+                            <% } %>
+                            <% if (currentPage < totalPages) { %>
+                                <a href="/admin/reports/sales?page=<%= currentPage + 1 %>&period=<%= period %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>" class="btn-page-nav">
+                                    Next &rarr;
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        function toggleCustomRange() {
+            const form = document.getElementById('customRangeRow');
+            if (!form) return;
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'flex';
+                const firstInput = form.querySelector('input[type="date"]');
+                if (firstInput) firstInput.focus();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+    </script>
+
+</body>
+</html>

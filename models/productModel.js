@@ -30,6 +30,16 @@ const productSchema = new mongoose.Schema(
             default: null,
             min: [0, "Sale price must be greater than or equal to 0"]
         },
+        baseSalePrice: {
+            type: Number,
+            default: null,
+            min: [0, "Base sale price must be greater than or equal to 0"]
+        },
+        appliedOffer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Offer",
+            default: null
+        },
         stock: {
             type: Number,
             required: [true, "Stock quantity is required"],

@@ -21,4 +21,7 @@ router.post("/orders/:orderId/items/:itemId/cancel", orderController.postCancelO
 // Return Delivered Order (c.iv)
 router.post("/orders/:orderId/return", orderController.postReturnOrder);
 
+// Return Individual Product in Delivered Order
+router.post("/orders/:orderId/items/:itemId/return", orderController.postReturnOrderItem);
+
 export default router;

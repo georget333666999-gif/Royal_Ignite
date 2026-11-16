@@ -7,9 +7,10 @@ import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
  */
 const getSignup = (req, res) => {
     try {
+        const refCode = req.query.ref || req.query.referral || "";
         return res.status(HTTP_STATUS.OK).render("signup", {
             error: req.query.error || null,
-            formData: {}
+            formData: { referralCode: refCode }
         });
     } catch (err) {
         console.error("getSignup error:", err);
@@ -22,13 +23,14 @@ const getSignup = (req, res) => {
  */
 const postSignup = async (req, res) => {
     try {
-        const { name, email, phone, password } = req.body;
+        const { name, email, phone, password, referralCode } = req.body;
 
         const user = await userService.createUser({
             name: name.trim(),
             email: email.trim().toLowerCase(),
             phone: phone.trim(),
-            password
+            password,
+            referralCode: referralCode ? referralCode.trim() : ""
         });
 
         const otp = await userService.createOTP(user._id);
@@ -110,17 +112,18 @@ const handleUnverifiedLogin = async (req, res, result) => {
 
 const establishUserSession = (req, res, user) => {
     try {
-        req.session.userId = user._id.toString();
-        req.session.isUserLoggedIn = true;
-
         const target = req.body.redirect || req.query.redirect || "/";
         const redirectUrl = (typeof target === "string" && target.startsWith("/") && !target.startsWith("//")) ? target : "/";
 
-        req.session.save((saveErr) => {
-            if (saveErr) {
-                console.error("Session save error during login:", saveErr);
-            }
-            res.redirect(redirectUrl);
+        req.session.regenerate((regenErr) => {
+            if (regenErr) console.error("Session regenerate error during login:", regenErr);
+            req.session.userId = user._id.toString();
+            req.session.isUserLoggedIn = true;
+
+            req.session.save((saveErr) => {
+                if (saveErr) console.error("Session save error during login:", saveErr);
+                res.redirect(redirectUrl);
+            });
         });
     } catch (err) {
         console.error("establishUserSession error:", err);

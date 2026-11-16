@@ -1165,3 +1165,34 @@ textarea,
         justify-content: center;
     }
 }
+
+/* ========================================================
+   Gas Lighters Theme Override (Torch Flame Sky Blue)
+   ======================================================== */
+.gas-metrics-ribbon .collection-offer-strip,
+.gas-container .collection-offer-strip {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(14, 18, 26, 0.75));
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(56, 189, 248, 0.08);
+}
+
+.gas-metrics-ribbon .collection-offer-badge,
+.gas-container .collection-offer-badge {
+    background: linear-gradient(135deg, #38BDF8, #0284C7);
+    color: #08090C;
+    font-weight: 800;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+}
+
+.gas-metrics-ribbon .collection-offer-text strong,
+.gas-container .collection-offer-text strong {
+    color: var(--gas-flame-blue);
+}
+
+.gas-card-stage .collection-card-offer-badge {
+    background: linear-gradient(135deg, #38BDF8, #0284C7);
+    color: #08090C;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 12px rgba(56, 189, 248, 0.4);
+}

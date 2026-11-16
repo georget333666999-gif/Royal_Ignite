@@ -195,10 +195,7 @@ export const postCancelOrderItem = async (req, res, next) => {
     }
 };
 
-/**
- * Return delivered order with mandatory reason (c.iv)
- */
-export const postReturnOrder = async (req, res, next) => {
+const handleReturnRequest = async (req, res, action) => {
     const isAjax = Boolean(
         req.xhr || req.headers.accept?.includes("application/json") || req.body.format === "json"
     );
@@ -225,22 +222,18 @@ export const postReturnOrder = async (req, res, next) => {
                     message
                 });
             }
-            return res.redirect(
-                `/orders/${orderId}?error=` + encodeURIComponent(message)
-            );
+            return res.redirect(`/orders/${orderId}?error=` + encodeURIComponent(message));
         }
 
-        const result = await orderService.returnOrder(orderId, userId, reason);
+        const result = await action(userId, reason);
 
         if (isAjax) {
             return res.status(HTTP_STATUS.OK).json(result);
         }
 
-        return res.redirect(
-            `/orders/${orderId}?success=` + encodeURIComponent(result.message)
-        );
+        return res.redirect(`/orders/${orderId}?success=` + encodeURIComponent(result.message));
     } catch (err) {
-        console.error("orderController postReturnOrder error:", err);
+        console.error("orderController return request error:", err);
         const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
 
         if (isAjax) {
@@ -253,6 +246,22 @@ export const postReturnOrder = async (req, res, next) => {
         return res.redirect(`/orders?error=` + encodeURIComponent(message));
     }
 };
+
+/**
+ * Return delivered order with mandatory reason (c.iv)
+ */
+export const postReturnOrder = (req, res) =>
+    handleReturnRequest(req, res, (userId, reason) =>
+        orderService.returnOrder(req.params.orderId, userId, reason)
+    );
+
+/**
+ * Return individual delivered product within an order
+ */
+export const postReturnOrderItem = (req, res) =>
+    handleReturnRequest(req, res, (userId, reason) =>
+        orderService.returnOrderItem(req.params.orderId, req.params.itemId, userId, reason)
+    );
 
 /**
  * Download Invoice PDF (c.vi)
@@ -281,5 +290,6 @@ export default {
     postCancelOrder,
     postCancelOrderItem,
     postReturnOrder,
+    postReturnOrderItem,
     downloadInvoice
 };

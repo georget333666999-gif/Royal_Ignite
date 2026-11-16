@@ -1,6 +1,5 @@
 import express from "express";
 import productController from "../../controllers/admin/productController.js";
-import inventoryController from "../../controllers/admin/inventoryController.js";
 import { productUpload } from "../../middleware/uploadMiddleware.js";
 
 const router = express.Router();
@@ -34,6 +33,6 @@ router.post("/products/restore/:id", productController.restoreProduct);
 router.post("/products/toggle-status/:id", productController.toggleListProduct);
 
 // Quick Stock Adjustment
-router.post("/products/:id/stock", inventoryController.postUpdateStock);
+router.post("/products/:id/stock", productController.updateStock);
 
 export default router;

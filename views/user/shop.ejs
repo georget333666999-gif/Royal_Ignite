@@ -349,7 +349,16 @@
                                             <% if (isOutOfStock) { %>
                                                 <span class="badge-sold-out">Sold Out</span>
                                             <% } else if (hasDiscount) { %>
-                                                <span class="badge-sale">-<%= discountPercent %>% OFF</span>
+                                                <% if (product.appliedOfferDoc && product.appliedOfferDoc.name) { %>
+                                                    <span class="badge-offer" title="Live Privilege: <%= product.appliedOfferDoc.name %>">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                        </svg>
+                                                        <span><%= product.appliedOfferDoc.name %> • -<%= discountPercent %>%</span>
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="badge-sale">-<%= discountPercent %>% OFF</span>
+                                                <% } %>
                                             <% } %>
                                         </div>
 
@@ -377,7 +386,15 @@
                                     <!-- Content -->
                                     <div class="product-card-body">
                                         <div class="product-card-category">
-                                            <%= product.categoryDoc ? product.categoryDoc.name : 'Royal Ignite' %>
+                                            <span><%= product.categoryDoc ? product.categoryDoc.name : 'Royal Ignite' %></span>
+                                            <% if (product.appliedOfferDoc && product.appliedOfferDoc.name) { %>
+                                                <span class="card-offer-subtag">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                    </svg>
+                                                    <%= product.appliedOfferDoc.name %>
+                                                </span>
+                                            <% } %>
                                         </div>
 
                                         <h3 class="product-card-title">

@@ -18,6 +18,7 @@ import cartRoutes from "./routes/user/cartRoutes.js";
 import wishlistRoutes from "./routes/user/wishlistRoutes.js";
 import checkoutRoutes from "./routes/user/checkoutRoutes.js";
 import orderRoutes from "./routes/user/orderRoutes.js";
+import walletRoutes from "./routes/user/walletRoutes.js";
 import adminRoutes from "./routes/admin/adminRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,14 +45,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Cache Control Middleware (Prevents BFCache from displaying cached auth/protected pages)
 app.use((req, res, next) => {
-    try {
-        res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-        res.set("Pragma", "no-cache");
-        res.set("Expires", "0");
-        next();
-    } catch (err) {
-        next(err);
-    }
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    res.set("Surrogate-Control", "no-store");
+    next();
 });
 
 // ========================================
@@ -89,33 +87,18 @@ const adminSession = session({
     }
 });
 
-// Route-scoped session handling
-app.use("/admin", adminSession);
-app.use((req, res, next) => {
-    try {
-        if (req.originalUrl.startsWith("/admin")) {
-            return next();
-        }
-        userSession(req, res, next);
-    } catch (err) {
-        next(err);
-    }
-});
+// Route-scoped session & passport handling
+const isAdminRoute = (req) => req.originalUrl.startsWith("/admin");
 
-// ========================================
-// Passport Authentication
-// ========================================
-app.use(passport.initialize());
-app.use(passport.session());
+app.use("/admin", adminSession);
+app.use((req, res, next) => isAdminRoute(req) ? next() : userSession(req, res, next));
+app.use((req, res, next) => isAdminRoute(req) ? next() : passport.initialize()(req, res, next));
+app.use((req, res, next) => isAdminRoute(req) ? next() : passport.session()(req, res, next));
 
 // Global template locals for user session state
 app.use((req, res, next) => {
-    try {
-        res.locals.isUserLoggedIn = Boolean(req.session && (req.session.userId || req.session.isUserLoggedIn));
-        next();
-    } catch (err) {
-        next(err);
-    }
+    res.locals.isUserLoggedIn = !isAdminRoute(req) && Boolean(req.session?.isUserLoggedIn || req.session?.userId || req.user?._id);
+    next();
 });
 
 // ========================================
@@ -128,6 +111,7 @@ app.use("/", cartRoutes);
 app.use("/", wishlistRoutes);
 app.use("/", checkoutRoutes);
 app.use("/", orderRoutes);
+app.use("/", walletRoutes);
 app.use("/", productRoutes);
 app.use("/", homeRoutes);
 

@@ -625,6 +625,32 @@ a:visited {
     border-radius: var(--radius-sm);
 }
 
+.badge-offer {
+    background: linear-gradient(135deg, #E5A93C, #D48833);
+    color: #0E0E12;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(229, 169, 60, 0.35);
+}
+
+.card-offer-subtag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    color: var(--gold-primary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
 .badge-sold-out {
     background: rgba(220, 38, 38, 0.85);
     backdrop-filter: blur(4px);

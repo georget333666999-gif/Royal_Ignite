@@ -8,9 +8,11 @@ const router = express.Router();
 router.use(adminMiddleware);
 
 // ========================================
-// Admin Dashboard & Analytics
+// Admin Dashboard & Analytics (Requirement f)
 // ========================================
 router.get("/dashboard", adminController.getDashboard);
+router.get("/dashboard/chart-data", adminController.getChartDataApi);
+router.get("/dashboard/ledger", adminController.getLedgerBook);
 router.get("/analytics", adminController.getAnalytics);
 
 export default router;

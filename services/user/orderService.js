@@ -1,6 +1,8 @@
 import PDFDocument from "pdfkit";
 import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
+import couponService from "./couponService.js";
+import walletService from "./walletService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
 /**
@@ -106,8 +108,8 @@ export const cancelOrder = async (orderIdentifier, userId, reason = "") => {
             throw err;
         }
 
-        // Only Placed or Processing orders can be cancelled
-        if (order.orderStatus !== "Placed" && order.orderStatus !== "Processing") {
+        // Only Placed, Processing, or Pending orders can be cancelled
+        if (!["Placed", "Processing", "Pending"].includes(order.orderStatus)) {
             const err = new Error(RESPONSE_MESSAGES.ORDER.CANNOT_CANCEL);
             err.code = "CANNOT_CANCEL";
             throw err;
@@ -126,12 +128,29 @@ export const cancelOrder = async (orderIdentifier, userId, reason = "") => {
             }
         }
 
-        // 2. Update overall order status
+        // 2. Direct Refund to Wallet for prepaid orders (Razorpay or Wallet)
+        const refundAmount = order.pricing?.totalAmount || 0;
+        if (order.paymentStatus === "Completed" && refundAmount > 0) {
+            await walletService.creditWallet(userId, {
+                amount: refundAmount,
+                description: `Direct refund for cancellation of order #${order.orderId}`,
+                source: "order_cancellation",
+                orderId: order.orderId
+            });
+            order.paymentStatus = "Refunded";
+        }
+
+        // 3. Update overall order status
         order.orderStatus = "Cancelled";
         order.cancellationReason = reason.trim() || "Order cancelled by client";
         order.cancelledAt = new Date();
 
         await order.save();
+
+        // 4. Revert coupon usage if applied
+        if (order.coupon && order.coupon.code) {
+            await couponService.revertCouponUsage(order.coupon.code, order.user);
+        }
 
         return {
             success: true,
@@ -162,7 +181,7 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
             throw err;
         }
 
-        if (order.orderStatus !== "Placed" && order.orderStatus !== "Processing") {
+        if (!["Placed", "Processing", "Pending"].includes(order.orderStatus)) {
             const err = new Error(RESPONSE_MESSAGES.ORDER.CANNOT_CANCEL);
             err.code = "CANNOT_CANCEL";
             throw err;
@@ -192,13 +211,29 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
         item.cancelReason = reason.trim() || "Item cancelled by customer";
         item.cancelledAt = new Date();
 
-        // 3. Check if all items in the order are now cancelled
+        // 3. Direct Refund to Wallet if piece was prepaid
+        if (order.paymentStatus === "Completed" && item.lineTotal > 0) {
+            await walletService.creditWallet(userId, {
+                amount: item.lineTotal,
+                description: `Direct refund for cancellation of "${item.name}" from order #${order.orderId}`,
+                source: "item_cancellation",
+                orderId: order.orderId
+            });
+        }
+
+        // 4. Check if all items in the order are now cancelled
         const allCancelled = order.items.every((i) => i.status === "Cancelled");
         if (allCancelled) {
             order.orderStatus = "Cancelled";
             order.cancellationReason = reason.trim() || "All items cancelled by customer";
             order.cancelledAt = new Date();
             order.pricing.totalAmount = 0;
+            if (order.paymentStatus === "Completed") {
+                order.paymentStatus = "Refunded";
+            }
+            if (order.coupon && order.coupon.code) {
+                await couponService.revertCouponUsage(order.coupon.code, order.user);
+            }
         } else {
             // Adjust total payable for remaining active items
             const activeTotal = order.items
@@ -243,28 +278,31 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
             throw err;
         }
 
-        // Requirement: Return request can only be submitted for delivered orders that are not already returned/cancelled/requested
-        if (order.orderStatus !== "Delivered") {
-            const err = new Error("Return requests can only be submitted after your order has been delivered.");
+        const isDeliveredOrder = order.deliveredAt || ["Delivered", "Return Requested", "Return Rejected", "Returned"].includes(order.orderStatus);
+        const returnableItems = order.items.filter(
+            (i) => i.status === "Delivered" || (order.orderStatus === "Delivered" && i.status === "Placed")
+        );
+
+        if (!isDeliveredOrder || returnableItems.length === 0) {
+            const err = new Error("Return requests can only be submitted for delivered items.");
             err.code = "CANNOT_RETURN";
             throw err;
         }
 
-        // Set status to Return Requested (Awaiting Admin Approval)
+        const cleanReason = reason.trim();
+        const now = new Date();
         order.orderStatus = "Return Requested";
-        order.returnReason = reason.trim();
-        order.returnRequestedAt = new Date();
+        order.returnReason = cleanReason;
+        order.returnRequestedAt = now;
         order.returnRejectReason = null;
         order.returnRejectedAt = null;
 
-        for (const item of order.items) {
-            if (item.status === "Delivered" || item.status === "Placed") {
-                item.status = "Return Requested";
-                item.returnReason = reason.trim();
-                item.returnRequestedAt = new Date();
-                item.returnRejectReason = null;
-                item.returnRejectedAt = null;
-            }
+        for (const item of returnableItems) {
+            item.status = "Return Requested";
+            item.returnReason = cleanReason;
+            item.returnRequestedAt = now;
+            item.returnRejectReason = null;
+            item.returnRejectedAt = null;
         }
 
         // Note: Inventory is NOT re-stocked now. It will only be re-stocked once the admin approves the return.
@@ -277,6 +315,77 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
         };
     } catch (error) {
         console.error("orderService returnOrder error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Request return for a single delivered product within an order
+ * @param {string} orderIdentifier
+ * @param {string} itemId
+ * @param {string} userId
+ * @param {string} reason
+ * @returns {Promise<Object>}
+ */
+export const returnOrderItem = async (orderIdentifier, itemId, userId, reason) => {
+    try {
+        if (!reason || reason.trim() === "") {
+            const err = new Error(RESPONSE_MESSAGES.ORDER.RETURN_REASON_REQUIRED);
+            err.code = "REASON_REQUIRED";
+            throw err;
+        }
+
+        const order = await getOrderDetails(orderIdentifier, userId);
+        if (!order) {
+            const err = new Error(RESPONSE_MESSAGES.ORDER.NOT_FOUND);
+            err.code = "ORDER_NOT_FOUND";
+            throw err;
+        }
+
+        const isDeliveredOrder = order.deliveredAt || ["Delivered", "Return Requested", "Return Rejected", "Returned"].includes(order.orderStatus);
+        if (!isDeliveredOrder) {
+            const err = new Error("Return requests can only be submitted after your order has been delivered.");
+            err.code = "CANNOT_RETURN";
+            throw err;
+        }
+
+        const item = order.items.id(itemId) || order.items.find((i) => String(i._id) === String(itemId));
+        if (!item) {
+            const err = new Error("Item could not be found in this order.");
+            err.code = "ITEM_NOT_FOUND";
+            throw err;
+        }
+
+        const isItemDelivered = item.status === "Delivered" || (order.orderStatus === "Delivered" && item.status === "Placed");
+        if (!isItemDelivered) {
+            const err = new Error(`This item cannot be returned because its status is "${item.status}".`);
+            err.code = "CANNOT_RETURN";
+            throw err;
+        }
+
+        const cleanReason = reason.trim();
+        const now = new Date();
+        item.status = "Return Requested";
+        item.returnReason = cleanReason;
+        item.returnRequestedAt = now;
+        item.returnRejectReason = null;
+        item.returnRejectedAt = null;
+
+        order.orderStatus = "Return Requested";
+        order.returnReason = cleanReason;
+        order.returnRequestedAt = now;
+        order.returnRejectReason = null;
+        order.returnRejectedAt = null;
+
+        await order.save();
+
+        return {
+            success: true,
+            order,
+            message: RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted for the selected product."
+        };
+    } catch (error) {
+        console.error("orderService returnOrderItem error:", error);
         throw error;
     }
 };
@@ -486,5 +595,6 @@ export default {
     cancelOrder,
     cancelOrderItem,
     returnOrder,
+    returnOrderItem,
     generateInvoicePDF
 };

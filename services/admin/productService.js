@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Product from "../../models/productModel.js";
 import Category from "../../models/categoryModel.js";
+import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
 const escapeRegex = (value) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -316,6 +317,49 @@ const toggleListProduct = async (productId) => {
     }
 };
 
+/**
+ * Adjust or set product inventory stock directly
+ * @param {string} productId
+ * @param {number|string} stockValue
+ * @param {"set"|"add"} [mode="set"]
+ */
+const updateProductStock = async (productId, stockValue, mode = "set") => {
+    try {
+        const numValue = parseInt(stockValue, 10);
+        if (isNaN(numValue)) {
+            const err = new Error(RESPONSE_MESSAGES.INVENTORY.INVALID_STOCK);
+            err.code = "INVALID_STOCK";
+            throw err;
+        }
+
+        const product = await Product.findById(productId);
+        if (!product || product.isDeleted) {
+            const err = new Error(RESPONSE_MESSAGES.INVENTORY.PRODUCT_NOT_FOUND);
+            err.code = "NOT_FOUND";
+            throw err;
+        }
+
+        let newStock = product.stock;
+        if (mode === "add") {
+            newStock = Math.max(0, product.stock + numValue);
+        } else {
+            newStock = Math.max(0, numValue);
+        }
+
+        product.stock = newStock;
+        await product.save();
+
+        return {
+            success: true,
+            product,
+            message: RESPONSE_MESSAGES.INVENTORY.STOCK_UPDATED_SUCCESS
+        };
+    } catch (error) {
+        console.error("productService updateProductStock error:", error);
+        throw error;
+    }
+};
+
 export {
     getProducts,
     getProductById,
@@ -324,7 +368,8 @@ export {
     editProduct,
     softDeleteProduct,
     restoreProduct,
-    toggleListProduct
+    toggleListProduct,
+    updateProductStock
 };
 
 export default {
@@ -335,5 +380,6 @@ export default {
     editProduct,
     softDeleteProduct,
     restoreProduct,
-    toggleListProduct
+    toggleListProduct,
+    updateProductStock
 };

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Product from "../../models/productModel.js";
 import Category from "../../models/categoryModel.js";
+import Offer from "../../models/offerModel.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
 /**
@@ -216,7 +217,7 @@ export const getShopProducts = async ({
 
     pipeline.push({ $sort: sortStage });
 
-    // 5. Populate Category details
+    // 5. Populate Category details & Applied Live Offers
     pipeline.push(
         {
             $lookup: {
@@ -230,6 +231,56 @@ export const getShopProducts = async ({
             $unwind: {
                 path: "$categoryDoc",
                 preserveNullAndEmptyArrays: false
+            }
+        },
+        {
+            $lookup: {
+                from: "offers",
+                localField: "appliedOffer",
+                foreignField: "_id",
+                as: "appliedOfferDoc"
+            }
+        },
+        {
+            $unwind: {
+                path: "$appliedOfferDoc",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: "offers",
+                let: { prodId: "$_id", catId: "$category" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$isActive", true] },
+                                    { $eq: ["$isDeleted", false] },
+                                    { $lte: ["$startDate", new Date()] },
+                                    { $gte: ["$endDate", new Date()] },
+                                    {
+                                        $or: [
+                                            { $and: [{ $eq: ["$offerType", "product"] }, { $eq: ["$product", "$$prodId"] }] },
+                                            { $and: [{ $eq: ["$offerType", "category"] }, { $eq: ["$category", "$$catId"] }] }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    { $sort: { discountValue: -1 } },
+                    { $limit: 1 }
+                ],
+                as: "fallbackOfferDocs"
+            }
+        },
+        {
+            $addFields: {
+                appliedOfferDoc: {
+                    $ifNull: ["$appliedOfferDoc", { $arrayElemAt: ["$fallbackOfferDocs", 0] }]
+                }
             }
         }
     );
@@ -283,7 +334,10 @@ export const getProductDetailsById = async (productId) => {
             return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.INVALID_ID };
         }
 
-        const product = await Product.findById(productId).populate("category");
+        const product = await Product.findById(productId)
+            .populate("category")
+            .populate("appliedOffer");
+
         if (!product) {
             return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.DOES_NOT_EXIST };
         }
@@ -298,6 +352,52 @@ export const getProductDetailsById = async (productId) => {
             return { product: null, unavailable: true, reason: RESPONSE_MESSAGES.PRODUCT.CATEGORY_UNAVAILABLE };
         }
 
+        // Check applied offer validity or resolve active offer in real time
+        const now = new Date();
+        let appliedOffer = null;
+
+        if (product.appliedOffer && product.appliedOffer.isActive && !product.appliedOffer.isDeleted) {
+            if (new Date(product.appliedOffer.endDate) >= now && new Date(product.appliedOffer.startDate) <= now) {
+                appliedOffer = {
+                    _id: product.appliedOffer._id,
+                    name: product.appliedOffer.name,
+                    offerType: product.appliedOffer.offerType,
+                    description: product.appliedOffer.description || "",
+                    discountType: product.appliedOffer.discountType,
+                    discountValue: product.appliedOffer.discountValue,
+                    endDate: product.appliedOffer.endDate,
+                    startDate: product.appliedOffer.startDate
+                };
+            }
+        }
+
+        // Fallback: If appliedOffer not directly populated or was null, query live offer for this product or category
+        if (!appliedOffer) {
+            const activeOffer = await Offer.findOne({
+                $or: [
+                    { offerType: "product", product: product._id },
+                    { offerType: "category", category: product.category._id || product.category }
+                ],
+                isActive: true,
+                isDeleted: false,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).sort({ discountValue: -1 }).lean();
+
+            if (activeOffer) {
+                appliedOffer = {
+                    _id: activeOffer._id,
+                    name: activeOffer.name,
+                    offerType: activeOffer.offerType,
+                    description: activeOffer.description || "",
+                    discountType: activeOffer.discountType,
+                    discountValue: activeOffer.discountValue,
+                    endDate: activeOffer.endDate,
+                    startDate: activeOffer.startDate
+                };
+            }
+        }
+
         // Calculate effective price & discount
         const hasDiscount = Boolean(product.salePrice && product.salePrice > 0 && product.salePrice < product.regularPrice);
         const effectivePrice = hasDiscount ? product.salePrice : product.regularPrice;
@@ -310,7 +410,8 @@ export const getProductDetailsById = async (productId) => {
                 effectivePrice,
                 hasDiscount,
                 discountAmount,
-                discountPercent
+                discountPercent,
+                appliedOffer
             },
             unavailable: false
         };
@@ -345,6 +446,7 @@ export const getRelatedProducts = async (currentProductId, categoryId, limit = 4
                 category: new mongoose.Types.ObjectId(categoryId)
             })
                 .populate("category", "name")
+                .populate("appliedOffer")
                 .limit(limit)
                 .lean();
         }
@@ -364,6 +466,7 @@ export const getRelatedProducts = async (currentProductId, categoryId, limit = 4
                 isDeleted: false
             })
                 .populate("category", "name")
+                .populate("appliedOffer")
                 .sort({ createdAt: -1 })
                 .limit(remainingNeeded)
                 .lean();

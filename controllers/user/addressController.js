@@ -51,8 +51,8 @@ const postAddAddress = async (req, res) => {
         res.redirect("/user/addresses");
     } catch (error) {
         console.error("Add address error:", error);
-        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("addAddress", {
-            error: RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG,
+        res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).render("addAddress", {
+            error: error.statusCode ? error.message : RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG,
             formData: req.body
         });
     }
@@ -149,9 +149,9 @@ const postEditAddress = async (req, res) => {
         res.redirect("/user/addresses");
     } catch (error) {
         console.error("Edit address error:", error);
-        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("editAddress", {
+        res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).render("editAddress", {
             address: { ...req.body, _id: req.params.id },
-            error: RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG
+            error: error.statusCode ? error.message : RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG
         });
     }
 };

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'My Digital Wallet — ROYAL IGNITE' %></title>
+    <link rel="stylesheet" href="/css/user/auth.css" />
+    <link rel="stylesheet" href="/css/user/profile.css" />
+    <style>
+        .wallet-hero-card {
+            background: linear-gradient(135deg, rgba(24, 22, 20, 0.95) 0%, rgba(14, 13, 12, 0.95) 100%);
+            border: 1px solid rgba(246, 189, 100, 0.3);
+            border-radius: 16px;
+            padding: 32px 36px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .wallet-hero-card::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -40px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(246, 189, 100, 0.16) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .wallet-tagline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold-primary, #F6BD64);
+            margin-bottom: 8px;
+        }
+
+        .wallet-balance-amount {
+            font-family: 'DM Serif Display', 'Cinzel', serif;
+            font-size: 44px;
+            color: #FFFFFF;
+            font-weight: 400;
+            line-height: 1.1;
+            margin: 6px 0 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .wallet-perks-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #a8a29a;
+            font-size: 12.5px;
+        }
+
+        .wallet-perk-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wallet-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: rgba(18, 17, 16, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-label {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8c857b;
+            margin-bottom: 6px;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        .stat-val.credit {
+            color: #10b981;
+        }
+
+        .stat-val.debit {
+            color: #F6BD64;
+        }
+
+        .ledger-card {
+            background: rgba(18, 17, 16, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .ledger-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .ledger-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #f5f0ea;
+            letter-spacing: 0.3px;
+        }
+
+        .tx-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tx-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .tx-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(246, 189, 100, 0.2);
+        }
+
+        .tx-main-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .tx-icon-pill {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tx-icon-pill.credit {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tx-icon-pill.debit {
+            background: rgba(246, 189, 100, 0.12);
+            color: #F6BD64;
+            border: 1px solid rgba(246, 189, 100, 0.3);
+        }
+
+        .tx-desc {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+
+        .tx-meta {
+            font-size: 11.5px;
+            color: #8c857b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tx-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #ded9d0;
+        }
+
+        .tx-amount-col {
+            text-align: right;
+        }
+
+        .tx-amount {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+        }
+
+        .tx-amount.credit {
+            color: #10b981;
+        }
+
+        .tx-amount.debit {
+            color: #F6BD64;
+        }
+
+        .tx-bal-after {
+            font-size: 11px;
+            color: #8c857b;
+        }
+
+        .empty-wallet-box {
+            text-align: center;
+            padding: 48px 24px;
+            color: #8c857b;
+        }
+
+        .empty-wallet-icon {
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: rgba(246, 189, 100, 0.08);
+            border: 1px solid rgba(246, 189, 100, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #F6BD64;
+        }
+
+        .pagination-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #ded9d0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #F6BD64;
+            color: #F6BD64;
+        }
+
+        /* Add Cash to Wallet Button & Chips */
+        .btn-add-funds {
+            background: #F6BD64;
+            color: #0E0E12;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 18px rgba(246, 189, 100, 0.28);
+            transition: all 0.25s ease;
+        }
+
+        .btn-add-funds:hover {
+            background: #e5ab53;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(246, 189, 100, 0.4);
+        }
+
+        .add-cash-chip {
+            padding: 7px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            color: #ded9d0;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-cash-chip:hover {
+            background: rgba(246, 189, 100, 0.15);
+            border-color: #F6BD64;
+            color: #F6BD64;
+        }
+
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(246, 189, 100, 0.3) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8) !important;
+            color: #f0ece6 !important;
+            font-family: 'Manrope', sans-serif !important;
+        }
+
+        .royal-swal-confirm-btn {
+            background: #F6BD64 !important;
+            color: #0E0E12 !important;
+            border-radius: 6px !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            padding: 11px 24px !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+
+        .royal-swal-cancel-btn {
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            padding: 11px 20px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            cursor: pointer !important;
+        }
+    </style>
+    <!-- SweetAlert2 & Razorpay SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body class="profile-page">
+
+    <%- include('partials/header') %>
+
+    <main class="dashboard-wrapper">
+        <div class="dashboard-container">
+
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="breadcrumb-separator">&rsaquo;</span>
+                <a href="/user/profile">My Account</a>
+                <span class="breadcrumb-separator">&rsaquo;</span>
+                <span class="breadcrumb-current">Digital Wallet</span>
+            </div>
+
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="dashboard-tagline">
+                    <span class="tagline-dot"></span>
+                    Account Dashboard
+                </div>
+                <h1 class="dashboard-title">My Digital Wallet</h1>
+                <p class="dashboard-subtitle">
+                    Manage your store balance, inspect automated refunds from cancellations and returns, and settle acquisitions instantly.
+                </p>
+            </div>
+
+            <!-- Main Layout Grid -->
+            <div class="dashboard-grid">
+
+                <!-- Sidebar Navigation -->
+                <aside class="sidebar-nav">
+                    <div class="sidebar-menu">
+                        <a href="/user/profile" class="nav-item">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Profile Information</span>
+                        </a>
+
+                        <a href="/user/addresses" class="nav-item">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>Saved Addresses</span>
+                        </a>
+
+                        <a href="/orders" class="nav-item">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                            <span>My Orders</span>
+                        </a>
+
+                        <a href="/wishlist" class="nav-item">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span>Wishlist Vault</span>
+                        </a>
+
+                        <% if (!user.googleId) { %>
+                            <a href="/user/profile/change-password" class="nav-item">
+                                <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <span>Security Settings</span>
+                            </a>
+                        <% } %>
+
+                        <a href="/wallet" class="nav-item active">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>My Wallet</span>
+                        </a>
+                    </div>
+
+                    <div class="sidebar-footer">
+                        <form action="/user/logout" method="POST">
+                            <button type="submit" class="nav-item signout-btn">
+                                <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span>Sign Out</span>
+                            </button>
+                        </form>
+                    </div>
+                </aside>
+
+                <!-- Right Column: Wallet Content -->
+                <div class="dashboard-content">
+
+                    <!-- Balance Hero Card -->
+                    <div class="wallet-hero-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                            <div>
+                                <div class="wallet-tagline">
+                                    <span class="tagline-dot"></span>
+                                    Atelier Digital Vault
+                                </div>
+                                <div class="wallet-balance-amount" id="wallet-balance-display">
+                                    ₹<%= Number(wallet.balance || 0).toLocaleString('en-IN') %>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-add-funds" onclick="openAddCashModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Add Cash to Wallet</span>
+                            </button>
+                        </div>
+                        <div class="wallet-perks-row">
+                            <div class="wallet-perk-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Instant Checkout Settlement</span>
+                            </div>
+                            <div class="wallet-perk-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Automated Cancellation & Return Refunds</span>
+                            </div>
+                            <div class="wallet-perk-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Zero Gateway Latency</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Row -->
+                    <div class="wallet-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Credited</div>
+                            <div class="stat-val credit">+ ₹<%= Number(totalCredited || 0).toLocaleString('en-IN') %></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Spent / Debited</div>
+                            <div class="stat-val debit">− ₹<%= Number(totalDebited || 0).toLocaleString('en-IN') %></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Transactions</div>
+                            <div class="stat-val"><%= totalTransactions || 0 %></div>
+                        </div>
+                    </div>
+
+                    <!-- Ledger Transactions Card -->
+                    <div class="ledger-card">
+                        <div class="ledger-header">
+                            <div>
+                                <div class="ledger-title">Transaction Ledger</div>
+                                <span style="font-size: 12px; color: #8c857b;">Immutable chronological statement of credits, refunds, and acquisitions.</span>
+                            </div>
+                        </div>
+
+                        <% if (!transactions || transactions.length === 0) { %>
+                            <div class="empty-wallet-box">
+                                <div class="empty-wallet-icon">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    </svg>
+                                </div>
+                                <h3 style="font-size: 15px; color: #f5f0ea; margin-bottom: 6px;">Your Wallet Ledger is Pristine</h3>
+                                <p style="font-size: 13px; max-width: 440px; margin: 0 auto;">
+                                    When you cancel a prepaid acquisition or an atelier return is approved, your refund balance will appear here instantly.
+                                </p>
+                            </div>
+                        <% } else { %>
+                            <div class="tx-list">
+                                <% transactions.forEach(function(tx) { %>
+                                    <div class="tx-row">
+                                        <div class="tx-main-info">
+                                            <div class="tx-icon-pill <%= tx.type %>">
+                                                <% if (tx.type === 'credit') { %>
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                                                        <polyline points="5 12 12 19 19 12"></polyline>
+                                                    </svg>
+                                                <% } else { %>
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <polyline points="19 12 12 5 5 12"></polyline>
+                                                    </svg>
+                                                <% } %>
+                                            </div>
+                                            <div>
+                                                <div class="tx-desc">
+                                                    <%= tx.description %>
+                                                    <% if (tx.orderId) { %>
+                                                        <a href="/orders/<%= tx.orderId %>" style="color: var(--gold-primary, #F6BD64); text-decoration: none; font-size: 12px; margin-left: 6px;">
+                                                            [#<%= tx.orderId %>]
+                                                        </a>
+                                                    <% } %>
+                                                </div>
+                                                <div class="tx-meta">
+                                                    <span><%= new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                                                    <span>•</span>
+                                                    <span class="tx-badge"><%= tx.source.replace(/_/g, ' ') %></span>
+                                                    <span>•</span>
+                                                    <span style="font-family: monospace; font-size: 10px; opacity: 0.6;"><%= tx.transactionId %></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="tx-amount-col">
+                                            <div class="tx-amount <%= tx.type %>">
+                                                <%= tx.type === 'credit' ? '+ ₹' : '− ₹' %><%= Number(tx.amount).toLocaleString('en-IN') %>
+                                            </div>
+                                            <div class="tx-bal-after">
+                                                Bal: ₹<%= Number(tx.balanceAfter).toLocaleString('en-IN') %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+
+                            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                                <div class="pagination-bar">
+                                    <% if (currentPage > 1) { %>
+                                        <a href="/wallet?page=<%= currentPage - 1 %>" class="page-btn">&larr; Previous</a>
+                                    <% } %>
+                                    <span style="font-size: 12px; color: #8c857b;">Page <%= currentPage %> of <%= totalPages %></span>
+                                    <% if (currentPage < totalPages) { %>
+                                        <a href="/wallet?page=<%= currentPage + 1 %>" class="page-btn">Next &rarr;</a>
+                                    <% } %>
+                                </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        function openAddCashModal() {
+            Swal.fire({
+                title: 'Add Cash to Wallet',
+                html: `
+                    <div style="text-align: left; font-family: 'Manrope', sans-serif;">
+                        <p style="font-size: 13px; color: #a8a29a; margin-bottom: 16px; line-height: 1.5;">
+                            Deposit funds securely using UPI, Cards, or Netbanking via Razorpay. Your balance will be credited instantly upon successful settlement.
+                        </p>
+                        <label style="display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #F6BD64; font-weight: 700; margin-bottom: 6px;">Enter Amount (₹)</label>
+                        <div style="position: relative; margin-bottom: 14px;">
+                            <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #F6BD64; font-weight: 700;">₹</span>
+                            <input type="number" id="swal-topup-amount" min="10" max="100000" placeholder="e.g. 1000" value="1000"
+                                style="width: 100%; box-sizing: border-box; padding: 12px 14px 12px 34px; background: #0E0E12; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #ffffff; font-size: 18px; font-weight: 600; outline: none;" />
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #8c857b; display: block; margin-bottom: 8px;">Quick Amounts</span>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="add-cash-chip" onclick="document.getElementById('swal-topup-amount').value = 500">+ ₹500</button>
+                                <button type="button" class="add-cash-chip" onclick="document.getElementById('swal-topup-amount').value = 1000">+ ₹1,000</button>
+                                <button type="button" class="add-cash-chip" onclick="document.getElementById('swal-topup-amount').value = 2500">+ ₹2,500</button>
+                                <button type="button" class="add-cash-chip" onclick="document.getElementById('swal-topup-amount').value = 5000">+ ₹5,000</button>
+                            </div>
+                        </div>
+                        <div style="font-size: 11.5px; color: #8c857b; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <span>256-bit encrypted deposit powered by Razorpay</span>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Proceed to Pay',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#F6BD64',
+                cancelButtonColor: '#27272a',
+                background: '#141312',
+                color: '#f0ece6',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                },
+                preConfirm: () => {
+                    const input = document.getElementById('swal-topup-amount');
+                    const val = parseFloat(input ? input.value : 0);
+                    if (!val || val < 10) {
+                        Swal.showValidationMessage('Please enter an amount of at least ₹10.');
+                        return false;
+                    }
+                    if (val > 100000) {
+                        Swal.showValidationMessage('Maximum deposit limit is ₹1,00,000.');
+                        return false;
+                    }
+                    return val;
+                }
+            }).then((res) => {
+                if (res.isConfirmed && res.value) {
+                    initiateAddCashRazorpay(res.value);
+                }
+            });
+        }
+
+        async function initiateAddCashRazorpay(amount) {
+            Swal.fire({
+                title: 'Connecting Gateway',
+                text: 'Preparing secure top-up session...',
+                background: '#141312',
+                color: '#eae6df',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const createRes = await fetch('/wallet/add-funds/create-order', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount })
+                });
+                const orderData = await createRes.json();
+                Swal.close();
+
+                if (!orderData.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gateway Notice',
+                        text: orderData.message || 'Unable to initialize deposit.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                    return;
+                }
+
+                const options = {
+                    key: orderData.key,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: 'ROYAL IGNITE',
+                    description: `Wallet Deposit (₹${Number(amount).toLocaleString('en-IN')})`,
+                    image: '/images/favicon.png',
+                    order_id: orderData.razorpayOrderId,
+                    handler: async function (paymentRes) {
+                        Swal.fire({
+                            title: 'Crediting Digital Wallet...',
+                            text: 'Authenticating deposit settlement. Please wait.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        try {
+                            const verifyRes = await fetch('/wallet/add-funds/verify', {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpayOrderId: paymentRes.razorpay_order_id,
+                                    razorpayPaymentId: paymentRes.razorpay_payment_id,
+                                    razorpaySignature: paymentRes.razorpay_signature,
+                                    amount
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+
+                            if (verifyData.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deposit Successful',
+                                    text: verifyData.message || 'Cash has been credited to your wallet.',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    confirmButtonColor: '#F6BD64'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Verification Failed',
+                                    text: verifyData.message || 'Payment confirmation failed.',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    confirmButtonColor: '#F6BD64'
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Verify add cash error:', err);
+                            window.location.reload();
+                        }
+                    },
+                    prefill: {
+                        name: orderData.user?.name || '',
+                        email: orderData.user?.email || '',
+                        contact: orderData.user?.phone || ''
+                    },
+                    theme: { color: '#F6BD64' }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                console.error('Add cash error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gateway Notice',
+                    text: 'Unable to connect to the payment gateway. Please try again.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
+

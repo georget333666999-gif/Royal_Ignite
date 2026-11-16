@@ -123,8 +123,16 @@
                                     <div class="wishlist-card-badges">
                                         <% if (product.isOutOfStock) { %>
                                             <span class="wl-badge-soldout">Sold Out</span>
-                                        <% } else if (product.hasDiscount) { %>
-                                            <span class="wl-badge-sale">-<%= product.discountPercent %>% OFF</span>
+                                        <% } else { %>
+                                            <% if (product.appliedOffer && product.appliedOffer.name) { %>
+                                                <span class="collection-card-offer-badge" style="font-size: 0.68rem; padding: 2px 8px; border-radius: 4px;">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                    <%= product.appliedOffer.name %>
+                                                </span>
+                                            <% } %>
+                                            <% if (product.hasDiscount) { %>
+                                                <span class="wl-badge-sale">-<%= product.discountPercent %>% OFF</span>
+                                            <% } %>
                                         <% } %>
                                     </div>
 

@@ -15,5 +15,7 @@ router.post("/orders/:orderId/status", orderController.updateOrderStatus);
 // Approve / Reject Return Requests
 router.post("/orders/:orderId/return/approve", orderController.approveReturn);
 router.post("/orders/:orderId/return/reject", orderController.rejectReturn);
+router.post("/orders/:orderId/items/:itemId/return/approve", orderController.approveReturnItem);
+router.post("/orders/:orderId/items/:itemId/return/reject", orderController.rejectReturnItem);
 
 export default router;

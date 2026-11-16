@@ -349,6 +349,41 @@ const toggleListProduct = async (req, res) => {
     }
 };
 
+// Quick Stock Adjustment for product
+const updateStock = async (req, res) => {
+    const isJson = isJsonRequest(req);
+    try {
+        const { id } = req.params;
+        const { stock, mode = "set" } = req.body;
+
+        if (stock === undefined || stock === null || stock === "") {
+            const message = RESPONSE_MESSAGES.INVENTORY.INVALID_STOCK;
+            if (isJson) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+            }
+            return res.redirect(`/admin/products?error=${encodeURIComponent(message)}`);
+        }
+
+        const result = await productService.updateProductStock(id, stock, mode);
+
+        if (isJson) {
+            return res.status(HTTP_STATUS.OK).json(result);
+        }
+
+        return res.redirect(`/admin/products?success=${encodeURIComponent(result.message)}`);
+    } catch (err) {
+        console.error("productController updateStock error:", err);
+        const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        if (isJson) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message
+            });
+        }
+        return res.redirect(`/admin/products?error=${encodeURIComponent(message)}`);
+    }
+};
+
 export {
     getProductList,
     showAddProductPage,
@@ -357,7 +392,8 @@ export {
     editProduct,
     softDeleteProduct,
     restoreProduct,
-    toggleListProduct
+    toggleListProduct,
+    updateStock
 };
 
 export default {
@@ -368,5 +404,6 @@ export default {
     editProduct,
     softDeleteProduct,
     restoreProduct,
-    toggleListProduct
+    toggleListProduct,
+    updateStock
 };

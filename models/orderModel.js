@@ -103,7 +103,7 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ["COD"],
+            enum: ["COD", "Razorpay", "Wallet"],
             default: "COD",
             required: true
         },
@@ -112,9 +112,33 @@ const orderSchema = new mongoose.Schema(
             enum: ["Pending", "Completed", "Failed", "Refunded"],
             default: "Pending"
         },
+        razorpayOrderId: {
+            type: String,
+            default: null
+        },
+        razorpayPaymentId: {
+            type: String,
+            default: null
+        },
+        razorpaySignature: {
+            type: String,
+            default: null
+        },
+        coupon: {
+            code: {
+                type: String,
+                default: null
+            },
+            discountAmount: {
+                type: Number,
+                default: 0,
+                min: 0
+            }
+        },
         pricing: {
             subtotal: { type: Number, required: true, min: 0 },
             discount: { type: Number, default: 0, min: 0 },
+            couponDiscount: { type: Number, default: 0, min: 0 },
             tax: { type: Number, default: 0, min: 0 },
             shippingFee: { type: Number, default: 0, min: 0 },
             totalAmount: { type: Number, required: true, min: 0 }

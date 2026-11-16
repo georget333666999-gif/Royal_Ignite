@@ -1,0 +1,842 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ==========================================================================
+   ROYAL IGNITE - Sales & Financial Dossier Console
+   Design System: Refined Quiet Luxury White Architecture
+   Matches Dashboard, Category, Offer & Coupon Benchmarks
+   ========================================================================== */
+
+:root {
+    /* Palette Tokens */
+    --admin-bg-base: #F8F7F4;
+    --admin-bg-surface: #FFFFFF;
+    --admin-bg-subtle: #FAF9F6;
+    --admin-bg-muted: #F3F1EC;
+    
+    /* Text Hierarchy */
+    --admin-text-primary: #171513;
+    --admin-text-secondary: #58544D;
+    --admin-text-muted: #888278;
+    --admin-text-dim: #ABA59B;
+    
+    /* Brand Gold Accents */
+    --gold-primary: #D48833;
+    --gold-light: #F6CF8B;
+    --gold-dark: #B87328;
+    --gold-bg-tint: rgba(212, 136, 51, 0.08);
+    --gold-border: rgba(212, 136, 51, 0.28);
+    
+    /* Status Colors */
+    --status-emerald: #10B981;
+    --status-emerald-bg: #ECFDF5;
+    --status-emerald-border: #A7F3D0;
+    --status-amber: #D97706;
+    --status-amber-bg: #FFFBEB;
+    --status-amber-border: #FDE68A;
+    --status-rose: #E11D48;
+    --status-rose-bg: #FFF1F2;
+    --status-rose-border: #FECDD3;
+    --status-indigo: #4F46E5;
+    --status-indigo-bg: #EEF2FF;
+    --status-indigo-border: #C7D2FE;
+    
+    /* Borders & Hairlines */
+    --border-card: rgba(228, 223, 214, 0.85);
+    --border-subtle: #EBE7DF;
+    --border-focus: #D48833;
+    
+    /* Shadows */
+    --shadow-card: 0 1px 3px rgba(28, 25, 23, 0.03),
+                   0 6px 16px -4px rgba(28, 25, 23, 0.05);
+    --shadow-card-hover: 0 4px 10px rgba(28, 25, 23, 0.04),
+                         0 14px 28px -6px rgba(28, 25, 23, 0.08);
+    --shadow-btn: 0 2px 6px rgba(20, 19, 18, 0.15);
+    
+    /* Layout Dimensions */
+    --sidebar-width: 268px;
+    --navbar-height: 72px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--admin-bg-base);
+    color: var(--admin-text-primary);
+    min-height: 100vh;
+    display: flex;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Main Layout & Top Navbar
+   ========================================================================== */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.top-navbar {
+    height: var(--navbar-height);
+    background: var(--admin-bg-surface);
+    border-bottom: 1px solid var(--border-card);
+    padding: 0 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.breadcrumb-trail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+}
+
+.crumb-dim {
+    color: var(--admin-text-muted);
+}
+
+.crumb-sep {
+    color: var(--admin-text-dim);
+}
+
+.crumb-active {
+    color: var(--admin-text-primary);
+    font-weight: 600;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nav-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--admin-bg-subtle);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    color: var(--admin-text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-action-btn:hover {
+    background: #EBE7DF;
+    color: var(--admin-text-primary);
+}
+
+.user-pill-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    background: var(--admin-bg-subtle);
+    border: 1px solid var(--border-card);
+    border-radius: 20px;
+}
+
+.avatar-circle-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--admin-text-primary);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.user-pill-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--admin-text-primary);
+}
+
+/* ==========================================================================
+   Content Canvas & Title Header
+   ========================================================================== */
+.content-padding {
+    padding: 32px 36px 48px;
+}
+
+.page-title-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.page-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.4px;
+    color: var(--admin-text-primary);
+    line-height: 1.15;
+    margin-bottom: 6px;
+}
+
+.page-desc {
+    font-size: 14px;
+    color: var(--admin-text-secondary);
+    line-height: 1.45;
+}
+
+.title-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-export-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    background: #FFF1F2;
+    color: #E11D48;
+    border: 1px solid #FECDD3;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(225, 29, 72, 0.08);
+}
+
+.btn-export-pdf:hover {
+    background: #FFE4E6;
+    border-color: #FDA4AF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.16);
+}
+
+.btn-export-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.08);
+}
+
+.btn-export-excel:hover {
+    background: #D1FAE5;
+    border-color: #6EE7B7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.16);
+}
+
+/* ==========================================================================
+   Refined Filter Toolbar
+   ========================================================================== */
+.report-filter-bar {
+    background: #FFFFFF;
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: var(--shadow-card);
+}
+
+.filter-left-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.filter-pills-track {
+    display: inline-flex;
+    background: #F4F1EA;
+    border-radius: 999px;
+    padding: 4px;
+    gap: 3px;
+}
+
+.filter-pill-btn {
+    background: transparent;
+    border: none;
+    color: var(--admin-text-secondary);
+    padding: 7px 18px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.filter-pill-btn:hover {
+    color: var(--admin-text-primary);
+}
+
+.filter-pill-btn.active {
+    background: var(--gold-primary);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(212, 136, 51, 0.35);
+}
+
+.custom-date-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #FAF9F6;
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 4px 10px;
+}
+
+.date-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.date-input {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--admin-text-primary);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: border-color 0.2s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px var(--gold-bg-tint);
+}
+
+.btn-apply-filter {
+    background: #171513;
+    color: #FAF8F5;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-apply-filter:hover {
+    background: #2D2B28;
+    transform: translateY(-1px);
+}
+
+.scope-indicator-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(212, 136, 51, 0.08);
+    border: 1px solid rgba(212, 136, 51, 0.25);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    color: var(--admin-text-secondary);
+}
+
+.scope-indicator-badge svg {
+    color: var(--gold-primary);
+}
+
+.scope-indicator-badge strong {
+    color: var(--gold-dark);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Financial KPI Metrics Grid (5 KPI Cards)
+   ========================================================================== */
+.financial-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.kpi-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: rgba(212, 136, 51, 0.35);
+}
+
+.kpi-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kpi-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--admin-text-muted);
+}
+
+.kpi-icon-pill {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-pill-orders {
+    background: #F4F1EA;
+    color: var(--admin-text-secondary);
+}
+
+.icon-pill-gross {
+    background: var(--status-indigo-bg);
+    color: var(--status-indigo);
+}
+
+.icon-pill-coupon {
+    background: var(--status-emerald-bg);
+    color: var(--status-emerald);
+}
+
+.icon-pill-discount {
+    background: var(--status-amber-bg);
+    color: var(--status-amber);
+}
+
+.icon-pill-net {
+    background: rgba(212, 136, 51, 0.15);
+    color: var(--gold-dark);
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+    color: var(--admin-text-primary);
+    line-height: 1.15;
+}
+
+.kpi-subtext {
+    font-size: 12px;
+    color: var(--admin-text-muted);
+}
+
+/* Prestige Hero Card for Net Atelier Revenue */
+.kpi-card-hero {
+    background: linear-gradient(135deg, #FFFDF8 0%, #FFF5E6 100%);
+    border: 1.5px solid rgba(212, 136, 51, 0.45);
+    box-shadow: 0 4px 18px rgba(212, 136, 51, 0.12);
+}
+
+.kpi-card-hero .kpi-label {
+    color: var(--gold-dark);
+}
+
+.kpi-card-hero .kpi-value {
+    color: var(--gold-dark);
+    font-size: 28px;
+}
+
+.kpi-card-hero .kpi-subtext {
+    color: #925C1B;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Transactions Dossier Table & Directory Card
+   ========================================================================== */
+.dossier-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.dossier-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.dossier-title-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dossier-card-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--admin-text-primary);
+}
+
+.badge-record-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: var(--admin-bg-muted);
+    color: var(--admin-text-secondary);
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13.5px;
+}
+
+.ledger-table th {
+    background: #FAF9F6;
+    color: var(--admin-text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.ledger-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+}
+
+.ledger-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.ledger-table tbody tr:hover td {
+    background-color: #FAF9F6;
+}
+
+/* Cell-Specific Layouts */
+.order-id-link {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold-dark);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.order-id-link:hover {
+    color: #8C5314;
+    text-decoration: underline;
+}
+
+.order-date-text {
+    font-size: 11.5px;
+    color: var(--admin-text-muted);
+    margin-top: 3px;
+}
+
+.client-name-text {
+    font-weight: 600;
+    color: var(--admin-text-primary);
+    font-size: 13.5px;
+}
+
+.client-contact-text {
+    font-size: 11.5px;
+    color: var(--admin-text-secondary);
+    margin-top: 2px;
+}
+
+.items-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--admin-bg-subtle);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--admin-text-secondary);
+}
+
+.payment-method-badge {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--admin-text-primary);
+    background: #F4F1EA;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.payment-status-text {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-completed {
+    color: var(--status-emerald);
+}
+
+.status-pending {
+    color: var(--status-amber);
+}
+
+.status-failed {
+    color: var(--status-rose);
+}
+
+/* Status Pill */
+.fulfillment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: capitalize;
+}
+
+.badge-placed {
+    background: var(--status-amber-bg);
+    color: var(--status-amber);
+    border: 1px solid var(--status-amber-border);
+}
+
+.badge-shipped {
+    background: var(--status-indigo-bg);
+    color: var(--status-indigo);
+    border: 1px solid var(--status-indigo-border);
+}
+
+.badge-delivered {
+    background: var(--status-emerald-bg);
+    color: var(--status-emerald);
+    border: 1px solid var(--status-emerald-border);
+}
+
+.badge-cancelled {
+    background: var(--status-rose-bg);
+    color: var(--status-rose);
+    border: 1px solid var(--status-rose-border);
+}
+
+.gross-subtotal-val {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--admin-text-secondary);
+}
+
+.coupon-discount-val {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--status-emerald);
+}
+
+.discount-none {
+    color: var(--admin-text-dim);
+    font-weight: 400;
+}
+
+.net-revenue-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--admin-text-primary);
+    background: rgba(212, 136, 51, 0.08);
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* ==========================================================================
+   Pagination & Empty State
+   ========================================================================== */
+.pagination-footer {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-subtle);
+    background: #FFFFFF;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: var(--admin-text-muted);
+}
+
+.pagination-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-page-nav {
+    padding: 7px 16px;
+    background: var(--admin-bg-subtle);
+    color: var(--admin-text-primary);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-page-nav:hover {
+    background: #EBE7DF;
+    border-color: #D8D3C8;
+}
+
+.empty-state-row td {
+    padding: 60px 24px;
+    text-align: center;
+}
+
+.empty-state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.empty-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: var(--admin-bg-muted);
+    color: var(--admin-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.empty-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    color: var(--admin-text-primary);
+}
+
+.empty-subtitle {
+    font-size: 13.5px;
+    color: var(--admin-text-muted);
+    max-width: 420px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1280px) {
+    .financial-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .financial-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .report-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .financial-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+
+    .content-padding {
+        padding: 24px 18px;
+    }
+
+    .page-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -267,6 +267,41 @@ body.order-details-body {
 }
 .status-badge.return-rejected .status-dot { background: #ef4444; }
 
+.status-badge.pending,
+.status-badge.payment-pending,
+.status-badge.failed {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-badge.pending .status-dot,
+.status-badge.payment-pending .status-dot,
+.status-badge.failed .status-dot { background: #f87171; }
+
+.btn-order-pay-now {
+    background: #F6BD64;
+    color: #0E0E12;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(246, 189, 100, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-order-pay-now:hover {
+    background: #e5ab53;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(246, 189, 100, 0.35);
+}
+
 /* ==========================================================================
    Order Stepper / Timeline Card
    ========================================================================== */
@@ -707,6 +742,37 @@ body.order-details-body {
     color: #ffffff;
     border-color: #ef4444;
 }
+
+.btn-return-piece {
+    background: transparent;
+    border: 1px solid rgba(246, 189, 100, 0.45);
+    color: #F6BD64;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-return-piece:hover {
+    background: #F6BD64;
+    color: #0E0E12;
+    border-color: #F6BD64;
+}
+
+.item-status-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.item-status-tag.requested { color: #f59e0b; background: rgba(245, 158, 11, 0.12); }
+.item-status-tag.returned { color: #10b981; background: rgba(16, 185, 129, 0.12); }
+.item-status-tag.rejected { color: #f87171; background: rgba(239, 68, 68, 0.12); }
 
 /* Right Column: Address, Payment & Assistance */
 .order-side-column {

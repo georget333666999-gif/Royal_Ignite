@@ -2,6 +2,8 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import User from "../../models/userModel.js";
 import OTP from "../../models/otpModel.js";
+import walletService from "./walletService.js";
+import offerService from "../admin/offerService.js";
 import { sendOtpEmail } from "../../utils/sendEmail.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
@@ -110,10 +112,19 @@ const verifyAndDeleteOtp = async (query, enteredOTP) => {
 // ========================================
 // Create User
 // ========================================
-const createUser = async ({ name, email, phone, password }) => {
+const createUser = async ({ name, email, phone, password, referralCode = "" }) => {
     try {
         const formattedEmail = email.trim().toLowerCase();
         const formattedPhone = phone.trim();
+
+        // Check if referral code was supplied and matches a valid referrer
+        let referrerUser = null;
+        if (referralCode && referralCode.trim()) {
+            referrerUser = await User.findOne({
+                referralCode: referralCode.trim().toUpperCase(),
+                isBlocked: false
+            });
+        }
 
         const existingUser = await User.findOne({
             $or: [{ email: formattedEmail }, { phone: formattedPhone }]
@@ -127,6 +138,9 @@ const createUser = async ({ name, email, phone, password }) => {
                 existingUser.email = formattedEmail;
                 existingUser.phone = formattedPhone;
                 existingUser.password = hashedPassword;
+                if (referrerUser && !existingUser.referredBy) {
+                    existingUser.referredBy = referrerUser._id;
+                }
                 await existingUser.save();
                 return existingUser;
             }
@@ -138,11 +152,22 @@ const createUser = async ({ name, email, phone, password }) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Generate a unique referral code for the new user
+        let myReferralCode;
+        let isCodeUnique = false;
+        while (!isCodeUnique) {
+            myReferralCode = "RYL" + crypto.randomBytes(3).toString("hex").toUpperCase();
+            const clash = await User.findOne({ referralCode: myReferralCode });
+            if (!clash) isCodeUnique = true;
+        }
+
         return await User.create({
             name,
             email: formattedEmail,
             phone: formattedPhone,
             password: hashedPassword,
+            referralCode: myReferralCode,
+            referredBy: referrerUser ? referrerUser._id : null,
             isAdmin: false,
             isBlocked: false,
             isVerified: false
@@ -173,10 +198,47 @@ const verifyOTP = async (userId, enteredOTP) => {
         const result = await verifyAndDeleteOtp({ userId, purpose: "signup" }, enteredOTP);
         if (!result.success) return result;
 
-        await User.findByIdAndUpdate(userId, {
-            $set: { isVerified: true }
-        });
+        const user = await User.findById(userId);
+        if (!user) {
+            return { success: false, message: "User account not found." };
+        }
 
+        user.isVerified = true;
+
+        // Process referral offer rewards upon successful verification (b.iii)
+        if (user.referredBy && !user.referralRewarded) {
+            try {
+                const referralOffer = await offerService.getActiveReferralOffer();
+                const referrerReward = referralOffer ? Number(referralOffer.referrerReward || 0) : 100;
+                const refereeReward = referralOffer ? Number(referralOffer.refereeReward || 0) : 50;
+
+                if (refereeReward > 0) {
+                    await walletService.creditWallet(user._id, {
+                        amount: refereeReward,
+                        description: "Welcome privilege bonus for joining via referral invitation",
+                        source: "referral_bonus"
+                    });
+                }
+
+                if (referrerReward > 0) {
+                    await walletService.creditWallet(user.referredBy, {
+                        amount: referrerReward,
+                        description: `Referral privilege reward for welcoming ${user.name}`,
+                        source: "referral_bonus"
+                    });
+
+                    await User.findByIdAndUpdate(user.referredBy, {
+                        $inc: { referralRewardsEarned: referrerReward }
+                    });
+                }
+
+                user.referralRewarded = true;
+            } catch (refErr) {
+                console.error("Referral reward distribution error:", refErr);
+            }
+        }
+
+        await user.save();
         return { success: true };
     } catch (error) {
         console.error("verifyOTP error:", error.message);

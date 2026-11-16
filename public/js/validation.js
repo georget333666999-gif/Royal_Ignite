@@ -141,7 +141,7 @@ const Validation = {
             if (!["Home", "Work", "Other"].includes(val)) return "Please select a valid address type.";
             return null;
         },
-        otp: (val, rules) => {
+        otp: (val, _rules) => {
             const clean = val.trim();
             if (!clean) return "Please enter the 6-digit verification code.";
             if (!/^\d+$/.test(clean)) return "OTP must contain only numbers.";
@@ -328,6 +328,17 @@ const Validation = {
         });
     }
 };
+
+// Prevent cached auth or BFCache-restored pages from appearing stale on Back/Forward navigation
+window.addEventListener("pageshow", (event) => {
+    const navType = window.performance?.getEntriesByType?.("navigation")?.[0]?.type;
+    const isBackForward = event.persisted || navType === "back_forward" || window.performance?.navigation?.type === 2;
+    const isAuthPath = /\/(login|signup|forgot-password|verify-otp|reset-password)(\/|$)/.test(window.location.pathname);
+
+    if (event.persisted || (isBackForward && isAuthPath)) {
+        window.location.reload();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     Validation.initPasswordToggles();

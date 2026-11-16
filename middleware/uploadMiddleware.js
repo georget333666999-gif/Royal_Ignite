@@ -58,7 +58,7 @@ export const handleProfileUpload = (req, res, next) => {
                         error: errorMessage,
                         success: null
                     });
-                } catch (error) {
+                } catch (_err) {
                     return res.status(HTTP_STATUS.BAD_REQUEST).render("editProfile", {
                         user: {},
                         error: errorMessage,

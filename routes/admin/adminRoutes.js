@@ -8,7 +8,9 @@ import userRoutes from "./userRoutes.js";
 import categoryRoutes from "./categoryRoutes.js";
 import productRoutes from "./productRoutes.js";
 import orderRoutes from "./orderRoutes.js";
-import inventoryRoutes from "./inventoryRoutes.js";
+import couponRoutes from "./couponRoutes.js";
+import offerRoutes from "./offerRoutes.js";
+import salesReportRoutes from "./salesReportRoutes.js";
 
 const router = express.Router();
 
@@ -34,8 +36,14 @@ router.use(adminMiddleware, productRoutes);
 // 6. Order Management Module (/admin/orders, etc.)
 router.use(adminMiddleware, orderRoutes);
 
-// 7. Inventory & Stock Management Module (/admin/inventory, etc.)
-router.use(adminMiddleware, inventoryRoutes);
+// 7. Coupon Management Module (/admin/coupons, etc.)
+router.use(adminMiddleware, couponRoutes);
+
+// 8. Offer Module (/admin/offers, etc.)
+router.use(adminMiddleware, offerRoutes);
+
+// 9. Sales Report Module (/admin/reports/sales, /admin/reports/sales/pdf, /admin/reports/sales/excel)
+router.use(adminMiddleware, salesReportRoutes);
 
 export {
     authRoutes,
@@ -44,7 +52,9 @@ export {
     categoryRoutes,
     productRoutes,
     orderRoutes,
-    inventoryRoutes
+    couponRoutes,
+    offerRoutes,
+    salesReportRoutes
 };
 
 export default router;

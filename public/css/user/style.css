@@ -292,3 +292,115 @@ a, button, input[type="button"], input[type="submit"], input[type="reset"], [rol
         justify-content: center;
     }
 }
+
+/* ========================================================
+   Live Privilege Offer Banners & Cards (Storefront Universal)
+   ======================================================== */
+.collection-offer-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 20px;
+    margin-top: 24px;
+    background: linear-gradient(135deg, rgba(229, 169, 60, 0.12), rgba(212, 136, 51, 0.06));
+    border: 1px solid rgba(229, 169, 60, 0.35);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.collection-offer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #E5A93C;
+    color: #0E0E12;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.collection-offer-text {
+    flex: 1;
+    color: #FFFFFF;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.collection-offer-text strong {
+    color: #E5A93C;
+    font-weight: 700;
+}
+
+.collection-offer-date {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.6);
+    flex-shrink: 0;
+}
+
+.collection-card-offer-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #E5A93C, #D48833);
+    color: #0E0E12;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.wishlist-card-badges .collection-card-offer-badge {
+    position: static;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.elec-card-stage .collection-card-offer-badge {
+    background: linear-gradient(135deg, #4FD1C5, #2BA79A);
+    color: #06090D;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 12px rgba(79, 209, 197, 0.4);
+}
+
+.gas-card-stage .collection-card-offer-badge {
+    background: linear-gradient(135deg, #38BDF8, #0284C7);
+    color: #08090C;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.cart-item-offer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    background: rgba(229, 169, 60, 0.12);
+    border: 1px solid rgba(229, 169, 60, 0.3);
+    color: #E5A93C;
+}
+
+.checkout-offer-applied-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #E5A93C;
+    margin-top: 4px;
+}

@@ -59,6 +59,7 @@ export const getOrderListPage = async (req, res, next) => {
             status: data.status,
             sort: data.sort,
             stats: data.stats,
+            allowedTransitions: orderService.ORDER_STATUS_TRANSITIONS,
             error: req.query.error || null,
             success: req.query.success || null
         });
@@ -104,6 +105,7 @@ export const getOrderDetail = async (req, res, next) => {
             pageTitle: `Order #${order.orderId} — ROYAL IGNITE Admin`,
             adminUser: req.session?.adminUser || { username: "Administrator", role: "Super Admin" },
             order,
+            allowedTransitions: orderService.ORDER_STATUS_TRANSITIONS,
             error: req.query.error || null,
             success: req.query.success || null
         });
@@ -124,8 +126,8 @@ export const getOrderDetail = async (req, res, next) => {
  */
 export const updateOrderStatus = async (req, res, next) => {
     const isJson = isJsonRequest(req);
+    const { orderId } = req.params;
     try {
-        const { orderId } = req.params;
         const { status, notes = "" } = req.body;
 
         if (!status) {
@@ -231,10 +233,46 @@ export const rejectReturn = async (req, res, next) => {
     }
 };
 
+export const approveReturnItem = async (req, res) => {
+    const isJson = isJsonRequest(req);
+    const { orderId, itemId } = req.params;
+    try {
+        const result = await orderService.approveReturnItem(orderId, itemId);
+        if (isJson) return res.status(HTTP_STATUS.OK).json(result);
+        return res.redirect(`/admin/orders/${orderId}?success=` + encodeURIComponent(result.message));
+    } catch (err) {
+        const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        if (isJson) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+        return res.redirect(`/admin/orders/${orderId}?error=` + encodeURIComponent(message));
+    }
+};
+
+export const rejectReturnItem = async (req, res) => {
+    const isJson = isJsonRequest(req);
+    const { orderId, itemId } = req.params;
+    try {
+        const reason = req.body.reason || req.body.notes;
+        if (!reason || !reason.trim()) {
+            const message = "Please provide a reason for rejecting the return request.";
+            if (isJson) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+            return res.redirect(`/admin/orders/${orderId}?error=` + encodeURIComponent(message));
+        }
+        const result = await orderService.rejectReturnItem(orderId, itemId, reason.trim());
+        if (isJson) return res.status(HTTP_STATUS.OK).json(result);
+        return res.redirect(`/admin/orders/${orderId}?success=` + encodeURIComponent(result.message));
+    } catch (err) {
+        const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        if (isJson) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message });
+        return res.redirect(`/admin/orders/${orderId}?error=` + encodeURIComponent(message));
+    }
+};
+
 export default {
     getOrderListPage,
     getOrderDetail,
     updateOrderStatus,
     approveReturn,
-    rejectReturn
+    rejectReturn,
+    approveReturnItem,
+    rejectReturnItem
 };

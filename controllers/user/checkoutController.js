@@ -1,7 +1,10 @@
 import User from "../../models/userModel.js";
 import Product from "../../models/productModel.js";
+import Cart from "../../models/cartModel.js";
 import checkoutService from "../../services/user/checkoutService.js";
 import addressService from "../../services/user/addressService.js";
+import couponService from "../../services/user/couponService.js";
+import { getRazorpayClient, getRazorpayKeyId, verifyRazorpaySignature } from "../../config/razorpay.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
 import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
 
@@ -79,11 +82,12 @@ export const getCheckoutPage = async (req, res, next) => {
         }
 
         let checkoutData;
+        const appliedCoupon = req.session?.appliedCoupon || null;
         if (isBuyNow) {
             const { productId, quantity } = req.session.buyNow;
-            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity);
+            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, appliedCoupon);
         } else {
-            checkoutData = await checkoutService.getCheckoutDetails(userId);
+            checkoutData = await checkoutService.getCheckoutDetails(userId, appliedCoupon);
         }
 
         if (checkoutData.isEmpty) {
@@ -99,6 +103,8 @@ export const getCheckoutPage = async (req, res, next) => {
                 checkoutData.blockingReasons?.[0] || RESPONSE_MESSAGES.CHECKOUT.ITEMS_BLOCKED;
             return res.redirect((isBuyNow ? "/shop" : "/cart") + "?error=" + encodeURIComponent(firstReason));
         }
+
+        const availableCoupons = await couponService.getAvailableCoupons(userId);
 
         res.set({
             "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -118,6 +124,10 @@ export const getCheckoutPage = async (req, res, next) => {
             addresses: checkoutData.addresses,
             selectedAddress: checkoutData.selectedAddress,
             financials: checkoutData.financials,
+            appliedCoupon,
+            availableCoupons,
+            walletBalance: checkoutData.walletBalance || 0,
+            razorpayKeyId: getRazorpayKeyId(),
             error: req.query.error || null,
             success: req.query.success || null
         });
@@ -154,6 +164,7 @@ export const postPlaceOrder = async (req, res, next) => {
 
         const { addressId, paymentMethod = "COD" } = req.body;
         const isBuyNow = Boolean(req.session?.buyNow);
+        const appliedCoupon = req.session?.appliedCoupon || null;
 
         let order;
         if (isBuyNow) {
@@ -163,16 +174,20 @@ export const postPlaceOrder = async (req, res, next) => {
                 addressId,
                 productId,
                 quantity,
-                paymentMethod
+                paymentMethod,
+                appliedCoupon
             });
-            req.session.buyNow = null; // Clean up Buy Now session
+            req.session.buyNow = null;
         } else {
             order = await checkoutService.placeOrder({
                 userId,
                 addressId,
-                paymentMethod
+                paymentMethod,
+                appliedCoupon
             });
         }
+
+        req.session.appliedCoupon = null;
 
         const successRedirect = `/checkout/success/${order.orderId}`;
 
@@ -295,7 +310,7 @@ export const postAddAddressCheckout = async (req, res, next) => {
         });
     } catch (err) {
         console.error("checkoutController postAddAddressCheckout error:", err);
-        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        return res.status(err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG
         });
@@ -354,9 +369,549 @@ export const postEditAddressCheckout = async (req, res, next) => {
         });
     } catch (err) {
         console.error("checkoutController postEditAddressCheckout error:", err);
-        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        return res.status(err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG
+        });
+    }
+};
+
+/**
+ * Apply coupon code at checkout (e.i, e.ii, e.iii)
+ */
+export const postApplyCoupon = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
+            });
+        }
+
+        const { code } = req.body;
+        if (!code || !code.trim()) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Please enter a coupon code."
+            });
+        }
+
+        // Prevent multiple coupons (e.ii)
+        if (req.session?.appliedCoupon) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: `Coupon "${req.session.appliedCoupon.code}" is already active. Please remove it first to apply another.`
+            });
+        }
+
+        const isBuyNow = Boolean(req.session?.buyNow);
+        let subtotal = 0;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            const checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity);
+            subtotal = checkoutData.financials.subtotal;
+        } else {
+            const checkoutData = await checkoutService.getCheckoutDetails(userId);
+            subtotal = checkoutData.financials.subtotal;
+        }
+
+        const validation = await couponService.validateCoupon(code, userId, subtotal);
+
+        req.session.appliedCoupon = {
+            code: validation.code,
+            discountAmount: validation.discountAmount,
+            discountType: validation.discountType,
+            discountValue: validation.discountValue
+        };
+
+        // Recalculate full financials
+        let updatedCheckout;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            updatedCheckout = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, req.session.appliedCoupon);
+        } else {
+            updatedCheckout = await checkoutService.getCheckoutDetails(userId, req.session.appliedCoupon);
+        }
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: `Privilege code "${validation.code}" applied! You save ₹${validation.discountAmount.toLocaleString("en-IN")}.`,
+            coupon: validation,
+            financials: updatedCheckout.financials
+        });
+    } catch (err) {
+        console.error("checkoutController postApplyCoupon error:", err);
+        return res.status(err.statusCode || HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            message: err.message || "Failed to apply coupon."
+        });
+    }
+};
+
+/**
+ * Remove applied coupon from checkout (e.i)
+ */
+export const postRemoveCoupon = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
+            });
+        }
+
+        req.session.appliedCoupon = null;
+
+        const isBuyNow = Boolean(req.session?.buyNow);
+        let updatedCheckout;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            updatedCheckout = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, null);
+        } else {
+            updatedCheckout = await checkoutService.getCheckoutDetails(userId, null);
+        }
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: "Coupon removed.",
+            financials: updatedCheckout.financials
+        });
+    } catch (err) {
+        console.error("checkoutController postRemoveCoupon error:", err);
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Failed to remove coupon."
+        });
+    }
+};
+
+/**
+ * Create a secure Razorpay order token for online checkout (a)
+ */
+export const postCreateRazorpayOrder = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user || user.isBlocked) {
+            return handleBlockedUser(req, res);
+        }
+
+        const { addressId } = req.body;
+        if (!addressId) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Please select a delivery destination before proceeding to payment."
+            });
+        }
+
+        const address = await addressService.getAddressById(addressId, userId);
+        if (!address) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({
+                success: false,
+                message: RESPONSE_MESSAGES.ADDRESS.NOT_FOUND
+            });
+        }
+
+        const isBuyNow = Boolean(req.session?.buyNow);
+        const appliedCoupon = req.session?.appliedCoupon || null;
+
+        let checkoutData;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, appliedCoupon);
+        } else {
+            checkoutData = await checkoutService.getCheckoutDetails(userId, appliedCoupon);
+        }
+
+        if (checkoutData.isEmpty || checkoutData.hasBlockingIssues) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: checkoutData.blockingReasons?.[0] || "Acquisition cannot proceed with current items."
+            });
+        }
+
+        const totalPayable = checkoutData.financials.totalAmount;
+        const amountInPaise = Math.round(totalPayable * 100);
+
+        if (amountInPaise <= 0) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Total amount must be greater than zero for online payment."
+            });
+        }
+
+        const rzpClient = getRazorpayClient();
+        const rzpReceipt = `rcpt_${Date.now()}_${userId.toString().slice(-4)}`;
+        const rzpOrder = await rzpClient.orders.create({
+            amount: amountInPaise,
+            currency: "INR",
+            receipt: rzpReceipt,
+            notes: {
+                userId: userId.toString(),
+                userEmail: user.email,
+                isBuyNow: isBuyNow ? "true" : "false"
+            }
+        });
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            razorpayOrderId: rzpOrder.id,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            key: getRazorpayKeyId(),
+            user: {
+                name: user.name || address.fullName,
+                email: user.email,
+                phone: address.phone
+            }
+        });
+    } catch (err) {
+        console.error("checkoutController postCreateRazorpayOrder error:", err);
+        const desc = err?.error?.description || err?.message || "Failed to initialize payment gateway.";
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: desc
+        });
+    }
+};
+
+/**
+ * Verify Razorpay payment signature and fulfill order (a, b)
+ */
+export const postVerifyPayment = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
+            });
+        }
+
+        const {
+            addressId,
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature
+        } = req.body;
+
+        const isSignatureValid = verifyRazorpaySignature(
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature
+        );
+
+        if (!isSignatureValid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Payment signature verification failed. Your transaction could not be verified."
+            });
+        }
+
+        const isBuyNow = Boolean(req.session?.buyNow);
+        const appliedCoupon = req.session?.appliedCoupon || null;
+
+        let order;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            order = await checkoutService.placeBuyNowOrder({
+                userId,
+                addressId,
+                productId,
+                quantity,
+                paymentMethod: "Razorpay",
+                paymentStatus: "Completed",
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpaySignature,
+                appliedCoupon
+            });
+            req.session.buyNow = null;
+        } else {
+            order = await checkoutService.placeOrder({
+                userId,
+                addressId,
+                paymentMethod: "Razorpay",
+                paymentStatus: "Completed",
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpaySignature,
+                appliedCoupon
+            });
+        }
+
+        req.session.appliedCoupon = null;
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            orderId: order.orderId,
+            redirect: `/checkout/success/${order.orderId}`
+        });
+    } catch (err) {
+        console.error("checkoutController postVerifyPayment error:", err);
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: err.message || "An error occurred while confirming your payment."
+        });
+    }
+};
+
+/**
+ * Record a failed/dismissed online transaction for retry (c)
+ */
+export const postPaymentFailed = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false });
+        }
+
+        const { addressId, razorpayOrderId, errorMessage } = req.body;
+        const isBuyNow = Boolean(req.session?.buyNow);
+        const appliedCoupon = req.session?.appliedCoupon || null;
+
+        let order;
+        if (isBuyNow) {
+            const { productId, quantity } = req.session.buyNow;
+            order = await checkoutService.placeBuyNowOrder({
+                userId,
+                addressId,
+                productId,
+                quantity,
+                paymentMethod: "Razorpay",
+                paymentStatus: "Failed",
+                razorpayOrderId,
+                appliedCoupon
+            });
+            req.session.buyNow = null;
+        } else {
+            order = await checkoutService.placeOrder({
+                userId,
+                addressId,
+                paymentMethod: "Razorpay",
+                paymentStatus: "Failed",
+                razorpayOrderId,
+                appliedCoupon
+            });
+        }
+
+        req.session.appliedCoupon = null;
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            orderId: order.orderId,
+            redirect: `/checkout/failure/${order.orderId}?reason=` + encodeURIComponent(errorMessage || "Payment attempt declined or interrupted")
+        });
+    } catch (err) {
+        console.error("checkoutController postPaymentFailed error:", err);
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: err.message || "Failed to record payment state."
+        });
+    }
+};
+
+/**
+ * Render Payment Failure Page with Retry and Redirect options (c)
+ */
+export const getPaymentFailurePage = async (req, res, next) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.redirect("/user/login");
+        }
+
+        const user = await User.findById(userId);
+        if (!user || user.isBlocked) {
+            return handleBlockedUser(req, res);
+        }
+
+        const { orderId } = req.params;
+        const order = await checkoutService.getOrderByIdentifier(orderId, userId);
+
+        if (!order) {
+            return res.redirect("/orders?error=" + encodeURIComponent(RESPONSE_MESSAGES.ORDER.NOT_FOUND));
+        }
+
+        res.set({
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Surrogate-Control": "no-store"
+        });
+
+        return res.status(HTTP_STATUS.OK).render("paymentFailure", {
+            pageTitle: "Payment Pending / Failed — ROYAL IGNITE",
+            isUserLoggedIn: true,
+            userId,
+            user,
+            order,
+            failureReason: req.query.reason || "The transaction could not be processed by your bank or the payment window was closed.",
+            razorpayKeyId: getRazorpayKeyId()
+        });
+    } catch (err) {
+        console.error("checkoutController getPaymentFailurePage error:", err);
+        return next(err);
+    }
+};
+
+/**
+ * Retry Payment: Generate new Razorpay order for existing failed order (c)
+ */
+export const postRetryPayment = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
+            });
+        }
+
+        const { orderId } = req.params;
+        const order = await checkoutService.getOrderByIdentifier(orderId, userId);
+
+        if (!order) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({
+                success: false,
+                message: RESPONSE_MESSAGES.ORDER.NOT_FOUND
+            });
+        }
+
+        if (order.paymentStatus === "Completed") {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "This acquisition is already paid and completed."
+            });
+        }
+
+        const amountInPaise = Math.round(order.pricing.totalAmount * 100);
+        const rzpClient = getRazorpayClient();
+        const rzpOrder = await rzpClient.orders.create({
+            amount: amountInPaise,
+            currency: "INR",
+            receipt: `retry_${Date.now()}_${order.orderId.slice(-6)}`,
+            notes: {
+                orderId: order.orderId,
+                userId: userId.toString()
+            }
+        });
+
+        order.razorpayOrderId = rzpOrder.id;
+        await order.save();
+
+        const user = await User.findById(userId);
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            razorpayOrderId: rzpOrder.id,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            key: getRazorpayKeyId(),
+            user: {
+                name: user?.name || order.shippingAddress.fullName,
+                email: user?.email,
+                phone: order.shippingAddress.phone
+            }
+        });
+    } catch (err) {
+        console.error("checkoutController postRetryPayment error:", err);
+        const desc = err?.error?.description || err?.message || "Failed to initialize retry payment.";
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: desc
+        });
+    }
+};
+
+/**
+ * Verify Razorpay payment on retry and complete order (c)
+ */
+export const postVerifyRetryPayment = async (req, res) => {
+    try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                success: false,
+                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
+            });
+        }
+
+        const { orderId } = req.params;
+        const {
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature
+        } = req.body;
+
+        const isSignatureValid = verifyRazorpaySignature(
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature
+        );
+
+        if (!isSignatureValid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Payment verification failed."
+            });
+        }
+
+        const order = await checkoutService.getOrderByIdentifier(orderId, userId);
+        if (!order) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({
+                success: false,
+                message: RESPONSE_MESSAGES.ORDER.NOT_FOUND
+            });
+        }
+
+        order.paymentStatus = "Completed";
+        order.paymentMethod = "Razorpay";
+        order.razorpayOrderId = razorpayOrderId;
+        order.razorpayPaymentId = razorpayPaymentId;
+        order.razorpaySignature = razorpaySignature;
+        order.orderStatus = "Placed";
+        if (Array.isArray(order.items)) {
+            order.items.forEach((item) => {
+                if (item.status === "Pending") {
+                    item.status = "Placed";
+                }
+            });
+        }
+        await order.save();
+
+        // Since payment retry completed and order is placed, remove items from user's cart if present
+        if (Array.isArray(order.items) && order.items.length > 0) {
+            const productIds = order.items.map((i) => i.product);
+            await Cart.updateOne(
+                { user: userId },
+                { $pull: { items: { product: { $in: productIds } } } }
+            );
+        }
+
+        // Record coupon usage if any
+        if (order.coupon?.code) {
+            await couponService.recordCouponUsage(order.coupon.code, userId, order._id);
+        }
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            redirect: `/checkout/success/${order.orderId}`
+        });
+    } catch (err) {
+        console.error("checkoutController postVerifyRetryPayment error:", err);
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: err.message || "Failed to confirm retry payment."
         });
     }
 };
@@ -367,5 +922,13 @@ export default {
     postPlaceOrder,
     getOrderSuccessPage,
     postAddAddressCheckout,
-    postEditAddressCheckout
+    postEditAddressCheckout,
+    postApplyCoupon,
+    postRemoveCoupon,
+    postCreateRazorpayOrder,
+    postVerifyPayment,
+    postPaymentFailed,
+    getPaymentFailurePage,
+    postRetryPayment,
+    postVerifyRetryPayment
 };

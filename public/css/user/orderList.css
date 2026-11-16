@@ -280,6 +280,27 @@ body.orders-body {
     border-color: rgba(239, 68, 68, 0.3);
 }
 
+.status-badge.pending,
+.status-badge.payment-pending,
+.status-badge.failed {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.ribbon-pending-payment {
+    background: rgba(239, 68, 68, 0.08);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ribbon-icon-pending {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
 /* Ribbons for Return Statuses on Order Cards (Quiet Luxury Aesthetic) */
 .order-notice-ribbon {
     padding: 14px 24px;
@@ -516,6 +537,30 @@ body.orders-body {
 .btn-order-view:hover {
     background: var(--ol-gold-hover);
     box-shadow: 0 4px 14px var(--ol-gold-glow);
+}
+
+.btn-order-pay-now {
+    padding: 8px 16px;
+    background: #F6BD64;
+    color: #0E0E12;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(246, 189, 100, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-order-pay-now:hover {
+    background: #e5ab53;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(246, 189, 100, 0.35);
 }
 
 .btn-order-invoice {

@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import Cart from "../../models/cartModel.js";
 import Wishlist from "../../models/wishlistModel.js";
+import Offer from "../../models/offerModel.js";
 import productService from "../../services/user/productService.js";
 import wishlistService from "../../services/user/wishlistService.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
@@ -242,9 +243,28 @@ export const getGasLightersPage = async (req, res, next) => {
             isListed: true
         };
 
-        let gasProducts = await Product.find(productsQuery)
-            .populate("category", "name")
-            .lean();
+        const now = new Date();
+        const [gasProductsRaw, activeCategoryOffer] = await Promise.all([
+            Product.find(productsQuery)
+                .populate("category", "name")
+                .populate("appliedOffer")
+                .lean(),
+            Offer.findOne({
+                offerType: "category",
+                category: gasCategory._id,
+                isActive: true,
+                isDeleted: false,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).lean()
+        ]);
+
+        let gasProducts = gasProductsRaw.map((p) => {
+            if (!p.appliedOffer && activeCategoryOffer) {
+                p.appliedOffer = activeCategoryOffer;
+            }
+            return p;
+        });
 
         // Specific editorial specs & metadata for the 6 models
         const editorialMeta = {
@@ -341,7 +361,8 @@ export const getGasLightersPage = async (req, res, next) => {
             category: gasCategory,
             products: gasProducts,
             activeSort: sort,
-            wishlistProductIds
+            wishlistProductIds,
+            activeCategoryOffer
         });
     } catch (err) {
         console.error("User productController getGasLightersPage error:", err);
@@ -388,9 +409,28 @@ export const getElectricLightersPage = async (req, res, next) => {
             isListed: true
         };
 
-        let electricProducts = await Product.find(productsQuery)
-            .populate("category", "name")
-            .lean();
+        const now = new Date();
+        const [electricProductsRaw, activeCategoryOffer] = await Promise.all([
+            Product.find(productsQuery)
+                .populate("category", "name")
+                .populate("appliedOffer")
+                .lean(),
+            Offer.findOne({
+                offerType: "category",
+                category: electricCategory._id,
+                isActive: true,
+                isDeleted: false,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).lean()
+        ]);
+
+        let electricProducts = electricProductsRaw.map((p) => {
+            if (!p.appliedOffer && activeCategoryOffer) {
+                p.appliedOffer = activeCategoryOffer;
+            }
+            return p;
+        });
 
         // Specific editorial specs & metadata for the 6 electric models
         const editorialMeta = {
@@ -487,7 +527,8 @@ export const getElectricLightersPage = async (req, res, next) => {
             category: electricCategory,
             products: electricProducts,
             activeSort: sort,
-            wishlistProductIds
+            wishlistProductIds,
+            activeCategoryOffer
         });
     } catch (err) {
         console.error("User productController getElectricLightersPage error:", err);
@@ -533,9 +574,28 @@ export const getFuelLightersPage = async (req, res, next) => {
             isListed: true
         };
 
-        let fuelProducts = await Product.find(productsQuery)
-            .populate("category", "name")
-            .lean();
+        const now = new Date();
+        const [fuelProductsRaw, activeCategoryOffer] = await Promise.all([
+            Product.find(productsQuery)
+                .populate("category", "name")
+                .populate("appliedOffer")
+                .lean(),
+            Offer.findOne({
+                offerType: "category",
+                category: fuelCategory._id,
+                isActive: true,
+                isDeleted: false,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).lean()
+        ]);
+
+        let fuelProducts = fuelProductsRaw.map((p) => {
+            if (!p.appliedOffer && activeCategoryOffer) {
+                p.appliedOffer = activeCategoryOffer;
+            }
+            return p;
+        });
 
         // Specific editorial specs & metadata for the 6 fuel models
         const editorialMeta = {
@@ -650,7 +710,8 @@ export const getFuelLightersPage = async (req, res, next) => {
             category: fuelCategory,
             products: fuelProducts,
             activeSort: sort,
-            wishlistProductIds
+            wishlistProductIds,
+            activeCategoryOffer
         });
     } catch (err) {
         console.error("User productController getFuelLightersPage error:", err);
@@ -697,9 +758,28 @@ export const getRefillsAndCarePage = async (req, res, next) => {
             isListed: true
         };
 
-        let careProducts = await Product.find(productsQuery)
-            .populate("category", "name")
-            .lean();
+        const now = new Date();
+        const [careProductsRaw, activeCategoryOffer] = await Promise.all([
+            Product.find(productsQuery)
+                .populate("category", "name")
+                .populate("appliedOffer")
+                .lean(),
+            Offer.findOne({
+                offerType: "category",
+                category: careCategory._id,
+                isActive: true,
+                isDeleted: false,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).lean()
+        ]);
+
+        let careProducts = careProductsRaw.map((p) => {
+            if (!p.appliedOffer && activeCategoryOffer) {
+                p.appliedOffer = activeCategoryOffer;
+            }
+            return p;
+        });
 
         // Specific editorial specs & metadata for Refills & Care
         const editorialMeta = {
@@ -793,7 +873,8 @@ export const getRefillsAndCarePage = async (req, res, next) => {
             user: currentUser,
             category: careCategory,
             products: careProducts,
-            activeSort: sort
+            activeSort: sort,
+            activeCategoryOffer
         });
     } catch (err) {
         console.error("User productController getRefillsAndCarePage error:", err);

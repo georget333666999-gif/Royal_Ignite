@@ -1,7 +1,51 @@
 import Order from "../../models/orderModel.js";
 import User from "../../models/userModel.js";
 import Product from "../../models/productModel.js";
+import couponService from "../user/couponService.js";
+import walletService from "../user/walletService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+
+const syncOrderReturnSummary = (order) => {
+    const activeItems = order.items.filter((i) => i.status !== "Cancelled");
+    if (activeItems.some((i) => i.status === "Return Requested")) {
+        order.orderStatus = "Return Requested";
+        return;
+    }
+    if (activeItems.length > 0 && activeItems.every((i) => i.status === "Returned")) {
+        order.orderStatus = "Returned";
+        order.returnedAt = order.returnedAt || new Date();
+        if (order.paymentStatus === "Completed") {
+            order.paymentStatus = "Refunded";
+        }
+        return;
+    }
+    if (activeItems.length > 0 && activeItems.every((i) => i.status === "Return Rejected")) {
+        order.orderStatus = "Return Rejected";
+        order.returnRejectedAt = order.returnRejectedAt || new Date();
+        return;
+    }
+    if (activeItems.some((i) => i.status === "Delivered")) {
+        order.orderStatus = "Delivered";
+        return;
+    }
+    if (activeItems.some((i) => i.status === "Return Rejected")) {
+        order.orderStatus = "Return Rejected";
+        order.returnRejectedAt = order.returnRejectedAt || new Date();
+    }
+};
+
+export const ORDER_STATUS_TRANSITIONS = Object.freeze({
+    Placed: ["Processing", "Cancelled"],
+    Pending: ["Processing", "Cancelled"],
+    Processing: ["Shipped", "Cancelled"],
+    Shipped: ["Out for Delivery", "Cancelled"],
+    "Out for Delivery": ["Delivered", "Cancelled"],
+    "Return Requested": ["Returned", "Return Rejected"],
+    Delivered: [],
+    Cancelled: [],
+    Returned: [],
+    "Return Rejected": []
+});
 
 /**
  * Fetch filtered, sorted, and paginated orders for administration (a.i, a.iv, a.v)
@@ -238,21 +282,7 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             };
         }
 
-        // State Machine: Allowed forward and return transitions
-        const ALLOWED_TRANSITIONS = {
-            Placed: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-            Pending: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-            Processing: ["Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-            Shipped: ["Out for Delivery", "Delivered", "Cancelled"],
-            "Out for Delivery": ["Delivered", "Cancelled"],
-            "Return Requested": ["Returned", "Return Rejected"],
-            Delivered: [],
-            Cancelled: [],
-            Returned: [],
-            "Return Rejected": []
-        };
-
-        const validNextStatuses = ALLOWED_TRANSITIONS[oldStatus] || [];
+        const validNextStatuses = ORDER_STATUS_TRANSITIONS[oldStatus] || [];
         if (!validNextStatuses.includes(newStatus)) {
             let msg = `Cannot change order status from "${oldStatus}" to "${newStatus}".`;
             if (oldStatus === "Delivered") {
@@ -261,6 +291,8 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
                 msg = `Orders in "${oldStatus}" status cannot be modified.`;
             } else if (["Returned", "Return Rejected", "Return Requested"].includes(newStatus)) {
                 msg = "Return options can only be processed after a client requests a return.";
+            } else if (validNextStatuses.length > 0) {
+                msg = `Cannot skip status from "${oldStatus}" to "${newStatus}". Next allowed: ${validNextStatuses.join(", ")}.`;
             }
             const err = new Error(msg);
             err.code = "INVALID_STATUS_TRANSITION";
@@ -269,6 +301,18 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
 
         // 1. Stock Reconciliation on cancellation
         if (newStatus === "Cancelled" && oldStatus !== "Cancelled" && oldStatus !== "Returned") {
+            const refundAmount = order.pricing?.totalAmount || 0;
+            const targetUserId = order.user?._id || order.user;
+            if (order.paymentStatus === "Completed" && refundAmount > 0 && targetUserId) {
+                await walletService.creditWallet(targetUserId, {
+                    amount: refundAmount,
+                    description: `Direct refund for cancellation of order #${order.orderId}`,
+                    source: "order_cancellation",
+                    orderId: order.orderId
+                });
+                order.paymentStatus = "Refunded";
+            }
+
             for (const item of order.items) {
                 if (item.status !== "Cancelled") {
                     await Product.updateOne(
@@ -283,35 +327,56 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             order.cancellationReason = adminNotes || "Cancelled by atelier administrator";
             order.cancelledAt = new Date();
             order.pricing.totalAmount = 0;
-        }
-
-        // 2. Delivered timestamp
-        if (newStatus === "Delivered") {
-            order.deliveredAt = new Date();
-            order.paymentStatus = "Completed";
-            for (const item of order.items) {
-                if (item.status !== "Cancelled") {
-                    item.status = "Delivered";
-                }
+            if (order.coupon && order.coupon.code) {
+                await couponService.revertCouponUsage(order.coupon.code, order.user);
             }
         }
 
-        // 4. Return Approved ("Returned") - Stock reconciliation & refund handling
-        if (newStatus === "Returned" && oldStatus !== "Returned") {
+        // 2. Sync active item statuses across fulfillment stages & handle delivery completion
+        if (["Processing", "Shipped", "Out for Delivery", "Delivered"].includes(newStatus)) {
             for (const item of order.items) {
-                if (item.status !== "Cancelled" && item.status !== "Returned") {
+                if (item.status !== "Cancelled") {
+                    item.status = newStatus;
+                }
+            }
+        }
+        if (newStatus === "Delivered") {
+            order.deliveredAt = new Date();
+            order.paymentStatus = "Completed";
+        }
+
+        // 4. Return Approved ("Returned") - Stock reconciliation & refund handling
+        let statusAlreadySynced = false;
+        if (newStatus === "Returned" && oldStatus !== "Returned") {
+            const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
+            let totalRefund = 0;
+            for (const item of order.items) {
+                const shouldReturnItem = hasExplicitItemRequests
+                    ? item.status === "Return Requested"
+                    : (item.status !== "Cancelled" && item.status !== "Returned");
+                if (shouldReturnItem) {
                     await Product.updateOne(
                         { _id: item.product },
                         { $inc: { stock: item.quantity } }
                     );
                     item.status = "Returned";
                     item.returnedAt = new Date();
+                    totalRefund += item.lineTotal;
+                    order.pricing.totalAmount = Math.max(0, (order.pricing.totalAmount || 0) - item.lineTotal);
                 }
             }
-            order.returnedAt = new Date();
-            if (order.paymentStatus === "Completed") {
+            if (totalRefund > 0 && order.user) {
+                const targetUserId = order.user._id || order.user;
+                await walletService.creditWallet(targetUserId, {
+                    amount: totalRefund,
+                    description: `Refund for approved return of order #${order.orderId}`,
+                    source: "order_return",
+                    orderId: order.orderId
+                });
                 order.paymentStatus = "Refunded";
             }
+            syncOrderReturnSummary(order);
+            statusAlreadySynced = true;
         }
 
         // 5. Return Rejected - Record admin rejection reason
@@ -324,17 +389,25 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             const cleanReason = adminNotes.trim();
             order.returnRejectReason = cleanReason;
             order.returnRejectedAt = new Date();
+            const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
             for (const item of order.items) {
-                if (item.status === "Return Requested" || item.status === "Delivered") {
+                const shouldRejectItem = hasExplicitItemRequests
+                    ? item.status === "Return Requested"
+                    : (item.status === "Return Requested" || item.status === "Delivered");
+                if (shouldRejectItem) {
                     item.status = "Return Rejected";
                     item.returnRejectReason = cleanReason;
                     item.returnRejectedAt = new Date();
                 }
             }
+            syncOrderReturnSummary(order);
+            statusAlreadySynced = true;
         }
 
         // 6. Update overall status
-        order.orderStatus = newStatus;
+        if (!statusAlreadySynced) {
+            order.orderStatus = newStatus;
+        }
         await order.save();
 
         let message = RESPONSE_MESSAGES.ORDER.STATUS_UPDATED;
@@ -380,10 +453,99 @@ export const rejectReturn = async (orderIdentifier, rejectionReason) => {
     return updateAdminOrderStatus(orderIdentifier, "Return Rejected", rejectionReason.trim());
 };
 
+/**
+ * Approve a return request for a single item within an order
+ */
+export const approveReturnItem = async (orderIdentifier, itemId) => {
+    const order = await getAdminOrderDetails(orderIdentifier);
+    if (!order) {
+        const err = new Error(RESPONSE_MESSAGES.ORDER.NOT_FOUND);
+        err.code = "NOT_FOUND";
+        throw err;
+    }
+
+    const item = order.items.id(itemId) || order.items.find((i) => String(i._id) === String(itemId));
+    if (!item || item.status !== "Return Requested") {
+        const err = new Error("This item does not have a pending return request.");
+        err.code = "INVALID_STATUS_TRANSITION";
+        throw err;
+    }
+
+    await Product.updateOne(
+        { _id: item.product },
+        { $inc: { stock: item.quantity } }
+    );
+    item.status = "Returned";
+    item.returnedAt = new Date();
+    order.pricing.totalAmount = Math.max(0, (order.pricing.totalAmount || 0) - item.lineTotal);
+
+    if (item.lineTotal > 0 && order.user) {
+        const targetUserId = order.user._id || order.user;
+        await walletService.creditWallet(targetUserId, {
+            amount: item.lineTotal,
+            description: `Refund for approved return of "${item.name}" from order #${order.orderId}`,
+            source: "item_return",
+            orderId: order.orderId
+        });
+    }
+
+    syncOrderReturnSummary(order);
+    await order.save();
+
+    return {
+        success: true,
+        order,
+        message: "Item return approved and stock restored."
+    };
+};
+
+/**
+ * Reject a return request for a single item within an order
+ */
+export const rejectReturnItem = async (orderIdentifier, itemId, rejectionReason) => {
+    if (!rejectionReason || !rejectionReason.trim()) {
+        const err = new Error("A reason is mandatory to reject a return request.");
+        err.code = "REJECTION_REASON_REQUIRED";
+        throw err;
+    }
+
+    const order = await getAdminOrderDetails(orderIdentifier);
+    if (!order) {
+        const err = new Error(RESPONSE_MESSAGES.ORDER.NOT_FOUND);
+        err.code = "NOT_FOUND";
+        throw err;
+    }
+
+    const item = order.items.id(itemId) || order.items.find((i) => String(i._id) === String(itemId));
+    if (!item || item.status !== "Return Requested") {
+        const err = new Error("This item does not have a pending return request.");
+        err.code = "INVALID_STATUS_TRANSITION";
+        throw err;
+    }
+
+    const cleanReason = rejectionReason.trim();
+    item.status = "Return Rejected";
+    item.returnRejectReason = cleanReason;
+    item.returnRejectedAt = new Date();
+    order.returnRejectReason = cleanReason;
+    order.returnRejectedAt = new Date();
+    syncOrderReturnSummary(order);
+    await order.save();
+
+    return {
+        success: true,
+        order,
+        message: "Item return request rejected."
+    };
+};
+
 export default {
+    ORDER_STATUS_TRANSITIONS,
     getAdminOrders,
     getAdminOrderDetails,
     updateAdminOrderStatus,
     approveReturn,
-    rejectReturn
+    rejectReturn,
+    approveReturnItem,
+    rejectReturnItem
 };

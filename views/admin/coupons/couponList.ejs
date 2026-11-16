@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Privilege Coupons — ROYAL IGNITE Admin' %></title>
+    
+    <!-- Design System Stylesheets -->
+    <link rel="stylesheet" href="/css/admin/couponList.css" />
+
+    <!-- SweetAlert2 for Luxury Confirmations -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(212, 136, 51, 0.28) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
+            color: #f0ece6 !important;
+            font-family: 'Instrument Sans', sans-serif !important;
+        }
+
+        .royal-swal-title {
+            font-family: 'DM Serif Display', Georgia, serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .royal-swal-confirm-btn {
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.3px !important;
+            padding: 10px 22px !important;
+            background: #D48833 !important;
+            color: #ffffff !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .royal-swal-confirm-btn:hover {
+            background: #B87326 !important;
+        }
+
+        .royal-swal-cancel-btn {
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.3px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Left Universal Sidebar Navigation -->
+    <%- include('../partials/sidebar', { activePage: 'coupons' }) %>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Top Navbar Header -->
+        <header class="top-navbar">
+            <div class="navbar-left">
+                <div class="breadcrumb-trail">
+                    <span class="crumb-dim">Portal</span>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-active">Privilege Coupons</span>
+                </div>
+            </div>
+
+            <div class="navbar-right">
+                <a href="/" target="_blank" class="nav-action-btn" title="Open Storefront">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Store</span>
+                </a>
+
+                <div class="user-pill-badge">
+                    <div class="avatar-circle-sm">A</div>
+                    <span class="user-pill-name">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Canvas -->
+        <main class="content-padding">
+
+            <!-- Flash Notices -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;">
+                    <%= error %>
+                </div>
+            <% } %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div style="background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <!-- Page Title Header Row -->
+            <section class="page-title-row">
+                <div>
+                    <h1 class="page-title">Privilege Coupons</h1>
+                    <p class="page-desc">Configure bespoke promotional vouchers, manage redemption thresholds, and monitor coupon trajectory.</p>
+                </div>
+
+                <div class="title-actions">
+                    <button type="button" class="btn-create-coupon" onclick="openCreateModal()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Create Privilege Code</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4 Clean KPI Metric Cards -->
+            <%
+                const totalStats = typeof stats !== 'undefined' && stats ? stats : { totalCount: 0, activeCount: 0, expiredCount: 0, inactiveCount: 0 };
+            %>
+            <section class="metrics-grid">
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Registered</span>
+                        <div class="icon-badge bg-total" title="Lifetime promotional vouchers">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= totalStats.totalCount || 0 %></div>
+                    <div class="metric-subtext">Lifetime promotional vouchers</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Active &amp; Redeemable</span>
+                        <div class="icon-badge bg-active" title="Currently usable at checkout">
+                            <div class="dot-green"></div>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= totalStats.activeCount || 0 %></div>
+                    <div class="metric-subtext">Currently usable at checkout</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Expired</span>
+                        <div class="icon-badge bg-expired" title="Passed redemption deadline">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= totalStats.expiredCount || 0 %></div>
+                    <div class="metric-subtext">Passed redemption deadline</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Deactivated</span>
+                        <div class="icon-badge bg-deactivated" title="Paused by administrator">
+                            <div class="dot-amber"></div>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= totalStats.inactiveCount || 0 %></div>
+                    <div class="metric-subtext">Paused by administrator</div>
+                </div>
+
+            </section>
+
+            <!-- Coupons Directory Card -->
+            <section class="directory-card">
+                
+                <!-- Card Header with Filters -->
+                <div class="directory-header">
+                    <div class="directory-title-area">
+                        <h2 class="directory-title">Coupons Catalog</h2>
+                        <span class="badge-total-count"><%= typeof totalCoupons !== 'undefined' ? totalCoupons : (coupons ? coupons.length : 0) %> vouchers</span>
+                    </div>
+
+                    <form action="/admin/coupons" method="GET" class="filter-bar" id="couponFilterForm">
+                        <div class="search-input-wrap">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                id="searchInput"
+                                name="search"
+                                placeholder="Search by code or description..."
+                                value="<%= typeof search !== 'undefined' ? search : '' %>"
+                                autocomplete="off"
+                            />
+                            <% if (typeof search !== 'undefined' && search) { %>
+                                <a href="/admin/coupons?status=<%= typeof status !== 'undefined' ? status : 'all' %>" class="search-clear-btn" title="Clear search">&times;</a>
+                            <% } %>
+                        </div>
+
+                        <select name="status" class="filter-select" onchange="this.form.submit()">
+                            <option value="all" <%= (!status || status === 'all') ? 'selected' : '' %>>All Statuses</option>
+                            <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active &amp; Valid</option>
+                            <option value="expired" <%= status === 'expired' ? 'selected' : '' %>>Expired</option>
+                            <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Deactivated</option>
+                        </select>
+
+                        <% if ((typeof search !== 'undefined' && search) || (typeof status !== 'undefined' && status && status !== 'all')) { %>
+                            <a href="/admin/coupons" class="btn-clear-filter">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                <span>Reset</span>
+                            </a>
+                        <% } %>
+                    </form>
+                </div>
+
+                <!-- Directory Table -->
+                <div class="table-responsive">
+                    <table class="directory-table">
+                        <thead>
+                            <tr>
+                                <th>Privilege Code</th>
+                                <th>Description</th>
+                                <th>Benefit Rate</th>
+                                <th>Min. Purchase</th>
+                                <th>Redemptions</th>
+                                <th>Expiry Threshold</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (Array.isArray(coupons) && coupons.length > 0) { %>
+                                <% 
+                                    const now = new Date();
+                                    coupons.forEach(function(cpn) { 
+                                        const expDate = new Date(cpn.expiryDate);
+                                        const isExpired = expDate < now;
+                                        const expDateFormatted = expDate.toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        });
+                                        const msDiff = expDate - now;
+                                        const daysRemaining = Math.max(0, Math.ceil(msDiff / (1000 * 60 * 60 * 24)));
+                                %>
+                                    <tr>
+                                        <!-- Privilege Code Badge -->
+                                        <td>
+                                            <span class="coupon-code-badge">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                                </svg>
+                                                <%= cpn.code %>
+                                            </span>
+                                        </td>
+
+                                        <!-- Description -->
+                                        <td>
+                                            <div class="coupon-desc-text">
+                                                <%= cpn.description || 'General Privilege Voucher' %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Benefit Rate -->
+                                        <td>
+                                            <% if (cpn.discountType === 'percentage') { %>
+                                                <span class="benefit-rate-gold"><%= cpn.discountValue %>% OFF</span>
+                                                <% if (cpn.maxDiscount) { %>
+                                                    <div class="subtext-hint">Max Cap: ₹<%= Number(cpn.maxDiscount).toLocaleString('en-IN') %></div>
+                                                <% } %>
+                                            <% } else { %>
+                                                <span class="benefit-rate-gold">₹<%= Number(cpn.discountValue).toLocaleString('en-IN') %> OFF</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Min Purchase -->
+                                        <td>
+                                            <% if (cpn.minPurchase > 0) { %>
+                                                <span style="font-weight: 600; color: #171513;">₹<%= Number(cpn.minPurchase).toLocaleString('en-IN') %></span>
+                                            <% } else { %>
+                                                <span style="color: #9CA3AF; font-size: 12.5px;">No minimum</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Redemptions / Quota -->
+                                        <td>
+                                            <div class="quota-stack">
+                                                <span class="quota-used"><%= cpn.usedCount || 0 %></span>
+                                                <span class="quota-sep">/</span>
+                                                <span class="quota-total"><%= cpn.usageLimit ? cpn.usageLimit : '∞' %></span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Expiry Threshold -->
+                                        <td>
+                                            <div class="validity-row">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                </svg>
+                                                <span>Until <%= expDateFormatted %></span>
+                                            </div>
+                                            <% if (isExpired) { %>
+                                                <span class="validity-days-badge expired">Expired</span>
+                                            <% } else { %>
+                                                <span class="validity-days-badge active"><%= daysRemaining %> days remaining</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Status Badge -->
+                                        <td>
+                                            <% if (isExpired) { %>
+                                                <span class="badge-status expired">
+                                                    <span class="dot-red"></span> Expired
+                                                </span>
+                                            <% } else if (cpn.isActive) { %>
+                                                <span class="badge-status active">
+                                                    <span class="dot-green"></span> Live
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge-status paused">
+                                                    <span class="dot-amber"></span> Paused
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Action Buttons -->
+                                        <td style="text-align: right;">
+                                            <div class="action-buttons-group">
+                                                <!-- Toggle Pause/Activate Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon <%= cpn.isActive ? 'toggle-active' : 'toggle-inactive' %>"
+                                                    onclick="toggleCoupon('<%= cpn._id %>', '<%= cpn.code %>', <%= cpn.isActive %>)"
+                                                    title="<%= cpn.isActive ? 'Deactivate Coupon' : 'Activate Coupon' %>"
+                                                >
+                                                    <% if (cpn.isActive) { %>
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                            <rect x="6" y="4" width="4" height="16"></rect>
+                                                            <rect x="14" y="4" width="4" height="16"></rect>
+                                                        </svg>
+                                                    <% } else { %>
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                        </svg>
+                                                    <% } %>
+                                                </button>
+
+                                                <!-- Delete Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon delete-btn"
+                                                    onclick="deleteCoupon('<%= cpn._id %>', '<%= cpn.code %>')"
+                                                    title="Permanently Delete Coupon"
+                                                >
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty-directory-card">
+                                            <div class="empty-icon-circle">
+                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                                </svg>
+                                            </div>
+                                            <h3 class="empty-title">No Privilege Coupons Found</h3>
+                                            <p class="empty-subtext">No promotional vouchers match your current filters. Create your first privilege code to reward patrons.</p>
+                                            <button type="button" class="btn-create-coupon" onclick="openCreateModal()">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                <span>Create First Coupon</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                    <div class="directory-footer">
+                        <div>
+                            Showing page <%= currentPage %> of <%= totalPages %> (<%= totalCoupons %> total records)
+                        </div>
+                        <div class="pagination-group">
+                            <% if (currentPage > 1) { %>
+                                <a href="/admin/coupons?page=<%= currentPage - 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>&status=<%= typeof status !== 'undefined' ? status : 'all' %>" class="page-btn">
+                                    &larr; Previous
+                                </a>
+                            <% } else { %>
+                                <span class="page-btn disabled">&larr; Previous</span>
+                            <% } %>
+
+                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                                    <a href="/admin/coupons?page=<%= i %>&search=<%= typeof search !== 'undefined' ? search : '' %>&status=<%= typeof status !== 'undefined' ? status : 'all' %>" class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                                    <span class="page-btn disabled">...</span>
+                                <% } %>
+                            <% } %>
+
+                            <% if (currentPage < totalPages) { %>
+                                <a href="/admin/coupons?page=<%= currentPage + 1 %>&search=<%= typeof search !== 'undefined' ? search : '' %>&status=<%= typeof status !== 'undefined' ? status : 'all' %>" class="page-btn">
+                                    Next &rarr;
+                                </a>
+                            <% } else { %>
+                                <span class="page-btn disabled">Next &rarr;</span>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL: Create Privilege Coupon
+         ========================================================================== -->
+    <div class="modal-overlay" id="createCouponModal" onclick="handleBackdropClick(event)">
+        <div class="modal-dialog">
+            
+            <div class="modal-header">
+                <div class="modal-header-text">
+                    <h3 class="modal-title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        </svg>
+                        <span>Create Privilege Coupon</span>
+                    </h3>
+                    <p class="modal-subtitle">Configure promo codes, discount bounds, and member redemption quotas.</p>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="closeCreateModal()">&times;</button>
+            </div>
+
+            <form id="createCouponForm" novalidate onsubmit="handleCreateCouponSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        
+                        <!-- Coupon Code -->
+                        <div>
+                            <label class="form-label" for="couponCode">Coupon Code <span class="req">*</span></label>
+                            <input
+                                type="text"
+                                id="couponCode"
+                                name="code"
+                                class="form-control form-control-uppercase"
+                                placeholder="e.g. ROYAL20"
+                                maxlength="20"
+                                autocomplete="off"
+                            />
+                            <div class="form-hint">3-20 characters (letters, numbers, hyphens, underscores).</div>
+                            <div class="form-error-msg" id="couponCodeError"></div>
+                        </div>
+
+                        <!-- Discount Type -->
+                        <div>
+                            <label class="form-label" for="discountType">Discount Type <span class="req">*</span></label>
+                            <select id="discountType" name="discountType" class="form-control" onchange="handleDiscountTypeChange()">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="flat">Flat Amount (₹)</option>
+                            </select>
+                            <div class="form-hint">Percentage rate or direct rupee discount.</div>
+                            <div class="form-error-msg" id="discountTypeError"></div>
+                        </div>
+
+                        <!-- Discount Value -->
+                        <div>
+                            <label class="form-label" for="discountValue" id="discountValueLabel">Discount Rate (%) <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="discountValue"
+                                name="discountValue"
+                                class="form-control"
+                                placeholder="e.g. 20"
+                                step="any"
+                            />
+                            <div class="form-hint" id="discountValueHint">Percentage bounded between 1% and 90%.</div>
+                            <div class="form-error-msg" id="discountValueError"></div>
+                        </div>
+
+                        <!-- Maximum Discount Cap (shown for Percentage) -->
+                        <div id="maxDiscountGroup">
+                            <label class="form-label" for="maxDiscount">Maximum Discount Cap (₹)</label>
+                            <input
+                                type="number"
+                                id="maxDiscount"
+                                name="maxDiscount"
+                                class="form-control"
+                                placeholder="e.g. 1500 (Optional)"
+                                min="1"
+                                step="any"
+                            />
+                            <div class="form-hint">Ceiling cap on percentage reductions.</div>
+                            <div class="form-error-msg" id="maxDiscountError"></div>
+                        </div>
+
+                        <!-- Minimum Purchase -->
+                        <div>
+                            <label class="form-label" for="minPurchase">Min Acquisition Total (₹)</label>
+                            <input
+                                type="number"
+                                id="minPurchase"
+                                name="minPurchase"
+                                class="form-control"
+                                placeholder="e.g. 2500"
+                                min="0"
+                                value="0"
+                                step="any"
+                            />
+                            <div class="form-hint">Subtotal required before discount applies.</div>
+                            <div class="form-error-msg" id="minPurchaseError"></div>
+                        </div>
+
+                        <!-- Total Usage Quota -->
+                        <div>
+                            <label class="form-label" for="usageLimit">Total Usage Quota</label>
+                            <input
+                                type="number"
+                                id="usageLimit"
+                                name="usageLimit"
+                                class="form-control"
+                                placeholder="e.g. 100 (Leave blank for unlimited)"
+                                min="1"
+                            />
+                            <div class="form-hint">Total lifetime redemption allowance.</div>
+                            <div class="form-error-msg" id="usageLimitError"></div>
+                        </div>
+
+                        <!-- Expiry Date & Time -->
+                        <div class="form-group-full">
+                            <label class="form-label" for="expiryDate">Expiration Date &amp; Time <span class="req">*</span></label>
+                            <input
+                                type="datetime-local"
+                                id="expiryDate"
+                                name="expiryDate"
+                                class="form-control"
+                            />
+                            <div class="form-hint">Voucher automatically pauses after this deadline.</div>
+                            <div class="form-error-msg" id="expiryDateError"></div>
+                        </div>
+
+                        <!-- Description / Notes -->
+                        <div class="form-group-full">
+                            <label class="form-label" for="couponDescription">Voucher Description / Notes</label>
+                            <textarea
+                                id="couponDescription"
+                                name="description"
+                                class="form-control"
+                                rows="2"
+                                placeholder="e.g. Sovereign Atelier seasonal privilege voucher..."
+                                maxlength="200"
+                            ></textarea>
+                            <div class="form-error-msg" id="couponDescriptionError"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="modal-actions">
+                        <button type="button" class="btn-modal-cancel" onclick="closeCreateModal()">Cancel</button>
+                        <button type="submit" class="btn-modal-submit" id="btnSubmitCoupon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Save Privilege Coupon</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         Client-Side Interactivity & Validation Engine
+         ========================================================================== -->
+    <script>
+        // ==========================================================================
+        // Inline Validation Engine Helpers
+        // ==========================================================================
+        function setFieldError(inputId, errorId, message) {
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(errorId);
+            if (!input || !errorEl) return;
+
+            input.classList.add('input-error');
+            errorEl.innerHTML = `
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>${message}</span>
+            `;
+            errorEl.classList.add('visible');
+            errorEl.style.display = 'flex';
+        }
+
+        function clearFieldError(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(errorId);
+            if (!input || !errorEl) return;
+
+            input.classList.remove('input-error');
+            errorEl.innerHTML = '';
+            errorEl.classList.remove('visible');
+            errorEl.style.display = 'none';
+        }
+
+        function clearAllErrors() {
+            const errorEls = document.querySelectorAll('#createCouponModal .form-error-msg');
+            errorEls.forEach(el => {
+                el.innerHTML = '';
+                el.classList.remove('visible');
+                el.style.display = 'none';
+            });
+            const errorInputs = document.querySelectorAll('#createCouponModal .input-error');
+            errorInputs.forEach(input => input.classList.remove('input-error'));
+        }
+
+        // ==========================================================================
+        // Field-by-Field Validation Rules
+        // ==========================================================================
+        function validateCouponCode(showUi = true) {
+            const input = document.getElementById('couponCode');
+            const val = input.value.trim().toUpperCase();
+            input.value = val;
+
+            if (!val) {
+                if (showUi) setFieldError('couponCode', 'couponCodeError', 'Coupon code is required.');
+                return false;
+            }
+            if (val.length < 3) {
+                if (showUi) setFieldError('couponCode', 'couponCodeError', 'Code must be at least 3 characters.');
+                return false;
+            }
+            if (val.length > 20) {
+                if (showUi) setFieldError('couponCode', 'couponCodeError', 'Code cannot exceed 20 characters.');
+                return false;
+            }
+            if (!/^[A-Z0-9_-]+$/.test(val)) {
+                if (showUi) setFieldError('couponCode', 'couponCodeError', 'Only uppercase letters, numbers, hyphens, and underscores permitted.');
+                return false;
+            }
+            clearFieldError('couponCode', 'couponCodeError');
+            return true;
+        }
+
+        function validateDiscountValue(showUi = true) {
+            const type = document.getElementById('discountType').value;
+            const input = document.getElementById('discountValue');
+            const rawVal = input.value.trim();
+            const minPurchaseInput = document.getElementById('minPurchase');
+            const minPurchaseVal = parseFloat(minPurchaseInput.value) || 0;
+
+            if (!rawVal) {
+                if (showUi) setFieldError('discountValue', 'discountValueError', 'Discount value is required.');
+                return false;
+            }
+
+            const val = parseFloat(rawVal);
+            if (isNaN(val) || val <= 0) {
+                if (showUi) setFieldError('discountValue', 'discountValueError', 'Please enter a positive value greater than 0.');
+                return false;
+            }
+
+            if (type === 'percentage') {
+                if (val < 1 || val > 90) {
+                    if (showUi) setFieldError('discountValue', 'discountValueError', 'Percentage discount must be between 1% and 90%.');
+                    return false;
+                }
+            } else if (type === 'flat') {
+                if (minPurchaseVal > 0 && val >= minPurchaseVal) {
+                    if (showUi) setFieldError('discountValue', 'discountValueError', `Flat discount (₹${val}) must be strictly less than minimum acquisition (₹${minPurchaseVal}).`);
+                    return false;
+                }
+            }
+
+            clearFieldError('discountValue', 'discountValueError');
+            return true;
+        }
+
+        function validateMaxDiscount(showUi = true) {
+            const type = document.getElementById('discountType').value;
+            if (type !== 'percentage') {
+                clearFieldError('maxDiscount', 'maxDiscountError');
+                return true;
+            }
+
+            const input = document.getElementById('maxDiscount');
+            const rawVal = input.value.trim();
+            if (!rawVal) {
+                clearFieldError('maxDiscount', 'maxDiscountError');
+                return true;
+            }
+
+            const val = parseFloat(rawVal);
+            if (isNaN(val) || val <= 0) {
+                if (showUi) setFieldError('maxDiscount', 'maxDiscountError', 'Maximum cap must be a positive number greater than 0.');
+                return false;
+            }
+
+            clearFieldError('maxDiscount', 'maxDiscountError');
+            return true;
+        }
+
+        function validateMinPurchase(showUi = true) {
+            const input = document.getElementById('minPurchase');
+            const rawVal = input.value.trim();
+            if (!rawVal) {
+                clearFieldError('minPurchase', 'minPurchaseError');
+                return true;
+            }
+
+            const val = parseFloat(rawVal);
+            if (isNaN(val) || val < 0) {
+                if (showUi) setFieldError('minPurchase', 'minPurchaseError', 'Minimum acquisition total cannot be negative.');
+                return false;
+            }
+
+            const type = document.getElementById('discountType').value;
+            const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
+            if (type === 'flat' && val > 0 && discountVal >= val) {
+                if (showUi) setFieldError('minPurchase', 'minPurchaseError', `Minimum acquisition (₹${val}) must be higher than flat discount (₹${discountVal}).`);
+                return false;
+            }
+
+            clearFieldError('minPurchase', 'minPurchaseError');
+            return true;
+        }
+
+        function validateUsageLimit(showUi = true) {
+            const input = document.getElementById('usageLimit');
+            const rawVal = input.value.trim();
+            if (!rawVal) {
+                clearFieldError('usageLimit', 'usageLimitError');
+                return true;
+            }
+
+            const val = parseInt(rawVal, 10);
+            if (isNaN(val) || val < 1 || String(val) !== rawVal) {
+                if (showUi) setFieldError('usageLimit', 'usageLimitError', 'Usage quota must be a positive whole number (at least 1).');
+                return false;
+            }
+
+            clearFieldError('usageLimit', 'usageLimitError');
+            return true;
+        }
+
+        function validateExpiryDate(showUi = true) {
+            const input = document.getElementById('expiryDate');
+            const rawVal = input.value;
+
+            if (!rawVal) {
+                if (showUi) setFieldError('expiryDate', 'expiryDateError', 'Expiration date and time is required.');
+                return false;
+            }
+
+            const expTime = new Date(rawVal).getTime();
+            if (isNaN(expTime)) {
+                if (showUi) setFieldError('expiryDate', 'expiryDateError', 'Please provide a valid expiration date.');
+                return false;
+            }
+
+            if (expTime <= Date.now() + 2 * 60 * 1000) {
+                if (showUi) setFieldError('expiryDate', 'expiryDateError', 'Expiration date must be scheduled in the future.');
+                return false;
+            }
+
+            clearFieldError('expiryDate', 'expiryDateError');
+            return true;
+        }
+
+        function validateDescription(showUi = true) {
+            const input = document.getElementById('couponDescription');
+            const rawVal = input.value;
+            if (rawVal && rawVal.length > 200) {
+                if (showUi) setFieldError('couponDescription', 'couponDescriptionError', 'Description cannot exceed 200 characters.');
+                return false;
+            }
+            clearFieldError('couponDescription', 'couponDescriptionError');
+            return true;
+        }
+
+        // ==========================================================================
+        // Modal & Form Controls
+        // ==========================================================================
+        function openCreateModal() {
+            const modal = document.getElementById('createCouponModal');
+            document.getElementById('createCouponForm').reset();
+            clearAllErrors();
+            handleDiscountTypeChange();
+
+            // Set default minimum expiry date to 30 days ahead
+            const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            const toLocalISO = (d) => {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+
+            const nowLocal = toLocalISO(new Date());
+            document.getElementById('expiryDate').min = nowLocal;
+            document.getElementById('expiryDate').value = toLocalISO(future);
+
+            modal.classList.add('open');
+            setTimeout(() => {
+                const codeInput = document.getElementById('couponCode');
+                if (codeInput) codeInput.focus();
+            }, 100);
+        }
+
+        function closeCreateModal() {
+            const modal = document.getElementById('createCouponModal');
+            modal.classList.remove('open');
+            clearAllErrors();
+        }
+
+        function handleBackdropClick(e) {
+            if (e.target.id === 'createCouponModal') {
+                closeCreateModal();
+            }
+        }
+
+        function handleDiscountTypeChange() {
+            const type = document.getElementById('discountType').value;
+            const valInput = document.getElementById('discountValue');
+            const valLabel = document.getElementById('discountValueLabel');
+            const valHint = document.getElementById('discountValueHint');
+            const maxGroup = document.getElementById('maxDiscountGroup');
+
+            clearFieldError('discountValue', 'discountValueError');
+            clearFieldError('maxDiscount', 'maxDiscountError');
+
+            if (type === 'percentage') {
+                valLabel.innerHTML = 'Discount Rate (%) <span class="req">*</span>';
+                valHint.textContent = 'Percentage bounded between 1% and 90%.';
+                valInput.placeholder = 'e.g. 20 (for 20%)';
+                valInput.max = '90';
+                maxGroup.style.display = 'block';
+            } else {
+                valLabel.innerHTML = 'Flat Discount (₹) <span class="req">*</span>';
+                valHint.textContent = 'Fixed rupee discount deducted from total.';
+                valInput.placeholder = 'e.g. 500 (for ₹500)';
+                valInput.removeAttribute('max');
+                maxGroup.style.display = 'none';
+                document.getElementById('maxDiscount').value = '';
+            }
+        }
+
+        // ==========================================================================
+        // Real-Time Event Listeners
+        // ==========================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeInput = document.getElementById('couponCode');
+            const discountInput = document.getElementById('discountValue');
+            const maxInput = document.getElementById('maxDiscount');
+            const minInput = document.getElementById('minPurchase');
+            const usageInput = document.getElementById('usageLimit');
+            const expiryInput = document.getElementById('expiryDate');
+            const descInput = document.getElementById('couponDescription');
+
+            if (codeInput) {
+                codeInput.addEventListener('input', () => {
+                    codeInput.value = codeInput.value.toUpperCase();
+                    if (codeInput.classList.contains('input-error')) validateCouponCode(true);
+                });
+                codeInput.addEventListener('blur', () => validateCouponCode(true));
+            }
+
+            if (discountInput) {
+                discountInput.addEventListener('input', () => {
+                    if (discountInput.classList.contains('input-error')) validateDiscountValue(true);
+                });
+                discountInput.addEventListener('blur', () => validateDiscountValue(true));
+            }
+
+            if (maxInput) {
+                maxInput.addEventListener('input', () => {
+                    if (maxInput.classList.contains('input-error')) validateMaxDiscount(true);
+                });
+                maxInput.addEventListener('blur', () => validateMaxDiscount(true));
+            }
+
+            if (minInput) {
+                minInput.addEventListener('input', () => {
+                    if (minInput.classList.contains('input-error')) validateMinPurchase(true);
+                });
+                minInput.addEventListener('blur', () => validateMinPurchase(true));
+            }
+
+            if (usageInput) {
+                usageInput.addEventListener('input', () => {
+                    if (usageInput.classList.contains('input-error')) validateUsageLimit(true);
+                });
+                usageInput.addEventListener('blur', () => validateUsageLimit(true));
+            }
+
+            if (expiryInput) {
+                expiryInput.addEventListener('change', () => validateExpiryDate(true));
+                expiryInput.addEventListener('blur', () => validateExpiryDate(true));
+            }
+
+            if (descInput) {
+                descInput.addEventListener('input', () => {
+                    if (descInput.classList.contains('input-error')) validateDescription(true);
+                });
+                descInput.addEventListener('blur', () => validateDescription(true));
+            }
+        });
+
+        // ==========================================================================
+        // Form Submission with Strict JS Validation
+        // ==========================================================================
+        async function handleCreateCouponSubmit(e) {
+            e.preventDefault();
+
+            // Run full validation across all fields
+            const isCodeValid = validateCouponCode(true);
+            const isDiscountValid = validateDiscountValue(true);
+            const isMaxValid = validateMaxDiscount(true);
+            const isMinValid = validateMinPurchase(true);
+            const isUsageValid = validateUsageLimit(true);
+            const isExpiryValid = validateExpiryDate(true);
+            const isDescValid = validateDescription(true);
+
+            if (!isCodeValid || !isDiscountValid || !isMaxValid || !isMinValid || !isUsageValid || !isExpiryValid || !isDescValid) {
+                const firstInvalid = document.querySelector('#createCouponModal .input-error');
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitCoupon');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path d="M12 2a10 10 0 0 1 10 10"></path>
+                </svg>
+                <span>Creating Coupon...</span>
+            `;
+
+            const code = document.getElementById('couponCode').value.trim().toUpperCase();
+            const discountType = document.getElementById('discountType').value;
+            const discountValue = parseFloat(document.getElementById('discountValue').value);
+            const minPurchase = parseFloat(document.getElementById('minPurchase').value) || 0;
+            const maxDiscount = document.getElementById('maxDiscount').value ? parseFloat(document.getElementById('maxDiscount').value) : null;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const usageLimit = document.getElementById('usageLimit').value ? parseInt(document.getElementById('usageLimit').value, 10) : null;
+            const description = document.getElementById('couponDescription').value.trim();
+
+            try {
+                const response = await fetch('/admin/coupons/create', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code,
+                        discountType,
+                        discountValue,
+                        minPurchase,
+                        maxDiscount,
+                        expiryDate,
+                        usageLimit,
+                        description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeCreateModal();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Coupon Created',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+
+                    // If duplicate code or specific field error returned by backend, highlight field directly
+                    if (data.message && data.message.toLowerCase().includes('already exists')) {
+                        setFieldError('couponCode', 'couponCodeError', data.message);
+                        document.getElementById('couponCode').focus();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Creation Notice',
+                            text: data.message || 'Unable to create coupon.',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                console.error('Create coupon error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Notice',
+                    text: 'Unable to connect to the atelier server.',
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn'
+                    }
+                });
+            }
+        }
+
+        // ==========================================================================
+        // Toggle & Delete Operations
+        // ==========================================================================
+        async function toggleCoupon(couponId, code, isCurrentlyActive) {
+            const actionText = isCurrentlyActive ? 'deactivate' : 'activate';
+            const result = await Swal.fire({
+                title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Privilege Coupon?`,
+                text: `Are you sure you want to ${actionText} coupon "${code}"? Clients ${isCurrentlyActive ? 'will not' : 'will'} be able to redeem this code at checkout.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${actionText}`,
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await fetch(`/admin/coupons/toggle/${couponId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Status Updated',
+                        text: data.message,
+                        timer: 1300,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Notice',
+                        text: data.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Toggle coupon error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Notice',
+                    text: 'Unable to update status.',
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn'
+                    }
+                });
+            }
+        }
+
+        function deleteCoupon(couponId, code) {
+            Swal.fire({
+                title: 'Delete Privilege Coupon?',
+                html: `Are you sure you wish to permanently delete privilege voucher <strong>${code}</strong>?<br><span style="font-size: 13px; color: #a1a1aa; margin-top: 6px; display: block;">Clients will no longer be able to redeem this code at checkout.</span>`,
+                icon: 'warning',
+                iconColor: '#ef4444',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Delete Permanently',
+                cancelButtonText: 'Keep Coupon',
+                confirmButtonColor: '#ef4444',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/coupons/delete/${couponId}`, {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Coupon Deleted',
+                                text: data.message,
+                                timer: 1300,
+                                showConfirmButton: false,
+                                customClass: {
+                                    popup: 'royal-luxury-swal',
+                                    title: 'royal-swal-title',
+                                    confirmButton: 'royal-swal-confirm-btn'
+                                }
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Delete Notice',
+                                text: data.message,
+                                customClass: {
+                                    popup: 'royal-luxury-swal',
+                                    title: 'royal-swal-title',
+                                    confirmButton: 'royal-swal-confirm-btn'
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Delete coupon error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'System Notice',
+                            text: 'Unable to delete coupon.',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

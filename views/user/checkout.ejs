@@ -18,6 +18,7 @@
 
     <!-- SweetAlert2 for Quiet Luxury Notifications -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         .royal-luxury-swal {
             background: #141312 !important;
@@ -175,7 +176,7 @@
                             </div>
                         </section>
 
-                        <!-- SECTION 2: PAYMENT METHOD (b.iii) -->
+                        <!-- SECTION 2: PAYMENT METHOD (b.iii, a) -->
                         <section class="checkout-section-card">
                             <div class="section-header-row">
                                 <div class="section-title-wrap">
@@ -184,18 +185,70 @@
                                 </div>
                             </div>
 
-                            <div class="payment-methods-list">
-                                <div class="payment-method-item">
+                            <input type="hidden" name="paymentMethod" id="selectedPaymentMethod" value="COD" />
+
+                            <div class="payment-methods-list" style="display: flex; flex-direction: column; gap: 14px;">
+                                <!-- COD Card -->
+                                <div class="payment-method-item selected" id="paymentMethodCOD" data-method="COD" onclick="selectPaymentMethod('COD')">
                                     <div class="custom-radio" style="border-color: var(--co-gold); margin-top: 2px;">
-                                        <div class="custom-radio-inner" style="background: var(--co-gold);"></div>
+                                        <div class="custom-radio-inner" id="radioInnerCOD" style="background: var(--co-gold);"></div>
                                     </div>
                                     <div class="payment-method-info">
                                         <div class="payment-method-title-row">
                                             <span class="payment-method-name">Cash on Delivery (COD)</span>
-                                            <span class="payment-method-badge">SELECTED</span>
+                                            <span class="payment-method-badge" id="badgeCOD">SELECTED</span>
                                         </div>
                                         <p class="payment-method-desc">
                                             Pay via cash, UPI, or card on physical delivery. Our white-glove air courier provides complete tamper-evident serial inspection before handoff.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Razorpay Card -->
+                                <div class="payment-method-item" id="paymentMethodRazorpay" data-method="Razorpay" onclick="selectPaymentMethod('Razorpay')">
+                                    <div class="custom-radio" style="border-color: var(--co-gold); margin-top: 2px;">
+                                        <div class="custom-radio-inner" id="radioInnerRazorpay" style="background: transparent;"></div>
+                                    </div>
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title-row">
+                                            <span class="payment-method-name">Online Payment (Razorpay)</span>
+                                            <span class="payment-method-badge" id="badgeRazorpay" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); background: rgba(96, 165, 250, 0.08);">CARDS / UPI / NETBANKING</span>
+                                        </div>
+                                        <p class="payment-method-desc">
+                                            Instant priority acquisition via UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, Net Banking, or Wallets with 256-bit encryption.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Royal Ignite Wallet Card (c) -->
+                                <% const isWalletSufficient = (typeof walletBalance !== 'undefined' ? walletBalance : 0) >= (financials ? financials.totalAmount : 0); %>
+                                <div class="payment-method-item <%= isWalletSufficient ? '' : 'disabled-method' %>" 
+                                     id="paymentMethodWallet" 
+                                     data-method="Wallet" 
+                                     onclick="selectPaymentMethod('Wallet')"
+                                     style="<%= isWalletSufficient ? '' : 'opacity: 0.6;' %>">
+                                    <div class="custom-radio" style="border-color: var(--co-gold); margin-top: 2px;">
+                                        <div class="custom-radio-inner" id="radioInnerWallet" style="background: transparent;"></div>
+                                    </div>
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title-row">
+                                            <span class="payment-method-name">Royal Ignite Wallet</span>
+                                            <% if (isWalletSufficient) { %>
+                                                <span class="payment-method-badge" id="badgeWallet" style="color: #10b981; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);">
+                                                    BALANCE: ₹<%= Number(walletBalance || 0).toLocaleString('en-IN') %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="payment-method-badge" id="badgeWallet" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
+                                                    INSUFFICIENT (₹<%= Number(walletBalance || 0).toLocaleString('en-IN') %>)
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                        <p class="payment-method-desc">
+                                            <% if (isWalletSufficient) { %>
+                                                Settle immediately using your verified store wallet balance with instant zero-latency confirmation.
+                                            <% } else { %>
+                                                Available wallet balance is lower than total payable amount (Current balance: ₹<%= Number(walletBalance || 0).toLocaleString('en-IN') %>).
+                                            <% } %>
                                         </p>
                                     </div>
                                 </div>
@@ -222,13 +275,78 @@
                                             </div>
                                             <div class="summary-item-details">
                                                 <div class="summary-item-name" title="<%= item.name %>"><%= item.name %></div>
-                                                <div class="summary-item-qty">Qty: <%= item.quantity %> × ₹<%= Number(item.price).toLocaleString('en-IN') %></div>
+                                                <div class="summary-item-qty">Qty: <%= item.quantity %> × ₹<%= Number(item.price || 0).toLocaleString('en-IN') %></div>
+                                                <% if (item.appliedOffer && item.appliedOffer.name) { %>
+                                                    <div class="checkout-offer-applied-tag">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                        <span>Privilege: <%= item.appliedOffer.name %></span>
+                                                    </div>
+                                                <% } %>
                                             </div>
                                             <div class="summary-item-price">
-                                                ₹<%= Number(item.lineTotal).toLocaleString('en-IN') %>
+                                                ₹<%= Number(item.lineTotal || 0).toLocaleString('en-IN') %>
                                             </div>
                                         </div>
                                     <% }); %>
+                                <% } %>
+                            </div>
+
+                            <!-- Coupon Redemption Card (e.i, e.ii, e.iii) -->
+                            <div class="coupon-box-card">
+                                <div class="coupon-header-title">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                    </svg>
+                                    <span>Privilege Atelier Coupon</span>
+                                </div>
+
+                                <% if (appliedCoupon && appliedCoupon.code) { %>
+                                    <div class="applied-coupon-pill" id="appliedCouponPill">
+                                        <div class="applied-coupon-info">
+                                            <span class="applied-coupon-code"><%= appliedCoupon.code %></span>
+                                            <span class="applied-coupon-desc">
+                                                Saved ₹<%= Number(appliedCoupon.discountAmount || (financials && financials.couponDiscount) || 0).toLocaleString('en-IN') %>
+                                            </span>
+                                        </div>
+                                        <button type="button" class="btn-remove-coupon" onclick="handleRemoveCoupon()" title="Remove coupon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                <% } else { %>
+                                    <div class="coupon-input-group" id="couponInputGroup">
+                                        <input type="text" 
+                                               id="couponCodeInput" 
+                                               class="coupon-input" 
+                                               placeholder="Enter code (e.g. ROYAL10)" 
+                                               maxlength="20" 
+                                               autocomplete="off" />
+                                        <button type="button" class="btn-apply-coupon" id="btnApplyCoupon" onclick="handleApplyCoupon()">
+                                            Apply
+                                        </button>
+                                    </div>
+
+                                    <% if (Array.isArray(availableCoupons) && availableCoupons.length > 0) { %>
+                                        <div class="available-coupons-wrap" style="margin-top: 10px;">
+                                            <span style="font-size: 11px; color: var(--co-text-muted); display: block; margin-bottom: 6px;">Available Privilege Codes:</span>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                                <% availableCoupons.forEach(function(cpn) { %>
+                                                    <button type="button" 
+                                                            class="coupon-chip" 
+                                                            onclick="applyPresetCoupon('<%= cpn.code %>')"
+                                                            title="<%= cpn.description || '' %> (Min: ₹<%= Number(cpn.minPurchase).toLocaleString('en-IN') %>)">
+                                                        <span><%= cpn.code %></span>
+                                                        <span style="opacity: 0.75; font-size: 10px;">
+                                                            (<%= cpn.discountType === 'percentage' ? cpn.discountValue + '% OFF' : '₹' + cpn.discountValue + ' OFF' %>)
+                                                        </span>
+                                                    </button>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    <% } %>
                                 <% } %>
                             </div>
 
@@ -236,28 +354,35 @@
                             <div class="summary-ledger">
                                 <% if (typeof isBuyNow !== 'undefined' && isBuyNow) { %>
                                     <div class="ledger-line">
-                                        <span>Direct Acquisition (<%= cart ? cart.itemCount : 1 %> <%= (cart && cart.itemCount === 1) ? 'piece' : 'pieces' %>)</span>
+                                        <span>Direct Acquisition (<%= (typeof cart !== 'undefined' && cart) ? cart.itemCount : 1 %> <%= (typeof cart !== 'undefined' && cart && cart.itemCount === 1) ? 'piece' : 'pieces' %>)</span>
                                         <span>₹<%= Number(financials ? financials.subtotal : 0).toLocaleString('en-IN') %></span>
                                     </div>
                                 <% } else if (financials && financials.savings > 0) { %>
                                     <div class="ledger-line">
-                                        <span>Catalog Value (<%= cart ? cart.itemCount : 0 %> pieces)</span>
-                                        <span>₹<%= Number(financials.catalogTotal || financials.regularTotal).toLocaleString('en-IN') %></span>
+                                        <span>Catalog Value (<%= (typeof cart !== 'undefined' && cart) ? cart.itemCount : 0 %> pieces)</span>
+                                        <span>₹<%= Number(financials.catalogTotal || financials.regularTotal || 0).toLocaleString('en-IN') %></span>
                                     </div>
 
                                     <div class="ledger-line savings">
                                         <span>Atelier Courtesy Discount</span>
-                                        <span>− ₹<%= Number(financials.savings).toLocaleString('en-IN') %></span>
+                                        <span>− ₹<%= Number(financials.savings || 0).toLocaleString('en-IN') %></span>
                                     </div>
 
                                     <div class="ledger-line">
                                         <span>Net Subtotal</span>
-                                        <span>₹<%= Number(financials.subtotal).toLocaleString('en-IN') %></span>
+                                        <span>₹<%= Number(financials.subtotal || 0).toLocaleString('en-IN') %></span>
                                     </div>
                                 <% } else { %>
                                     <div class="ledger-line">
                                         <span>Bag Subtotal (<%= cart ? cart.itemCount : 0 %> pieces)</span>
-                                        <span>₹<%= Number(financials ? financials.subtotal : 0).toLocaleString('en-IN') %></span>
+                                        <span>₹<%= Number(financials ? financials.subtotal || 0 : 0).toLocaleString('en-IN') %></span>
+                                    </div>
+                                <% } %>
+
+                                <% if (financials && financials.couponDiscount > 0) { %>
+                                    <div class="ledger-line coupon-discount" style="color: #10b981;">
+                                        <span>Privilege Discount (<%= financials.couponCode || (appliedCoupon && appliedCoupon.code) %>)</span>
+                                        <span id="ledgerCouponDiscount">− ₹<%= Number(financials.couponDiscount || 0).toLocaleString('en-IN') %></span>
                                     </div>
                                 <% } %>
 
@@ -273,7 +398,7 @@
 
                                 <div class="ledger-line total">
                                     <span>Total Payable</span>
-                                    <span class="total-amount">₹<%= Number(financials ? financials.totalAmount : 0).toLocaleString('en-IN') %></span>
+                                    <span class="total-amount">₹<%= Number(financials ? financials.totalAmount || 0 : 0).toLocaleString('en-IN') %></span>
                                 </div>
                             </div>
 
@@ -910,7 +1035,232 @@
             }
         }
 
-        // Handle Place Order Submission
+        const RAZORPAY_KEY_ID = '<%= razorpayKeyId || "" %>';
+        const USER_FULL_NAME = '<%= (user && (user.name || user.fullName)) ? (user.name || user.fullName).replace(/'/g, "\\'") : "" %>';
+        const USER_EMAIL = '<%= (user && user.email) ? user.email : "" %>';
+        const USER_PHONE = '<%= (user && user.phone) ? user.phone : "" %>';
+        const CURRENT_TOTAL = <%= Number(financials ? financials.totalAmount : 0) %>;
+        const WALLET_BALANCE = <%= Number(typeof walletBalance !== 'undefined' ? walletBalance : 0) %>;
+
+        function selectPaymentMethod(method) {
+            const codItem = document.getElementById('paymentMethodCOD');
+            const rzpItem = document.getElementById('paymentMethodRazorpay');
+            const walletItem = document.getElementById('paymentMethodWallet');
+            const radioInnerCOD = document.getElementById('radioInnerCOD');
+            const radioInnerRzp = document.getElementById('radioInnerRazorpay');
+            const radioInnerWallet = document.getElementById('radioInnerWallet');
+            const badgeCOD = document.getElementById('badgeCOD');
+            const badgeRzp = document.getElementById('badgeRazorpay');
+            const badgeWallet = document.getElementById('badgeWallet');
+            const btn = document.getElementById('btnPlaceOrder');
+
+            if (method === 'Wallet') {
+                if (WALLET_BALANCE < CURRENT_TOTAL) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Insufficient Balance',
+                        text: `Your current wallet balance is ₹${WALLET_BALANCE.toLocaleString('en-IN')}, but your acquisition total is ₹${CURRENT_TOTAL.toLocaleString('en-IN')}. Please select Online Payment or COD.`,
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                    return;
+                }
+            }
+
+            document.getElementById('selectedPaymentMethod').value = method;
+
+            // Reset selection highlights
+            if (codItem) codItem.classList.remove('selected');
+            if (rzpItem) rzpItem.classList.remove('selected');
+            if (walletItem) walletItem.classList.remove('selected');
+            if (radioInnerCOD) radioInnerCOD.style.background = 'transparent';
+            if (radioInnerRzp) radioInnerRzp.style.background = 'transparent';
+            if (radioInnerWallet) radioInnerWallet.style.background = 'transparent';
+
+            if (method === 'COD') {
+                if (codItem) codItem.classList.add('selected');
+                if (radioInnerCOD) radioInnerCOD.style.background = 'var(--co-gold)';
+                if (badgeCOD) {
+                    badgeCOD.textContent = 'SELECTED';
+                    badgeCOD.style.display = 'inline-block';
+                }
+                if (badgeRzp) {
+                    badgeRzp.textContent = 'CARDS / UPI / NETBANKING';
+                    badgeRzp.style.color = '#60a5fa';
+                    badgeRzp.style.borderColor = 'rgba(96, 165, 250, 0.4)';
+                    badgeRzp.style.background = 'rgba(96, 165, 250, 0.08)';
+                }
+                if (badgeWallet) {
+                    badgeWallet.textContent = `BALANCE: ₹${WALLET_BALANCE.toLocaleString('en-IN')}`;
+                    badgeWallet.style.color = '#10b981';
+                    badgeWallet.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                    badgeWallet.style.background = 'rgba(16, 185, 129, 0.08)';
+                }
+                if (btn) {
+                    btn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Place Order (COD)</span>
+                    `;
+                }
+            } else if (method === 'Razorpay') {
+                if (rzpItem) rzpItem.classList.add('selected');
+                if (radioInnerRzp) radioInnerRzp.style.background = 'var(--co-gold)';
+                if (badgeRzp) {
+                    badgeRzp.textContent = 'SELECTED';
+                    badgeRzp.style.color = 'var(--co-gold)';
+                    badgeRzp.style.borderColor = 'var(--co-gold)';
+                    badgeRzp.style.background = 'rgba(246, 189, 100, 0.12)';
+                }
+                if (badgeCOD) {
+                    badgeCOD.textContent = '';
+                    badgeCOD.style.display = 'none';
+                }
+                if (badgeWallet) {
+                    badgeWallet.textContent = `BALANCE: ₹${WALLET_BALANCE.toLocaleString('en-IN')}`;
+                    badgeWallet.style.color = '#10b981';
+                    badgeWallet.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                    badgeWallet.style.background = 'rgba(16, 185, 129, 0.08)';
+                }
+                if (btn) {
+                    btn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                        <span>Proceed to Online Payment (₹${CURRENT_TOTAL.toLocaleString('en-IN')})</span>
+                    `;
+                }
+            } else if (method === 'Wallet') {
+                if (walletItem) walletItem.classList.add('selected');
+                if (radioInnerWallet) radioInnerWallet.style.background = 'var(--co-gold)';
+                if (badgeWallet) {
+                    badgeWallet.textContent = 'SELECTED';
+                    badgeWallet.style.color = 'var(--co-gold)';
+                    badgeWallet.style.borderColor = 'var(--co-gold)';
+                    badgeWallet.style.background = 'rgba(246, 189, 100, 0.12)';
+                }
+                if (badgeCOD) {
+                    badgeCOD.textContent = '';
+                    badgeCOD.style.display = 'none';
+                }
+                if (badgeRzp) {
+                    badgeRzp.textContent = 'CARDS / UPI / NETBANKING';
+                    badgeRzp.style.color = '#60a5fa';
+                    badgeRzp.style.borderColor = 'rgba(96, 165, 250, 0.4)';
+                    badgeRzp.style.background = 'rgba(96, 165, 250, 0.08)';
+                }
+                if (btn) {
+                    btn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                            <path d="M7 15h0M2 10h20"></path>
+                        </svg>
+                        <span>Pay via Atelier Wallet (₹${CURRENT_TOTAL.toLocaleString('en-IN')})</span>
+                    `;
+                }
+            }
+        }
+
+        async function handleApplyCoupon() {
+            const input = document.getElementById('couponCodeInput');
+            const code = input ? input.value.trim() : '';
+            if (!code) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Coupon Code Required',
+                    text: 'Please type a valid privilege coupon code.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+                return;
+            }
+
+            const btn = document.getElementById('btnApplyCoupon');
+            if (btn) btn.disabled = true;
+
+            try {
+                const response = await fetch('/checkout/coupon/apply', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Privilege Applied',
+                        text: data.message,
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64',
+                        timer: 1400,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    if (btn) btn.disabled = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Coupon Error',
+                        text: data.message || 'Unable to apply coupon code.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
+            } catch (err) {
+                console.error('Apply coupon error:', err);
+                if (btn) btn.disabled = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Notice',
+                    text: 'Unable to contact coupon concierge. Please try again.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
+        }
+
+        async function handleRemoveCoupon() {
+            try {
+                const response = await fetch('/checkout/coupon/remove', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Notice',
+                        text: data.message || 'Unable to remove coupon.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
+            } catch (err) {
+                console.error('Remove coupon error:', err);
+            }
+        }
+
+        function applyPresetCoupon(code) {
+            const input = document.getElementById('couponCodeInput');
+            if (input) {
+                input.value = code;
+                handleApplyCoupon();
+            }
+        }
+
+        // Handle Place Order Submission (COD or Razorpay)
         async function handlePlaceOrder(event) {
             event.preventDefault();
 
@@ -927,69 +1277,198 @@
                 return;
             }
 
+            const paymentMethod = document.getElementById('selectedPaymentMethod').value || 'COD';
             const btn = document.getElementById('btnPlaceOrder');
+            const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
-                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
-                </svg>
-                <span>Securing Acquisition...</span>
-            `;
 
-            try {
-                const response = await fetch('/checkout/place-order', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        addressId: selectedAddressId,
-                        paymentMethod: 'COD'
-                    })
-                });
+            if (paymentMethod === 'COD' || paymentMethod === 'Wallet') {
+                btn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                    </svg>
+                    <span>${paymentMethod === 'Wallet' ? 'Processing Atelier Wallet Settlement...' : 'Securing Acquisition...'}</span>
+                `;
 
-                const data = await response.json();
+                try {
+                    const response = await fetch('/checkout/place-order', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            addressId: selectedAddressId,
+                            paymentMethod: paymentMethod
+                        })
+                    });
 
-                if (data.success && data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
+                    const data = await response.json();
+
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Acquisition Error',
+                            text: data.message || 'Unable to complete order.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                    }
+                } catch (err) {
+                    console.error("Place order error:", err);
                     btn.disabled = false;
-                    btn.innerHTML = `
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        <span>Place Order (COD)</span>
-                    `;
+                    btn.innerHTML = originalHTML;
                     Swal.fire({
                         icon: 'error',
-                        title: 'Acquisition Error',
-                        text: data.message || 'Unable to complete order.',
+                        title: 'Notice',
+                        text: 'Unable to connect to the atelier server. Please try again.',
                         background: '#141312',
                         color: '#eae6df',
                         confirmButtonColor: '#F6BD64'
                     });
                 }
-            } catch (err) {
-                console.error("Place order error:", err);
-                btn.disabled = false;
+            } else if (paymentMethod === 'Razorpay') {
                 btn.innerHTML = `
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
                     </svg>
-                    <span>Place Order (COD)</span>
+                    <span>Connecting Payment Concierge...</span>
                 `;
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Notice',
-                    text: 'Unable to connect to the atelier server. Please try again.',
-                    background: '#141312',
-                    color: '#eae6df',
-                    confirmButtonColor: '#F6BD64'
-                });
+
+                try {
+                    const initRes = await fetch('/checkout/create-razorpay-order', {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ addressId: selectedAddressId })
+                    });
+                    const initData = await initRes.json();
+
+                    if (!initData.success) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Gateway Notice',
+                            text: initData.message || 'Unable to initialize online payment.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            confirmButtonColor: '#F6BD64'
+                        });
+                        return;
+                    }
+
+                    const options = {
+                        key: initData.key,
+                        amount: initData.amount,
+                        currency: initData.currency,
+                        name: 'ROYAL IGNITE',
+                        description: 'Prestige Acquisition — Luxury Ignition Editions',
+                        image: '/images/favicon.png',
+                        order_id: initData.razorpayOrderId,
+                        handler: async function (paymentResponse) {
+                            btn.innerHTML = `
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                                    <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                                </svg>
+                                <span>Authenticating Settlement...</span>
+                            `;
+                            try {
+                                const verifyRes = await fetch('/checkout/verify-payment', {
+                                    method: 'POST',
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        addressId: selectedAddressId,
+                                        razorpayOrderId: paymentResponse.razorpay_order_id,
+                                        razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                                        razorpaySignature: paymentResponse.razorpay_signature
+                                    })
+                                });
+                                const verifyData = await verifyRes.json();
+                                if (verifyData.success && verifyData.redirect) {
+                                    window.location.href = verifyData.redirect;
+                                } else {
+                                    window.location.href = verifyData.redirect || `/checkout/failure/${initData.razorpayOrderId}`;
+                                }
+                            } catch (err) {
+                                console.error('Verify payment error:', err);
+                                window.location.href = `/checkout/failure/${initData.razorpayOrderId}`;
+                            }
+                        },
+                        prefill: {
+                            name: initData.user?.name || USER_FULL_NAME,
+                            email: initData.user?.email || USER_EMAIL,
+                            contact: initData.user?.phone || USER_PHONE
+                        },
+                        theme: {
+                            color: '#F6BD64'
+                        },
+                        modal: {
+                            ondismiss: async function () {
+                                btn.disabled = false;
+                                btn.innerHTML = originalHTML;
+                                try {
+                                    const failRes = await fetch('/checkout/payment-failed', {
+                                        method: 'POST',
+                                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            addressId: selectedAddressId,
+                                            razorpayOrderId: initData.razorpayOrderId,
+                                            errorMessage: 'Transaction dismissed by client before authentication.'
+                                        })
+                                    });
+                                    const failData = await failRes.json();
+                                    if (failData.redirect) {
+                                        window.location.href = failData.redirect;
+                                    }
+                                } catch (err) {
+                                    console.error('Payment dismissed error:', err);
+                                }
+                            }
+                        }
+                    };
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', async function (response) {
+                        try {
+                            const failRes = await fetch('/checkout/payment-failed', {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    addressId: selectedAddressId,
+                                    razorpayOrderId: initData.razorpayOrderId,
+                                    errorMessage: response.error?.description || response.error?.reason || 'Transaction declined by issuer bank.'
+                                })
+                            });
+                            const failData = await failRes.json();
+                            if (failData.redirect) {
+                                window.location.href = failData.redirect;
+                            }
+                        } catch (err) {
+                            console.error('Payment failure logging error:', err);
+                        }
+                    });
+                    rzp.open();
+                } catch (err) {
+                    console.error("Initiate Razorpay error:", err);
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Notice',
+                        text: 'Unable to connect to the payment gateway. Please try again.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                }
             }
         }
     </script>

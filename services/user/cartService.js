@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Cart from "../../models/cartModel.js";
 import Wishlist from "../../models/wishlistModel.js";
 import Product from "../../models/productModel.js";
+import Offer from "../../models/offerModel.js";
 import { CART, RESPONSE_MESSAGES } from "../../constants/index.js";
 
 /**
@@ -133,7 +134,10 @@ export const getCart = async (userId) => {
         const cart = await Cart.findOne({ user: userId })
             .populate({
                 path: "items.product",
-                populate: { path: "category" }
+                populate: [
+                    { path: "category" },
+                    { path: "appliedOffer" }
+                ]
             })
             .lean();
 
@@ -236,6 +240,35 @@ export const getCart = async (userId) => {
                 itemCount += item.quantity;
             }
 
+            let appliedOffer = prod.appliedOffer || null;
+            if (!appliedOffer && (prod.category || prod._id)) {
+                const now = new Date();
+                const directOffer = await Offer.findOne({
+                    isActive: true,
+                    isDeleted: false,
+                    offerType: "product",
+                    product: prod._id,
+                    startDate: { $lte: now },
+                    endDate: { $gte: now }
+                }).lean();
+                if (directOffer) {
+                    appliedOffer = directOffer;
+                } else if (prod.category) {
+                    const catId = prod.category._id || prod.category;
+                    const catOffer = await Offer.findOne({
+                        isActive: true,
+                        isDeleted: false,
+                        offerType: "category",
+                        category: catId,
+                        startDate: { $lte: now },
+                        endDate: { $gte: now }
+                    }).lean();
+                    if (catOffer) {
+                        appliedOffer = catOffer;
+                    }
+                }
+            }
+
             processedItems.push({
                 _id: item._id,
                 productId: prod._id,
@@ -246,6 +279,7 @@ export const getCart = async (userId) => {
                 price: currentEffectivePrice,
                 regularPrice: prod.regularPrice,
                 hasDiscount,
+                appliedOffer: appliedOffer,
                 stock: prod.stock,
                 maxAllowed: maxItemLimit,
                 lineTotal: itemLineTotal,

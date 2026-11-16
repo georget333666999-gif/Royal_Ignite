@@ -281,7 +281,7 @@ const validateChangeEmail = async (req, res, next) => {
                 const user = await User.findById(req.session.userId).select("email");
                 if (user) currentEmail = user.email;
             }
-        } catch (e) {}
+        } catch (_) {}
 
         const error = getChangeEmailValidationError(newEmail, currentEmail);
         if (error) {

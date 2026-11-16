@@ -1,4 +1,27 @@
 import Address from "../../models/addressModel.js";
+import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
+
+const normalizeField = (val = "") => String(val).trim().replace(/\s+/g, " ").toLowerCase();
+
+const findDuplicateAddress = async (userId, fields, excludeId = null) => {
+    const query = excludeId ? { userId, _id: { $ne: excludeId } } : { userId };
+    const addresses = await Address.find(query).lean();
+    return addresses.find((addr) =>
+        normalizeField(addr.fullName) === normalizeField(fields.fullName) &&
+        normalizeField(addr.phone) === normalizeField(fields.phone) &&
+        normalizeField(addr.addressLine) === normalizeField(fields.addressLine) &&
+        normalizeField(addr.city) === normalizeField(fields.city) &&
+        normalizeField(addr.state) === normalizeField(fields.state) &&
+        normalizeField(addr.pincode) === normalizeField(fields.pincode) &&
+        normalizeField(addr.country || "India") === normalizeField(fields.country || "India")
+    );
+};
+
+const createDuplicateError = () => {
+    const err = new Error(RESPONSE_MESSAGES.ADDRESS.DUPLICATE);
+    err.statusCode = HTTP_STATUS.CONFLICT;
+    return err;
+};
 
 /**
  * Create a new user address
@@ -16,6 +39,10 @@ const createAddress = async ({
     isDefault
 }) => {
     try {
+        if (await findDuplicateAddress(userId, { fullName, phone, addressLine, city, state, pincode, country })) {
+            throw createDuplicateError();
+        }
+
         // If this is the user's first address, automatically make it default
         const existingAddress = await Address.findOne({ userId });
         const shouldBeDefault = !existingAddress || isDefault === true;
@@ -94,6 +121,10 @@ const updateAddress = async (
         const address = await Address.findOne({ _id: addressId, userId });
         if (!address) {
             return null;
+        }
+
+        if (await findDuplicateAddress(userId, { fullName, phone, addressLine, city, state, pincode, country }, addressId)) {
+            throw createDuplicateError();
         }
 
         // If setting as default, unset default for all other user addresses

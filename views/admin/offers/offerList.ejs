@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Privilege Offers & Incentives — ROYAL IGNITE Admin' %></title>
+    
+    <!-- Design System Stylesheets -->
+    <link rel="stylesheet" href="/css/admin/offerList.css" />
+
+    <!-- SweetAlert2 for Luxury Confirmations -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .royal-luxury-swal {
+            background: #141312 !important;
+            border: 1px solid rgba(212, 136, 51, 0.28) !important;
+            border-radius: 16px !important;
+            padding: 26px 22px !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75) !important;
+            color: #f0ece6 !important;
+            font-family: 'Instrument Sans', sans-serif !important;
+        }
+
+        .royal-swal-title {
+            font-family: 'DM Serif Display', Georgia, serif !important;
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 0.3px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .royal-swal-confirm-btn {
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.3px !important;
+            padding: 10px 22px !important;
+            background: #D48833 !important;
+            color: #ffffff !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .royal-swal-confirm-btn:hover {
+            background: #B87326 !important;
+        }
+
+        .royal-swal-cancel-btn {
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            letter-spacing: 0.3px !important;
+            padding: 10px 20px !important;
+            background: #27272a !important;
+            color: #d4d4d8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .royal-swal-cancel-btn:hover {
+            background: #3f3f46 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Left Universal Sidebar Navigation -->
+    <%- include('../partials/sidebar', { activePage: 'offers' }) %>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Top Navbar Header -->
+        <header class="top-navbar">
+            <div class="navbar-left">
+                <div class="breadcrumb-trail">
+                    <span class="crumb-dim">Portal</span>
+                    <span class="crumb-sep">/</span>
+                    <span class="crumb-active">Offers &amp; Incentives</span>
+                </div>
+            </div>
+
+            <div class="navbar-right">
+                <a href="/" target="_blank" class="nav-action-btn" title="Open Storefront">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Store</span>
+                </a>
+
+                <div class="user-pill-badge">
+                    <div class="avatar-circle-sm">A</div>
+                    <span class="user-pill-name">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Canvas -->
+        <main class="content-padding">
+
+            <!-- Flash Notices if present -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;">
+                    <%= error %>
+                </div>
+            <% } %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div style="background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <!-- Page Title Header Row -->
+            <section class="page-title-row">
+                <div>
+                    <h1 class="page-title">Privilege Offers &amp; Incentives</h1>
+                    <p class="page-desc">Configure bespoke edition discounts, collection privileges, and member referral incentives.</p>
+                </div>
+
+                <div class="title-actions">
+                    <button type="button" class="btn-launch-offer" onclick="openCreateOfferModal()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Launch Privilege Offer</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4 Clean KPI Metric Cards -->
+            <%
+                const nowTime = new Date();
+                const activeCount = offers.filter(o => o.isActive && new Date(o.endDate) >= nowTime).length;
+                const productCount = offers.filter(o => o.offerType === 'product').length;
+                const categoryCount = offers.filter(o => o.offerType === 'category').length;
+                const referralCount = offers.filter(o => o.offerType === 'referral').length;
+            %>
+            <section class="metrics-grid">
+                
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Active Privileges</span>
+                        <div class="icon-badge bg-active" title="Live campaigns">
+                            <div class="dot-green"></div>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= activeCount %></div>
+                    <div class="metric-subtext">Currently live in atelier</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Product Offers</span>
+                        <div class="icon-badge bg-product" title="Bespoke item discounts">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= productCount %></div>
+                    <div class="metric-subtext">Bespoke edition discounts</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Category Offers</span>
+                        <div class="icon-badge bg-category" title="Collection privileges">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= categoryCount %></div>
+                    <div class="metric-subtext">Collection-wide privileges</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Referral Incentives</span>
+                        <div class="icon-badge bg-referral" title="Client acquisition incentives">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="metric-value"><%= referralCount %></div>
+                    <div class="metric-subtext">Token URL &amp; wallet credits</div>
+                </div>
+
+            </section>
+
+            <!-- Offers Directory Card -->
+            <section class="directory-card">
+                
+                <!-- Card Header with Filters -->
+                <div class="directory-header">
+                    <div class="directory-title-area">
+                        <h2 class="directory-title">Offers Directory</h2>
+                        <span class="badge-total-count"><%= typeof totalOffers !== 'undefined' ? totalOffers : offers.length %> entries</span>
+                    </div>
+
+                    <form action="/admin/offers" method="GET" class="filter-bar" id="offerFilterForm">
+                        <div class="search-input-wrap">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                id="searchInput"
+                                name="search"
+                                placeholder="Search offers by title..."
+                                value="<%= search || '' %>"
+                                autocomplete="off"
+                            />
+                            <% if (search) { %>
+                                <a href="/admin/offers?type=<%= currentType %>" class="search-clear-btn" title="Clear search">&times;</a>
+                            <% } %>
+                        </div>
+
+                        <select name="type" class="filter-select" onchange="this.form.submit()">
+                            <option value="all" <%= currentType === 'all' ? 'selected' : '' %>>All Types</option>
+                            <option value="product" <%= currentType === 'product' ? 'selected' : '' %>>Product Specific</option>
+                            <option value="category" <%= currentType === 'category' ? 'selected' : '' %>>Category Offers</option>
+                            <option value="referral" <%= currentType === 'referral' ? 'selected' : '' %>>Referral Incentives</option>
+                        </select>
+
+                        <% if (search || (currentType && currentType !== 'all')) { %>
+                            <a href="/admin/offers" class="btn-clear-filter">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                <span>Reset</span>
+                            </a>
+                        <% } %>
+                    </form>
+                </div>
+
+                <!-- Directory Table -->
+                <div class="table-responsive">
+                    <table class="directory-table">
+                        <thead>
+                            <tr>
+                                <th>Offer Title &amp; Notes</th>
+                                <th>Type</th>
+                                <th>Target Scope</th>
+                                <th>Benefit / Reward</th>
+                                <th>Validity Period</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (offers && offers.length > 0) { %>
+                                <% offers.forEach(function(offer) { %>
+                                    <%
+                                        const isExpired = new Date(offer.endDate) < nowTime;
+                                        const endDateFormatted = new Date(offer.endDate).toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        });
+                                        const msDiff = new Date(offer.endDate) - nowTime;
+                                        const daysRemaining = Math.max(0, Math.ceil(msDiff / (1000 * 60 * 60 * 24)));
+                                    %>
+                                    <tr>
+                                        <!-- Offer Title & Notes -->
+                                        <td>
+                                            <div class="offer-title-text"><%= offer.name %></div>
+                                            <% if (offer.description) { %>
+                                                <div class="offer-notes-text"><%= offer.description %></div>
+                                            <% } else { %>
+                                                <div class="offer-notes-text" style="color: #9CA3AF; font-style: italic;">No atelier notes</div>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Scope / Type Pill -->
+                                        <td>
+                                            <% if (offer.offerType === 'product') { %>
+                                                <span class="scope-pill pill-product">
+                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                    </svg>
+                                                    <span>Product</span>
+                                                </span>
+                                            <% } else if (offer.offerType === 'category') { %>
+                                                <span class="scope-pill pill-category">
+                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                                    </svg>
+                                                    <span>Category</span>
+                                                </span>
+                                            <% } else if (offer.offerType === 'referral') { %>
+                                                <span class="scope-pill pill-referral">
+                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                        <circle cx="9" cy="7" r="4"></circle>
+                                                    </svg>
+                                                    <span>Referral</span>
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Target Scope Details -->
+                                        <td>
+                                            <% if (offer.offerType === 'product') { %>
+                                                <div class="target-product-wrap">
+                                                    <img
+                                                        src="<%= (offer.product && offer.product.images && offer.product.images[0]) || '/uploads/hero_lighter.png' %>"
+                                                        alt="<%= offer.product ? offer.product.name : 'Target Creation' %>"
+                                                        class="target-thumb"
+                                                    />
+                                                    <div>
+                                                        <div class="target-meta-name"><%= offer.product ? offer.product.name : 'Unknown Product' %></div>
+                                                        <% if (offer.product && offer.product.regularPrice) { %>
+                                                            <div class="target-meta-price">₹<%= Number(offer.product.regularPrice).toLocaleString('en-IN') %></div>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            <% } else if (offer.offerType === 'category') { %>
+                                                <div class="target-category-wrap">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                                        <polyline points="2 17 12 22 22 17"></polyline>
+                                                        <polyline points="2 12 12 17 22 12"></polyline>
+                                                    </svg>
+                                                    <span><%= offer.category ? offer.category.name : 'Unknown Collection' %></span>
+                                                </div>
+                                            <% } else if (offer.offerType === 'referral') { %>
+                                                <div class="target-referral-wrap">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                                    </svg>
+                                                    <span>Token URL (?ref=CODE)</span>
+                                                </div>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Benefit / Reward -->
+                                        <td>
+                                            <% if (offer.offerType === 'referral') { %>
+                                                <div class="referral-reward-stack">
+                                                    <div class="reward-inviter">
+                                                        Inviter: ₹<%= Number(offer.referrerReward || 0).toLocaleString('en-IN') %>
+                                                    </div>
+                                                    <div class="reward-friend">
+                                                        Friend: ₹<%= Number(offer.refereeReward || 0).toLocaleString('en-IN') %>
+                                                    </div>
+                                                </div>
+                                            <% } else if (offer.discountType === 'percentage') { %>
+                                                <span class="benefit-rate-gold"><%= offer.discountValue %>% OFF</span>
+                                            <% } else { %>
+                                                <span class="benefit-rate-gold">₹<%= Number(offer.discountValue || 0).toLocaleString('en-IN') %> OFF</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Validity Trajectory -->
+                                        <td>
+                                            <div class="validity-row">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                </svg>
+                                                <span>Until <%= endDateFormatted %></span>
+                                            </div>
+                                            <% if (isExpired) { %>
+                                                <span class="validity-days-badge expired">Expired</span>
+                                            <% } else { %>
+                                                <span class="validity-days-badge active"><%= daysRemaining %> days remaining</span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Status Badge -->
+                                        <td>
+                                            <% if (isExpired) { %>
+                                                <span class="badge-status expired">
+                                                    <span class="dot-red"></span> Expired
+                                                </span>
+                                            <% } else if (offer.isActive) { %>
+                                                <span class="badge-status active">
+                                                    <span class="dot-green"></span> Live
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge-status paused">
+                                                    <span class="dot-amber"></span> Paused
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Action Buttons -->
+                                        <td style="text-align: right;">
+                                            <div class="action-buttons-group">
+                                                <!-- Pause / Activate Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon <%= offer.isActive ? 'toggle-active' : 'toggle-inactive' %>"
+                                                    onclick="handleToggleOffer('<%= offer._id %>', '<%= offer.name.replace(/'/g, "\\'") %>', <%= offer.isActive %>)"
+                                                    title="<%= offer.isActive ? 'Pause Offer' : 'Activate Offer' %>"
+                                                >
+                                                    <% if (offer.isActive) { %>
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                            <rect x="6" y="4" width="4" height="16"></rect>
+                                                            <rect x="14" y="4" width="4" height="16"></rect>
+                                                        </svg>
+                                                    <% } else { %>
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                        </svg>
+                                                    <% } %>
+                                                </button>
+
+                                                <!-- Delete / Decommission Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon delete-btn"
+                                                    onclick="handleDeleteOffer('<%= offer._id %>', '<%= offer.name.replace(/'/g, "\\'") %>')"
+                                                    title="Decommission Offer"
+                                                >
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-directory-card">
+                                            <div class="empty-icon-circle">
+                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                </svg>
+                                            </div>
+                                            <h3 class="empty-title">No Privilege Offers Found</h3>
+                                            <p class="empty-subtext">No campaign matches your current search criteria or no offers have been configured yet.</p>
+                                            <button type="button" class="btn-launch-offer" onclick="openCreateOfferModal()">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                <span>Launch First Offer</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <% if (totalPages > 1) { %>
+                    <div class="directory-footer">
+                        <div>
+                            Showing page <%= currentPage %> of <%= totalPages %> (<%= totalOffers %> total offers)
+                        </div>
+                        <div class="pagination-group">
+                            <% if (currentPage > 1) { %>
+                                <a href="/admin/offers?page=<%= currentPage - 1 %>&search=<%= search %>&type=<%= currentType %>" class="page-btn">
+                                    &larr; Previous
+                                </a>
+                            <% } else { %>
+                                <span class="page-btn disabled">&larr; Previous</span>
+                            <% } %>
+
+                            <% if (currentPage < totalPages) { %>
+                                <a href="/admin/offers?page=<%= currentPage + 1 %>&search=<%= search %>&type=<%= currentType %>" class="page-btn">
+                                    Next &rarr;
+                                </a>
+                            <% } else { %>
+                                <span class="page-btn disabled">Next &rarr;</span>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL: Launch Privilege Offer
+         ========================================================================== -->
+    <div class="modal-overlay" id="createOfferModal" onclick="handleModalOverlayClick(event)">
+        <div class="modal-dialog">
+            
+            <div class="modal-header">
+                <div class="modal-header-text">
+                    <h3 class="modal-title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>Launch Privilege Offer</span>
+                    </h3>
+                    <p class="modal-subtitle">Configure a product discount, collection privilege, or member referral campaign.</p>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="closeCreateOfferModal()">&times;</button>
+            </div>
+
+            <form id="createOfferForm" novalidate onsubmit="handleCreateOffer(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        
+                        <!-- Row 1: Offer Title (Full Width) -->
+                        <div class="form-group-full">
+                            <label class="form-label" for="offerName">Offer Title <span class="req">*</span></label>
+                            <input
+                                type="text"
+                                id="offerName"
+                                name="name"
+                                class="form-control"
+                                placeholder="e.g. Winter Sovereign Privilege, Heritage 20% Privilege"
+                                maxlength="100"
+                                autocomplete="off"
+                            />
+                            <div class="form-hint">A distinctive, memorable title displayed across client invoices &amp; checkout.</div>
+                            <div class="form-error-msg" id="offerNameError"></div>
+                        </div>
+
+                        <!-- Row 2, Col 1: Privilege Scope -->
+                        <div>
+                            <label class="form-label" for="offerType">Privilege Scope <span class="req">*</span></label>
+                            <select id="offerType" name="offerType" class="form-control" onchange="handleOfferTypeChange(this.value)">
+                                <option value="product">Product Specific Offer</option>
+                                <option value="category">Category / Collection Offer</option>
+                                <option value="referral">Member Referral Incentive (Token &amp; Bonus)</option>
+                            </select>
+                            <div class="form-hint">Applies to an edition, category, or referral reward.</div>
+                            <div class="form-error-msg" id="offerTypeError"></div>
+                        </div>
+
+                        <!-- Row 2, Col 2: Target Scope (Product or Category or Referral Notice) -->
+                        <div id="fieldProductScope">
+                            <label class="form-label" for="productId">Target Product Edition <span class="req">*</span></label>
+                            <select id="productId" name="productId" class="form-control">
+                                <option value="">Select target edition...</option>
+                                <% products.forEach(function(p) { %>
+                                    <option value="<%= p._id %>" data-price="<%= p.regularPrice %>">
+                                        <%= p.name %> (₹<%= Number(p.regularPrice).toLocaleString('en-IN') %>)
+                                    </option>
+                                <% }); %>
+                            </select>
+                            <div class="form-hint">Applied directly to this masterpiece edition.</div>
+                            <div class="form-error-msg" id="productIdError"></div>
+                        </div>
+
+                        <div id="fieldCategoryScope" style="display: none;">
+                            <label class="form-label" for="categoryId">Target Collection / Category <span class="req">*</span></label>
+                            <select id="categoryId" name="categoryId" class="form-control">
+                                <option value="">Select collection...</option>
+                                <% categories.forEach(function(c) { %>
+                                    <option value="<%= c._id %>"><%= c.name %></option>
+                                <% }); %>
+                            </select>
+                            <div class="form-hint">Applies to all creations cataloged in this collection.</div>
+                            <div class="form-error-msg" id="categoryIdError"></div>
+                        </div>
+
+                        <div id="fieldReferralScopeNotice" style="display: none;">
+                            <label class="form-label">Client Reward Scope</label>
+                            <div style="background: var(--admin-bg-subtle); border: 1px dashed var(--border-card); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--admin-text-secondary); line-height: 1.4;">
+                                <strong style="color: #047857;">Automated Referral Link:</strong> Wallet credits applied upon friend verification.
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Product / Category Discounts -->
+                        <div id="fieldDiscountTypeCol">
+                            <label class="form-label" for="discountType">Discount Type</label>
+                            <select id="discountType" name="discountType" class="form-control" onchange="handleDiscountTypeChange(this.value)">
+                                <option value="percentage">Percentage Discount (%)</option>
+                                <option value="flat">Flat Value Discount (₹)</option>
+                            </select>
+                            <div class="form-hint">Percentage or flat rupee deduction.</div>
+                        </div>
+
+                        <div id="fieldDiscountValueCol">
+                            <label class="form-label" for="discountValue">Discount Value <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="discountValue"
+                                name="discountValue"
+                                class="form-control"
+                                placeholder="e.g. 20"
+                                min="1"
+                                step="any"
+                            />
+                            <div class="form-hint" id="discountHint">Percentage rate bounded between 1% and 90%.</div>
+                            <div class="form-error-msg" id="discountValueError"></div>
+                        </div>
+
+                        <!-- Row 3 (Alternative for Referral Rewards) -->
+                        <div id="fieldReferrerCol" style="display: none;">
+                            <label class="form-label" for="referrerReward">Referrer Reward (₹) <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="referrerReward"
+                                name="referrerReward"
+                                class="form-control"
+                                placeholder="e.g. 250"
+                                min="0"
+                                value="250"
+                            />
+                            <div class="form-hint">Credited to referring patron's wallet upon verified friend order.</div>
+                            <div class="form-error-msg" id="referrerRewardError"></div>
+                        </div>
+
+                        <div id="fieldRefereeCol" style="display: none;">
+                            <label class="form-label" for="refereeReward">Friend Welcome Bonus (₹) <span class="req">*</span></label>
+                            <input
+                                type="number"
+                                id="refereeReward"
+                                name="refereeReward"
+                                class="form-control"
+                                placeholder="e.g. 125"
+                                min="0"
+                                value="125"
+                            />
+                            <div class="form-hint">Instant wallet gift credited to newly welcomed patron.</div>
+                            <div class="form-error-msg" id="refereeRewardError"></div>
+                        </div>
+
+                        <!-- Row 4: Dates -->
+                        <div>
+                            <label class="form-label" for="startDate">Launch Date</label>
+                            <input type="datetime-local" id="startDate" name="startDate" class="form-control" />
+                            <div class="form-error-msg" id="startDateError"></div>
+                        </div>
+
+                        <div>
+                            <label class="form-label" for="endDate">Expiration Date <span class="req">*</span></label>
+                            <input type="datetime-local" id="endDate" name="endDate" class="form-control" />
+                            <div class="form-error-msg" id="endDateError"></div>
+                        </div>
+
+                        <!-- Row 5: Notes / Description (Full Width) -->
+                        <div class="form-group-full">
+                            <label class="form-label" for="description">Atelier Notes / Campaign Rationale</label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Internal context, campaign season, or promotional rationale..."
+                                maxlength="500"
+                            ></textarea>
+                            <div class="form-error-msg" id="descriptionError"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="modal-actions">
+                        <button type="button" class="btn-modal-cancel" onclick="closeCreateOfferModal()">Cancel</button>
+                        <button type="submit" class="btn-modal-submit" id="btnSubmitOffer">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Launch Privilege Offer</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         Client-Side Interactivity & Validation Engine
+         ========================================================================== -->
+    <script>
+        // ==========================================================================
+        // Inline Validation Engine Helpers
+        // ==========================================================================
+        function setFieldError(inputId, errorId, message) {
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(errorId);
+            if (!input || !errorEl) return;
+
+            input.classList.add('input-error');
+            errorEl.innerHTML = `
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>${message}</span>
+            `;
+            errorEl.classList.add('visible');
+            errorEl.style.display = 'flex';
+        }
+
+        function clearFieldError(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(errorId);
+            if (!input || !errorEl) return;
+
+            input.classList.remove('input-error');
+            errorEl.innerHTML = '';
+            errorEl.classList.remove('visible');
+            errorEl.style.display = 'none';
+        }
+
+        function clearAllErrors() {
+            const errorEls = document.querySelectorAll('#createOfferModal .form-error-msg');
+            errorEls.forEach(el => {
+                el.innerHTML = '';
+                el.classList.remove('visible');
+                el.style.display = 'none';
+            });
+            const errorInputs = document.querySelectorAll('#createOfferModal .input-error');
+            errorInputs.forEach(input => input.classList.remove('input-error'));
+        }
+
+        // ==========================================================================
+        // Field-by-Field Validation Rules
+        // ==========================================================================
+        function validateOfferName(showUi = true) {
+            const input = document.getElementById('offerName');
+            const val = input.value.trim();
+
+            if (!val) {
+                if (showUi) setFieldError('offerName', 'offerNameError', 'Offer title is required.');
+                return false;
+            }
+            if (val.length < 2) {
+                if (showUi) setFieldError('offerName', 'offerNameError', 'Offer title must be at least 2 characters.');
+                return false;
+            }
+            if (val.length > 100) {
+                if (showUi) setFieldError('offerName', 'offerNameError', 'Offer title cannot exceed 100 characters.');
+                return false;
+            }
+            clearFieldError('offerName', 'offerNameError');
+            return true;
+        }
+
+        function validateProductSelection(showUi = true) {
+            const type = document.getElementById('offerType').value;
+            if (type !== 'product') {
+                clearFieldError('productId', 'productIdError');
+                return true;
+            }
+
+            const select = document.getElementById('productId');
+            const val = select ? select.value.trim() : '';
+            if (!val) {
+                if (showUi) setFieldError('productId', 'productIdError', 'Please select a target product edition.');
+                return false;
+            }
+            clearFieldError('productId', 'productIdError');
+            return true;
+        }
+
+        function validateCategorySelection(showUi = true) {
+            const type = document.getElementById('offerType').value;
+            if (type !== 'category') {
+                clearFieldError('categoryId', 'categoryIdError');
+                return true;
+            }
+
+            const select = document.getElementById('categoryId');
+            const val = select ? select.value.trim() : '';
+            if (!val) {
+                if (showUi) setFieldError('categoryId', 'categoryIdError', 'Please select a target collection.');
+                return false;
+            }
+            clearFieldError('categoryId', 'categoryIdError');
+            return true;
+        }
+
+        function validateDiscountValue(showUi = true) {
+            const offerType = document.getElementById('offerType').value;
+            if (offerType === 'referral') {
+                clearFieldError('discountValue', 'discountValueError');
+                return true;
+            }
+
+            const discountType = document.getElementById('discountType').value;
+            const input = document.getElementById('discountValue');
+            const rawVal = input.value.trim();
+
+            if (!rawVal) {
+                if (showUi) setFieldError('discountValue', 'discountValueError', 'Discount value is required.');
+                return false;
+            }
+
+            const val = parseFloat(rawVal);
+            if (isNaN(val) || val <= 0) {
+                if (showUi) setFieldError('discountValue', 'discountValueError', 'Please enter a valid positive discount value.');
+                return false;
+            }
+
+            if (discountType === 'percentage') {
+                if (val < 1 || val > 90) {
+                    if (showUi) setFieldError('discountValue', 'discountValueError', 'Percentage discount must be between 1% and 90%.');
+                    return false;
+                }
+            } else if (discountType === 'flat') {
+                if (offerType === 'product') {
+                    const productSelect = document.getElementById('productId');
+                    const selectedOpt = productSelect ? productSelect.options[productSelect.selectedIndex] : null;
+                    const price = selectedOpt ? parseFloat(selectedOpt.getAttribute('data-price')) : 0;
+                    if (price > 0 && val >= price) {
+                        if (showUi) setFieldError('discountValue', 'discountValueError', `Flat discount (₹${val}) must be strictly less than product price (₹${price}).`);
+                        return false;
+                    }
+                }
+            }
+
+            clearFieldError('discountValue', 'discountValueError');
+            return true;
+        }
+
+        function validateReferralRewards(showUi = true) {
+            const offerType = document.getElementById('offerType').value;
+            if (offerType !== 'referral') {
+                clearFieldError('referrerReward', 'referrerRewardError');
+                clearFieldError('refereeReward', 'refereeRewardError');
+                return true;
+            }
+
+            const referrerInput = document.getElementById('referrerReward');
+            const refereeInput = document.getElementById('refereeReward');
+            const referrerVal = parseFloat(referrerInput.value) || 0;
+            const refereeVal = parseFloat(refereeInput.value) || 0;
+
+            let isValid = true;
+            if (referrerVal < 0) {
+                if (showUi) setFieldError('referrerReward', 'referrerRewardError', 'Referrer reward cannot be negative.');
+                isValid = false;
+            } else {
+                clearFieldError('referrerReward', 'referrerRewardError');
+            }
+
+            if (refereeVal < 0) {
+                if (showUi) setFieldError('refereeReward', 'refereeRewardError', 'Friend welcome bonus cannot be negative.');
+                isValid = false;
+            } else {
+                clearFieldError('refereeReward', 'refereeRewardError');
+            }
+
+            if (referrerVal <= 0 && refereeVal <= 0) {
+                if (showUi) {
+                    setFieldError('referrerReward', 'referrerRewardError', 'At least one reward (inviter or friend) must be greater than ₹0.');
+                }
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function validateDates(showUi = true) {
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            const startVal = startInput.value;
+            const endVal = endInput.value;
+
+            let isValid = true;
+
+            if (!endVal) {
+                if (showUi) setFieldError('endDate', 'endDateError', 'Expiration date and time is required.');
+                isValid = false;
+            } else {
+                const endTime = new Date(endVal).getTime();
+                if (isNaN(endTime)) {
+                    if (showUi) setFieldError('endDate', 'endDateError', 'Please provide a valid expiration date.');
+                    isValid = false;
+                } else if (endTime <= Date.now() + 2 * 60 * 1000) {
+                    if (showUi) setFieldError('endDate', 'endDateError', 'Expiration date must be scheduled in the future.');
+                    isValid = false;
+                } else if (startVal) {
+                    const startTime = new Date(startVal).getTime();
+                    if (!isNaN(startTime) && endTime <= startTime) {
+                        if (showUi) setFieldError('endDate', 'endDateError', 'Expiration date must be scheduled after launch date.');
+                        isValid = false;
+                    } else {
+                        clearFieldError('endDate', 'endDateError');
+                    }
+                } else {
+                    clearFieldError('endDate', 'endDateError');
+                }
+            }
+
+            return isValid;
+        }
+
+        function validateDescription(showUi = true) {
+            const input = document.getElementById('description');
+            const val = input.value;
+            if (val && val.length > 500) {
+                if (showUi) setFieldError('description', 'descriptionError', 'Atelier notes cannot exceed 500 characters.');
+                return false;
+            }
+            clearFieldError('description', 'descriptionError');
+            return true;
+        }
+
+        // ==========================================================================
+        // Modal Controls & Dynamic Scope
+        // ==========================================================================
+        function openCreateOfferModal() {
+            document.getElementById('createOfferForm').reset();
+            clearAllErrors();
+            handleOfferTypeChange('product');
+
+            // Default launch time to now, end date to 30 days ahead
+            const now = new Date();
+            const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            
+            const toLocalISO = (d) => {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+
+            const nowIso = toLocalISO(now);
+            const futureIso = toLocalISO(future);
+
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            if (startInput) {
+                startInput.value = nowIso;
+                startInput.min = nowIso;
+            }
+            if (endInput) {
+                endInput.value = futureIso;
+                endInput.min = nowIso;
+            }
+
+            const modal = document.getElementById('createOfferModal');
+            modal.classList.add('open');
+            setTimeout(() => {
+                const nameInput = document.getElementById('offerName');
+                if (nameInput) nameInput.focus();
+            }, 100);
+        }
+
+        function closeCreateOfferModal() {
+            const modal = document.getElementById('createOfferModal');
+            modal.classList.remove('open');
+            clearAllErrors();
+        }
+
+        function handleModalOverlayClick(e) {
+            if (e.target.id === 'createOfferModal') {
+                closeCreateOfferModal();
+            }
+        }
+
+        function handleOfferTypeChange(type) {
+            const productScope = document.getElementById('fieldProductScope');
+            const categoryScope = document.getElementById('fieldCategoryScope');
+            const referralNotice = document.getElementById('fieldReferralScopeNotice');
+            const discountTypeCol = document.getElementById('fieldDiscountTypeCol');
+            const discountValueCol = document.getElementById('fieldDiscountValueCol');
+            const referrerCol = document.getElementById('fieldReferrerCol');
+            const refereeCol = document.getElementById('fieldRefereeCol');
+
+            clearAllErrors();
+
+            if (type === 'product') {
+                productScope.style.display = 'block';
+                categoryScope.style.display = 'none';
+                if (referralNotice) referralNotice.style.display = 'none';
+                discountTypeCol.style.display = 'block';
+                discountValueCol.style.display = 'block';
+                referrerCol.style.display = 'none';
+                refereeCol.style.display = 'none';
+            } else if (type === 'category') {
+                productScope.style.display = 'none';
+                categoryScope.style.display = 'block';
+                if (referralNotice) referralNotice.style.display = 'none';
+                discountTypeCol.style.display = 'block';
+                discountValueCol.style.display = 'block';
+                referrerCol.style.display = 'none';
+                refereeCol.style.display = 'none';
+            } else if (type === 'referral') {
+                productScope.style.display = 'none';
+                categoryScope.style.display = 'none';
+                if (referralNotice) referralNotice.style.display = 'block';
+                discountTypeCol.style.display = 'none';
+                discountValueCol.style.display = 'none';
+                referrerCol.style.display = 'block';
+                refereeCol.style.display = 'block';
+            }
+        }
+
+        function handleDiscountTypeChange(type) {
+            const hint = document.getElementById('discountHint');
+            const valInput = document.getElementById('discountValue');
+            clearFieldError('discountValue', 'discountValueError');
+
+            if (type === 'percentage') {
+                hint.textContent = 'Percentage rate bounded between 1% and 90%.';
+                valInput.placeholder = 'e.g. 20 (for 20%)';
+                valInput.max = 90;
+            } else {
+                hint.textContent = 'Flat rupee reduction applied directly against retail value.';
+                valInput.placeholder = 'e.g. 1500 (for ₹1,500)';
+                valInput.removeAttribute('max');
+            }
+
+            if (valInput && valInput.value) {
+                validateDiscountValue(true);
+            }
+        }
+
+        // ==========================================================================
+        // Real-Time Event Listeners
+        // ==========================================================================
+        function initOfferListeners() {
+            const nameInput = document.getElementById('offerName');
+            const productSelect = document.getElementById('productId');
+            const categorySelect = document.getElementById('categoryId');
+            const discountInput = document.getElementById('discountValue');
+            const referrerInput = document.getElementById('referrerReward');
+            const refereeInput = document.getElementById('refereeReward');
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            const descInput = document.getElementById('description');
+
+            if (nameInput) {
+                nameInput.addEventListener('input', () => {
+                    if (nameInput.classList.contains('input-error')) validateOfferName(true);
+                });
+                nameInput.addEventListener('blur', () => validateOfferName(true));
+            }
+
+            if (productSelect) {
+                productSelect.addEventListener('change', () => {
+                    validateProductSelection(true);
+                    if (discountInput && discountInput.value) validateDiscountValue(true);
+                });
+                productSelect.addEventListener('blur', () => validateProductSelection(true));
+            }
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', () => validateCategorySelection(true));
+                categorySelect.addEventListener('blur', () => validateCategorySelection(true));
+            }
+
+            if (discountInput) {
+                discountInput.addEventListener('input', () => {
+                    if (discountInput.classList.contains('input-error')) validateDiscountValue(true);
+                });
+                discountInput.addEventListener('blur', () => validateDiscountValue(true));
+            }
+
+            if (referrerInput) {
+                referrerInput.addEventListener('input', () => {
+                    if (referrerInput.classList.contains('input-error')) validateReferralRewards(true);
+                });
+                referrerInput.addEventListener('blur', () => validateReferralRewards(true));
+            }
+
+            if (refereeInput) {
+                refereeInput.addEventListener('input', () => {
+                    if (refereeInput.classList.contains('input-error')) validateReferralRewards(true);
+                });
+                refereeInput.addEventListener('blur', () => validateReferralRewards(true));
+            }
+
+            if (startInput) {
+                startInput.addEventListener('change', () => {
+                    if (endInput && startInput.value) {
+                        endInput.min = startInput.value;
+                    }
+                    validateDates(true);
+                });
+                startInput.addEventListener('blur', () => validateDates(true));
+            }
+
+            if (endInput) {
+                endInput.addEventListener('change', () => validateDates(true));
+                endInput.addEventListener('blur', () => validateDates(true));
+            }
+
+            if (descInput) {
+                descInput.addEventListener('input', () => {
+                    if (descInput.classList.contains('input-error')) validateDescription(true);
+                });
+                descInput.addEventListener('blur', () => validateDescription(true));
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initOfferListeners);
+        } else {
+            initOfferListeners();
+        }
+
+        // ==========================================================================
+        // Form Submission with Strict JS Validation
+        // ==========================================================================
+        async function handleCreateOffer(event) {
+            event.preventDefault();
+
+            // Run validations across all relevant fields
+            const isNameValid = validateOfferName(true);
+            const isProductValid = validateProductSelection(true);
+            const isCategoryValid = validateCategorySelection(true);
+            const isDiscountValid = validateDiscountValue(true);
+            const isReferralValid = validateReferralRewards(true);
+            const areDatesValid = validateDates(true);
+            const isDescValid = validateDescription(true);
+
+            if (!isNameValid || !isProductValid || !isCategoryValid || !isDiscountValid || !isReferralValid || !areDatesValid || !isDescValid) {
+                const firstInvalid = document.querySelector('#createOfferModal .input-error');
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitOffer');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path d="M12 2a10 10 0 0 1 10 10"></path>
+                </svg>
+                <span>Configuring Atelier Offer...</span>
+            `;
+
+            const form = event.target;
+            const data = {
+                name: form.name.value.trim(),
+                offerType: form.offerType.value,
+                description: form.description.value.trim(),
+                discountType: form.discountType.value,
+                discountValue: parseFloat(form.discountValue.value) || 0,
+                productId: form.productId ? form.productId.value || null : null,
+                categoryId: form.categoryId ? form.categoryId.value || null : null,
+                referrerReward: parseFloat(form.referrerReward ? form.referrerReward.value : 0) || 0,
+                refereeReward: parseFloat(form.refereeReward ? form.refereeReward.value : 0) || 0,
+                startDate: form.startDate.value,
+                endDate: form.endDate.value
+            };
+
+            try {
+                const response = await fetch('/admin/offers/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+
+                if (res.success) {
+                    closeCreateOfferModal();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Privilege Offer Launched',
+                        text: res.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        },
+                        timer: 1600,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+
+                    if (res.message && res.message.toLowerCase().includes('title')) {
+                        setFieldError('offerName', 'offerNameError', res.message);
+                        document.getElementById('offerName').focus();
+                    } else if (res.message && res.message.toLowerCase().includes('product')) {
+                        setFieldError('productId', 'productIdError', res.message);
+                        document.getElementById('productId').focus();
+                    } else if (res.message && res.message.toLowerCase().includes('category')) {
+                        setFieldError('categoryId', 'categoryIdError', res.message);
+                        document.getElementById('categoryId').focus();
+                    } else if (res.message && res.message.toLowerCase().includes('discount')) {
+                        setFieldError('discountValue', 'discountValueError', res.message);
+                        document.getElementById('discountValue').focus();
+                    } else if (res.message && (res.message.toLowerCase().includes('date') || res.message.toLowerCase().includes('expiration'))) {
+                        setFieldError('endDate', 'endDateError', res.message);
+                        document.getElementById('endDate').focus();
+                    } else if (res.message && (res.message.toLowerCase().includes('referral') || res.message.toLowerCase().includes('reward'))) {
+                        setFieldError('referrerReward', 'referrerRewardError', res.message);
+                        document.getElementById('referrerReward').focus();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Configuration Notice',
+                            text: res.message || 'Unable to launch offer.',
+                            customClass: {
+                                popup: 'royal-luxury-swal',
+                                title: 'royal-swal-title',
+                                confirmButton: 'royal-swal-confirm-btn'
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Create offer error:', err);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Notice',
+                    text: 'Unable to connect to the atelier server.',
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn'
+                    }
+                });
+            }
+        }
+
+        // ==========================================================================
+        // Toggle & Delete Operations
+        // ==========================================================================
+        async function handleToggleOffer(offerId, offerName, isCurrentlyActive) {
+            const actionText = isCurrentlyActive ? 'pause' : 'activate';
+            const result = await Swal.fire({
+                title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Privilege Offer?`,
+                text: `Are you sure you want to ${actionText} "${offerName}"? Product prices will be automatically recalculated.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${actionText}`,
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await fetch(`/admin/offers/toggle/${offerId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const res = await response.json();
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Offer Updated',
+                        text: res.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        },
+                        timer: 1300,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Notice',
+                        text: res.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Toggle offer error:', err);
+            }
+        }
+
+        async function handleDeleteOffer(offerId, offerName) {
+            const result = await Swal.fire({
+                title: 'Decommission Offer?',
+                text: `Permanently decommission "${offerName}"? Any affected product pricing will be immediately restored.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Decommission',
+                cancelButtonText: 'Keep Active',
+                customClass: {
+                    popup: 'royal-luxury-swal',
+                    title: 'royal-swal-title',
+                    confirmButton: 'royal-swal-confirm-btn',
+                    cancelButton: 'royal-swal-cancel-btn'
+                }
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await fetch(`/admin/offers/delete/${offerId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const res = await response.json();
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Decommissioned',
+                        text: res.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        },
+                        timer: 1300,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Notice',
+                        text: res.message,
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Delete offer error:', err);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -77,6 +77,12 @@
     </div>
 <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
 <script>
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+
     (function() {
         fetch('/wishlist/count')
             .then(res => res.json())

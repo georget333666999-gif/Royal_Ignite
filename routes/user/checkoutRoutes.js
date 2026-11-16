@@ -13,7 +13,21 @@ router.post("/checkout/buy-now", checkoutController.postBuyNow);
 // Place Order (COD)
 router.post("/checkout/place-order", checkoutController.postPlaceOrder);
 
-// Order Confirmation / Success Page
+// Coupon Management (e.i, e.ii, e.iii)
+router.post("/checkout/coupon/apply", checkoutController.postApplyCoupon);
+router.post("/checkout/coupon/remove", checkoutController.postRemoveCoupon);
+
+// Online Payment Gateway: Razorpay (a)
+router.post("/checkout/create-razorpay-order", checkoutController.postCreateRazorpayOrder);
+router.post("/checkout/verify-payment", checkoutController.postVerifyPayment);
+router.post("/checkout/payment-failed", checkoutController.postPaymentFailed);
+
+// Payment Failure Page & Retry Payment (c)
+router.get("/checkout/failure/:orderId", checkoutController.getPaymentFailurePage);
+router.post("/checkout/retry-payment/:orderId", checkoutController.postRetryPayment);
+router.post("/checkout/verify-retry-payment/:orderId", checkoutController.postVerifyRetryPayment);
+
+// Order Confirmation / Success Page (b)
 router.get("/checkout/success/:orderId", checkoutController.getOrderSuccessPage);
 
 // Checkout Inline / Modal Address Management

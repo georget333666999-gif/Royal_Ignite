@@ -18,6 +18,7 @@
 
     <!-- SweetAlert2 for Quiet Luxury Dialogs -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         .royal-luxury-swal {
             background: #141312 !important;
@@ -86,10 +87,14 @@
                     <div class="order-heading-group">
                         <h1 class="order-details-title">
                             Edition <span class="order-id-highlight">#<%= order.orderId %></span>
-                            <% const statusSlug = (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-'); %>
+                            <% 
+                                const isPaymentPending = order.paymentStatus === 'Failed' || (order.orderStatus === 'Pending' && order.paymentStatus !== 'Completed');
+                                const displayStatus = isPaymentPending ? 'Payment Pending' : order.orderStatus;
+                                const statusSlug = isPaymentPending ? 'payment-pending' : (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-');
+                            %>
                             <span class="status-badge <%= statusSlug %>">
                                 <span class="status-dot"></span>
-                                <span><%= order.orderStatus %></span>
+                                <span><%= displayStatus %></span>
                             </span>
                         </h1>
                         <div class="order-meta-stamp">
@@ -97,36 +102,53 @@
                             <span class="stamp-dot"></span>
                             <span><%= new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %></span>
                             <span class="stamp-dot"></span>
-                            <span>Payment: <%= order.paymentMethod %> (<%= order.paymentStatus %>)</span>
+                            <span>Payment: <%= order.paymentMethod %> (<%= isPaymentPending ? 'Pending' : order.paymentStatus %>)</span>
                         </div>
                     </div>
 
                     <!-- Actions (c.ii, c.iv, c.vi) -->
                     <div class="order-header-actions">
-                        <!-- Invoice Download (c.vi) -->
-                        <a href="/orders/<%= order.orderId %>/invoice" 
-                           class="btn-download-invoice" 
-                           target="_blank" 
-                           title="Download official atelier invoice as PDF">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            <span>Download Invoice (PDF)</span>
-                        </a>
+                        <!-- Pay Now Button if payment pending -->
+                        <% if (isPaymentPending) { %>
+                            <button type="button" 
+                                    class="btn-order-pay-now" 
+                                    onclick="retryOrderPayment('<%= order.orderId %>')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                </svg>
+                                <span>Pay Now</span>
+                            </button>
+                        <% } %>
+
+                        <!-- Invoice Download (only for placed/completed orders) -->
+                        <% if (!isPaymentPending) { %>
+                            <a href="/orders/<%= order.orderId %>/invoice" 
+                               class="btn-download-invoice" 
+                               target="_blank" 
+                               title="Download official atelier invoice as PDF">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Download Invoice (PDF)</span>
+                            </a>
+                        <% } %>
 
                         <!-- Cancel Entire Order (c.ii, c.iii) -->
-                        <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing') { %>
+                        <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing' || isPaymentPending) { %>
                             <button type="button" 
                                     class="btn-header-cancel" 
                                     onclick="promptCancelOrder('<%= order.orderId %>')">
-                                Cancel Entire Order
+                                <%= isPaymentPending ? 'Cancel / Discard Order' : 'Cancel Entire Order' %>
                             </button>
                         <% } %>
 
                         <!-- Return Order (c.iv) -->
-                        <% if (order.orderStatus === 'Delivered') { %>
+                        <% const hasReturnableItems = Array.isArray(order.items) && order.items.some(i => i.status === 'Delivered'); %>
+                        <% const isDeliveredStage = Boolean(order.deliveredAt) || ['Delivered', 'Return Requested', 'Return Rejected', 'Returned'].includes(order.orderStatus); %>
+                        <% if (isDeliveredStage && hasReturnableItems) { %>
                             <button type="button" 
                                     class="btn-header-return" 
                                     onclick="promptReturnOrder('<%= order.orderId %>')">
@@ -136,6 +158,34 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Banner notice for Payment Pending -->
+            <% if (isPaymentPending) { %>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; color: #f87171; flex-shrink: 0;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <div style="color: #f87171; font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px;">Payment Incomplete</div>
+                            <div style="color: #d4d4d8; font-size: 13.5px; margin-top: 3px;">The transaction was interrupted or declined. Your edition reservation is on hold until payment is completed.</div>
+                        </div>
+                    </div>
+                    <button type="button" 
+                            onclick="retryOrderPayment('<%= order.orderId %>')"
+                            style="background: #F6BD64; color: #0E0E12; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 22px; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(246, 189, 100, 0.25);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                            <line x1="2" y1="10" x2="22" y2="10"></line>
+                        </svg>
+                        <span>Complete Payment Now</span>
+                    </button>
+                </div>
+            <% } %>
 
             <!-- Visual Progress Stepper (c.v) -->
             <section class="order-stepper-card">
@@ -157,85 +207,65 @@
                 <% 
                     const isCancelled = order.orderStatus === 'Cancelled';
                     const isReturned = order.orderStatus === 'Returned';
-                    
-                    let progressPercent = 0;
-                    let isPlacedDone = false, isProcessingDone = false, isShippedDone = false, isDeliveredDone = false;
-                    let isPlacedActive = false, isProcessingActive = false, isShippedActive = false, isDeliveredActive = false;
-
-                    if (!isCancelled && !isReturned) {
-                        if (order.orderStatus === 'Placed') {
-                            isPlacedActive = true;
-                            progressPercent = 0;
-                        } else if (order.orderStatus === 'Processing') {
-                            isPlacedDone = true;
-                            isProcessingActive = true;
-                            progressPercent = 33.33;
-                        } else if (order.orderStatus === 'Shipped') {
-                            isPlacedDone = true;
-                            isProcessingDone = true;
-                            isShippedActive = true;
-                            progressPercent = 66.66;
-                        } else if (order.orderStatus === 'Delivered') {
-                            isPlacedDone = true;
-                            isProcessingDone = true;
-                            isShippedDone = true;
-                            isDeliveredDone = true;
-                            progressPercent = 100;
+                    const stepIndexMap = {
+                        'Pending': 0,
+                        'Placed': 0,
+                        'Processing': 1,
+                        'Shipped': 2,
+                        'Out for Delivery': 3,
+                        'Delivered': 4,
+                        'Return Requested': 4,
+                        'Return Rejected': 4
+                    };
+                    const currentStepIndex = stepIndexMap[order.orderStatus] ?? 0;
+                    const trajectorySteps = [
+                        {
+                            label: 'Placed',
+                            sub: new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                            icon: '<polyline points="20 6 9 17 4 12"></polyline>'
+                        },
+                        {
+                            label: 'Processing',
+                            sub: 'Atelier Inspection',
+                            icon: '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>'
+                        },
+                        {
+                            label: 'Shipped',
+                            sub: 'Courier Concierge',
+                            icon: '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>'
+                        },
+                        {
+                            label: 'Out for Delivery',
+                            sub: 'With Local Courier',
+                            icon: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>'
+                        },
+                        {
+                            label: 'Delivered',
+                            sub: order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Safely Received',
+                            icon: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
                         }
-                    }
+                    ];
                 %>
 
                 <% if (!isCancelled && !isReturned) { %>
                     <div class="stepper-track">
-                        <div class="stepper-progress-fill" style="width: <%= progressPercent %>%;"></div>
+                        <div class="stepper-progress-fill" style="width: calc((100% - 80px) * <%= currentStepIndex / 4 %>);"></div>
 
-                        <!-- Step 1: Placed -->
-                        <div class="stepper-step <%= isPlacedDone ? 'completed' : (isPlacedActive ? 'active' : '') %>">
-                            <div class="step-node">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                        <% trajectorySteps.forEach(function(step, idx) { %>
+                            <%
+                                const isDone = idx < currentStepIndex || (idx === 4 && currentStepIndex === 4);
+                                const isActive = !isDone && idx === currentStepIndex;
+                            %>
+                            <div class="stepper-step <%= isDone ? 'completed' : (isActive ? 'active' : '') %>">
+                                <div class="step-node">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <%- step.icon %>
+                                    </svg>
+                                </div>
+                                <span class="step-label"><%= step.label %></span>
+                                <span class="step-sub"><%= step.sub %></span>
                             </div>
-                            <span class="step-label">Placed</span>
-                            <span class="step-sub"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) %></span>
-                        </div>
-
-                        <!-- Step 2: Processing -->
-                        <div class="stepper-step <%= isProcessingDone ? 'completed' : (isProcessingActive ? 'active' : '') %>">
-                            <div class="step-node">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                                </svg>
-                            </div>
-                            <span class="step-label">Processing</span>
-                            <span class="step-sub">Atelier Inspection</span>
-                        </div>
-
-                        <!-- Step 3: Shipped -->
-                        <div class="stepper-step <%= isShippedDone ? 'completed' : (isShippedActive ? 'active' : '') %>">
-                            <div class="step-node">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="1" y="3" width="15" height="13"></rect>
-                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                </svg>
-                            </div>
-                            <span class="step-label">Dispatched</span>
-                            <span class="step-sub">Courier Concierge</span>
-                        </div>
-
-                        <!-- Step 4: Delivered -->
-                        <div class="stepper-step <%= isDeliveredDone ? 'completed' : (isDeliveredActive ? 'active' : '') %>">
-                            <div class="step-node">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
-                            </div>
-                            <span class="step-label">Delivered</span>
-                            <span class="step-sub"><%= order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Safely Received' %></span>
-                        </div>
+                        <% }); %>
                     </div>
                 <% } else if (isCancelled) { %>
                     <!-- Cancellation Notice Banner -->
@@ -272,7 +302,9 @@
                             </div>
                         </div>
                     </div>
-                <% } else if (isReturnRequested) { %>
+                <% } %>
+
+                <% if (order.orderStatus === 'Return Requested') { %>
                     <!-- Return Requested Banner -->
                     <div class="order-notice-banner notice-return-requested">
                         <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -299,7 +331,7 @@
                             <% } %>
                         </div>
                     </div>
-                <% } else if (isReturnRejected) { %>
+                <% } else if (order.orderStatus === 'Return Rejected') { %>
                     <!-- Return Rejected Outcome Banner -->
                     <div class="order-notice-banner notice-return-rejected">
                         <svg class="notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -379,6 +411,14 @@
                                                 <div class="item-cancel-reason-callout">
                                                     Cancel Note: <%= item.cancelReason %>
                                                 </div>
+                                            <% } else if (item.status === 'Return Requested' && item.returnReason) { %>
+                                                <div class="item-cancel-reason-callout">
+                                                    Return Reason: <%= item.returnReason %>
+                                                </div>
+                                            <% } else if (item.status === 'Return Rejected' && item.returnRejectReason) { %>
+                                                <div class="item-cancel-reason-callout" style="color: #fca5a5;">
+                                                    Rejection Note: <%= item.returnRejectReason %>
+                                                </div>
                                             <% } %>
                                         </div>
                                     </div>
@@ -397,6 +437,19 @@
                                                     onclick="promptCancelPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
                                                 Cancel This Piece
                                             </button>
+                                        <% } else if (isDeliveredStage && item.status === 'Delivered') { %>
+                                            <!-- Specific Product Return Button -->
+                                            <button type="button"
+                                                    class="btn-return-piece"
+                                                    onclick="promptReturnPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
+                                                Return This Piece
+                                            </button>
+                                        <% } else if (item.status === 'Return Requested') { %>
+                                            <span class="item-status-tag requested">Return Requested</span>
+                                        <% } else if (item.status === 'Returned') { %>
+                                            <span class="item-status-tag returned">Returned</span>
+                                        <% } else if (item.status === 'Return Rejected') { %>
+                                            <span class="item-status-tag rejected">Return Declined</span>
                                         <% } %>
                                     </div>
                                 </div>
@@ -652,11 +705,10 @@
             });
         }
 
-        // Prompt Return Delivered Order with Mandatory Reason (c.iv)
-        function promptReturnOrder(orderId) {
+        function submitReturnPrompt(endpoint, title, html) {
             Swal.fire({
-                title: 'Initiate the Order Return',
-                html: `Please provide a mandatory reason for returning order <strong>#${orderId}</strong>:`,
+                title,
+                html,
                 input: 'textarea',
                 inputPlaceholder: 'State detailed reason for return (mandatory)...',
                 inputValidator: (value) => {
@@ -679,7 +731,7 @@
                 if (result.isConfirmed) {
                     const reason = result.value.trim();
                     try {
-                        const response = await fetch(`/orders/${orderId}/return`, {
+                        const response = await fetch(endpoint, {
                             method: 'POST',
                             headers: {
                                 'Accept': 'application/json',
@@ -712,7 +764,7 @@
                             });
                         }
                     } catch (err) {
-                        console.error('Return order error:', err);
+                        console.error('Return request error:', err);
                         Swal.fire({
                             icon: 'error',
                             title: 'Notice',
@@ -724,6 +776,125 @@
                     }
                 }
             });
+        }
+
+        // Prompt Return Delivered Order with Mandatory Reason (c.iv)
+        function promptReturnOrder(orderId) {
+            submitReturnPrompt(
+                `/orders/${orderId}/return`,
+                'Initiate the Order Return',
+                `Please provide a mandatory reason for returning order <strong>#${orderId}</strong>:`
+            );
+        }
+
+        // Prompt Return Individual Product with Mandatory Reason
+        function promptReturnPiece(orderId, itemId, itemName) {
+            submitReturnPrompt(
+                `/orders/${orderId}/items/${itemId}/return`,
+                'Return This Piece?',
+                `Please provide a mandatory reason for returning <strong>${itemName}</strong>:`
+            );
+        }
+
+        async function retryOrderPayment(orderId) {
+            Swal.fire({
+                title: 'Connecting Gateway',
+                text: 'Opening secure payment concierge...',
+                background: '#141312',
+                color: '#eae6df',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch(`/checkout/retry-payment/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                Swal.close();
+
+                if (!data.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Gateway Notice',
+                        text: data.message || 'Unable to re-initialize payment.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                    return;
+                }
+
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'ROYAL IGNITE',
+                    description: `Acquisition Payment #${orderId}`,
+                    image: '/images/favicon.png',
+                    order_id: data.razorpayOrderId,
+                    handler: async function (paymentRes) {
+                        Swal.fire({
+                            title: 'Authenticating Settlement...',
+                            text: 'Please do not refresh the page.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        try {
+                            const verifyRes = await fetch(`/checkout/verify-retry-payment/${orderId}`, {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpayOrderId: paymentRes.razorpay_order_id,
+                                    razorpayPaymentId: paymentRes.razorpay_payment_id,
+                                    razorpaySignature: paymentRes.razorpay_signature
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success && verifyData.redirect) {
+                                window.location.href = verifyData.redirect;
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Notice',
+                                    text: verifyData.message || 'Payment verification failed.',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    confirmButtonColor: '#F6BD64'
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Verify retry error:', err);
+                            window.location.reload();
+                        }
+                    },
+                    prefill: {
+                        name: data.user?.name || '',
+                        email: data.user?.email || '',
+                        contact: data.user?.phone || ''
+                    },
+                    theme: { color: '#F6BD64' }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                console.error('Retry payment error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gateway Notice',
+                    text: 'Unable to connect to the payment gateway. Please try again.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
         }
     </script>
 

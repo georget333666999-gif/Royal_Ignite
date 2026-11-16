@@ -211,7 +211,7 @@ const getChangeEmail = async (req, res) => {
             currentEmail: user.email,
             newEmail: req.session.pendingNewEmail || ""
         });
-    } catch (e) {
+    } catch (_err) {
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("changeEmail", { error: null, currentEmail: "", newEmail: "" });
     }
 };

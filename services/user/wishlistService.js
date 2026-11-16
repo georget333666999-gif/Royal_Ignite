@@ -1,5 +1,6 @@
 import Wishlist from "../../models/wishlistModel.js";
 import Product from "../../models/productModel.js";
+import Offer from "../../models/offerModel.js";
 import cartService from "./cartService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
@@ -14,7 +15,10 @@ export const getWishlist = async (userId) => {
         let wishlist = await Wishlist.findOne({ user: userId })
             .populate({
                 path: "products",
-                populate: { path: "category" }
+                populate: [
+                    { path: "category" },
+                    { path: "appliedOffer" }
+                ]
             });
 
         if (!wishlist) {
@@ -50,6 +54,35 @@ export const getWishlist = async (userId) => {
                     ? Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)
                     : 0;
 
+                let appliedOffer = product.appliedOffer || null;
+                if (!appliedOffer && (product.category || product._id)) {
+                    const now = new Date();
+                    const directOffer = await Offer.findOne({
+                        isActive: true,
+                        isDeleted: false,
+                        offerType: "product",
+                        product: product._id,
+                        startDate: { $lte: now },
+                        endDate: { $gte: now }
+                    }).lean();
+                    if (directOffer) {
+                        appliedOffer = directOffer;
+                    } else if (product.category) {
+                        const catId = product.category._id || product.category;
+                        const catOffer = await Offer.findOne({
+                            isActive: true,
+                            isDeleted: false,
+                            offerType: "category",
+                            category: catId,
+                            startDate: { $lte: now },
+                            endDate: { $gte: now }
+                        }).lean();
+                        if (catOffer) {
+                            appliedOffer = catOffer;
+                        }
+                    }
+                }
+
                 validProducts.push({
                     _id: product._id,
                     name: product.name,
@@ -59,6 +92,7 @@ export const getWishlist = async (userId) => {
                     effectivePrice,
                     hasDiscount,
                     discountPercent,
+                    appliedOffer: appliedOffer,
                     stock: product.stock,
                     isOutOfStock: product.stock <= 0,
                     category: product.category,

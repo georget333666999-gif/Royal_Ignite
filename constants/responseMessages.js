@@ -140,6 +140,7 @@ export const RESPONSE_MESSAGES = Object.freeze({
         DELETED_SUCCESS: "Address removed successfully.",
         DEFAULT_UPDATED: "Default delivery address updated successfully.",
         NOT_FOUND: "Address not found.",
+        DUPLICATE: "This address already exists in your saved addresses.",
         LIMIT_REACHED: "You can save up to 10 delivery addresses.",
         FETCH_ERROR: "Unable to load saved addresses. Please refresh.",
         PAGE_RENDER_ERROR: "Error opening address form."

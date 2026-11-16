@@ -218,10 +218,20 @@
                      ---------------------------------------------------- -->
                 <div class="dt-details-panel">
                     
-                    <!-- Category Tag Kicker -->
-                    <span class="dt-category-kicker">
-                        <%= (product.category && product.category.name) ? `THE ${product.category.name.toUpperCase()} COLLECTION` : 'THE FUEL COLLECTION' %>
-                    </span>
+                    <!-- Category Tag Kicker & Privilege Pill -->
+                    <div class="dt-kicker-row">
+                        <span class="dt-category-kicker">
+                            <%= (product.category && product.category.name) ? `THE ${product.category.name.toUpperCase()} COLLECTION` : 'THE FUEL COLLECTION' %>
+                        </span>
+                        <% if (product.appliedOffer) { %>
+                            <span class="dt-offer-pill-badge" title="Live Atelier Privilege: <%= product.appliedOffer.name %>">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                <span><%= product.appliedOffer.name %> • <%= product.appliedOffer.discountType === 'percentage' ? `${product.appliedOffer.discountValue}% OFF` : `₹${Number(product.appliedOffer.discountValue).toLocaleString('en-IN')} OFF` %></span>
+                            </span>
+                        <% } %>
+                    </div>
 
                     <!-- Product Main Title -->
                     <h1 class="dt-product-title"><%= product.name %></h1>
@@ -229,11 +239,12 @@
                     <!-- Price & Monospace Serial/Edition Header -->
                     <div class="dt-price-serial-row">
                         <div class="dt-price-col">
-                            <span class="dt-price-label">Price</span>
-                            <div>
+                            <span class="dt-price-label">Atelier Price</span>
+                            <div class="dt-price-val-wrap">
                                 <span class="dt-price-val">₹<%= Number(product.effectivePrice).toLocaleString('en-IN') %></span>
                                 <% if (product.hasDiscount && product.regularPrice > product.effectivePrice) { %>
                                     <span class="dt-price-orig">₹<%= Number(product.regularPrice).toLocaleString('en-IN') %></span>
+                                    <span class="dt-discount-pill">-<%= product.discountPercent %>%</span>
                                 <% } %>
                             </div>
                         </div>
@@ -243,6 +254,59 @@
                             <span class="dt-edition-sub">EDITION: 042 / 300</span>
                         </div>
                     </div>
+
+                    <!-- Live Privilege Offer Announcement Card -->
+                    <% if (product.appliedOffer) { %>
+                        <div class="dt-privilege-card">
+                            <div class="dt-privilege-top">
+                                <div class="dt-privilege-badge">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                    <span><%= product.appliedOffer.offerType === 'category' ? 'COLLECTION PRIVILEGE LIVE' : 'BESPOKE EDITION OFFER LIVE' %></span>
+                                </div>
+                                <span class="dt-privilege-rate">
+                                    <%= product.appliedOffer.discountType === 'percentage' ? `${product.appliedOffer.discountValue}% OFF` : `₹${Number(product.appliedOffer.discountValue).toLocaleString('en-IN')} OFF` %>
+                                </span>
+                            </div>
+
+                            <div class="dt-privilege-content">
+                                <h3 class="dt-privilege-name"><%= product.appliedOffer.name %></h3>
+                                <p class="dt-privilege-desc">
+                                    <%= product.appliedOffer.description || (product.appliedOffer.offerType === 'category' ? 'Special collection-wide privilege automatically deducted from standard acquisition rate.' : 'Exclusive bespoke atelier incentive applied directly to this masterpiece edition.') %>
+                                </p>
+                            </div>
+
+                            <div class="dt-privilege-footer">
+                                <div class="dt-privilege-saving">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Patron Savings: <strong>₹<%= Number(product.discountAmount).toLocaleString('en-IN') %></strong></span>
+                                </div>
+                                <% if (product.appliedOffer.endDate) { %>
+                                    <div class="dt-privilege-expiry">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                        <span>Privilege active until <%= new Date(product.appliedOffer.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } else if (product.hasDiscount && product.regularPrice > product.effectivePrice) { %>
+                        <div class="dt-privilege-card simple">
+                            <div class="dt-privilege-footer" style="padding-top: 0; border-top: none;">
+                                <div class="dt-privilege-saving">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Special Atelier Rate: Save <strong>₹<%= Number(product.discountAmount).toLocaleString('en-IN') %></strong> (<%= product.discountPercent %>% reduction)</span>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
 
                     <!-- Editorial Description Text -->
                     <p class="dt-description-text">

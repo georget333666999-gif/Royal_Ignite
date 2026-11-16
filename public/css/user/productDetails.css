@@ -558,6 +558,141 @@ a:visited {
     font-size: 0.68rem;
 }
 
+/* Kicker Row with Offer Pill */
+.dt-kicker-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.dt-offer-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(229, 169, 60, 0.2), rgba(212, 136, 51, 0.12));
+    border: 1px solid rgba(229, 169, 60, 0.4);
+    color: var(--dt-gold);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(229, 169, 60, 0.15);
+}
+
+.dt-price-val-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.dt-discount-pill {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+/* Live Privilege Offer Card */
+.dt-privilege-card {
+    background: linear-gradient(145deg, #181716, #121110);
+    border: 1px solid rgba(229, 169, 60, 0.28);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.dt-privilege-card.simple {
+    padding: 12px 16px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dt-privilege-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.dt-privilege-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dt-gold);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.dt-privilege-rate {
+    background: #E5A93C;
+    color: #0E0E12;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+
+.dt-privilege-name {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 1.25rem;
+    color: #FFFFFF;
+    margin: 0 0 6px 0;
+    letter-spacing: 0.5px;
+}
+
+.dt-privilege-desc {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+}
+
+.dt-privilege-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8rem;
+}
+
+.dt-privilege-saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #34d399;
+}
+
+.dt-privilege-saving strong {
+    color: #6ee7b7;
+    font-weight: 700;
+}
+
+.dt-privilege-expiry {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.76rem;
+}
+
 /* Description */
 .dt-description-text {
     font-size: 0.95rem;

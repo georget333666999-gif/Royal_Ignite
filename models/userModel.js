@@ -20,7 +20,22 @@ const userSchema = new mongoose.Schema(
         },
         referralCode: {
             type: String,
-            trim: true
+            trim: true,
+            unique: true,
+            sparse: true
+        },
+        referredBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null
+        },
+        referralRewardsEarned: {
+            type: Number,
+            default: 0
+        },
+        referralRewarded: {
+            type: Boolean,
+            default: false
         },
         imgUrl: {
             type: String

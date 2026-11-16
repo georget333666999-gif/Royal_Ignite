@@ -18,6 +18,7 @@
 
     <!-- SweetAlert2 for Quiet Luxury Dialogs -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         .royal-luxury-swal {
             background: #141312 !important;
@@ -113,6 +114,7 @@
                         const currentStatus = status || 'all';
                     %>
                     <a href="<%= buildFilterUrl('all') %>" class="filter-pill <%= currentStatus === 'all' ? 'active' : '' %>">All</a>
+                    <a href="<%= buildFilterUrl('Pending') %>" class="filter-pill <%= currentStatus === 'Pending' ? 'active' : '' %>">Pending</a>
                     <a href="<%= buildFilterUrl('Placed') %>" class="filter-pill <%= currentStatus === 'Placed' ? 'active' : '' %>">Placed</a>
                     <a href="<%= buildFilterUrl('Processing') %>" class="filter-pill <%= currentStatus === 'Processing' ? 'active' : '' %>">Processing</a>
                     <a href="<%= buildFilterUrl('Shipped') %>" class="filter-pill <%= currentStatus === 'Shipped' ? 'active' : '' %>">Shipped</a>
@@ -137,13 +139,32 @@
                                     </span>
                                 </div>
 
-                                <div class="status-badge <%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                                <% 
+                                    const isPaymentPending = order.paymentStatus === 'Failed' || (order.orderStatus === 'Pending' && order.paymentStatus !== 'Completed');
+                                    const displayStatus = isPaymentPending ? 'Payment Pending' : order.orderStatus;
+                                    const statusSlug = isPaymentPending ? 'payment-pending' : (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-');
+                                %>
+                                <div class="status-badge <%= statusSlug %>">
                                     <span class="status-dot"></span>
-                                    <span><%= order.orderStatus %></span>
+                                    <span><%= displayStatus %></span>
                                 </div>
                             </div>
 
-                            <% if (order.orderStatus === 'Return Requested') { %>
+                            <% if (isPaymentPending) { %>
+                                <div class="order-notice-ribbon ribbon-pending-payment">
+                                    <div class="ribbon-icon-wrapper ribbon-icon-pending">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                        </svg>
+                                    </div>
+                                    <div class="ribbon-text-group">
+                                        <span class="ribbon-tag-label">Payment Incomplete / Interrupted</span>
+                                        <span class="ribbon-tag-desc">Transaction was not confirmed. Click "Pay Now" below to complete settlement and confirm your dispatch.</span>
+                                    </div>
+                                </div>
+                            <% } else if (order.orderStatus === 'Return Requested') { %>
                                 <div class="order-notice-ribbon ribbon-requested">
                                     <div class="ribbon-icon-wrapper">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -210,22 +231,37 @@
                                 </div>
 
                                 <div class="order-card-actions">
-                                    <!-- Invoice Download (c.vi) -->
-                                    <a href="/orders/<%= order.orderId %>/invoice" class="btn-order-invoice" title="Download Official Tax Invoice">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                                        </svg>
-                                        <span>Invoice</span>
-                                    </a>
+                                    <!-- Pay Now Button if payment pending -->
+                                    <% if (isPaymentPending) { %>
+                                        <button type="button" 
+                                                class="btn-order-pay-now" 
+                                                onclick="retryOrderPayment('<%= order.orderId %>')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                                <line x1="2" y1="10" x2="22" y2="10"></line>
+                                            </svg>
+                                            <span>Pay Now</span>
+                                        </button>
+                                    <% } %>
 
-                                    <!-- Cancel Order (c.ii, c.iii) -->
-                                    <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing') { %>
+                                    <!-- Invoice Download (only for placed/completed orders) -->
+                                    <% if (!isPaymentPending) { %>
+                                        <a href="/orders/<%= order.orderId %>/invoice" class="btn-order-invoice" title="Download Official Tax Invoice">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            <span>Invoice</span>
+                                        </a>
+                                    <% } %>
+
+                                    <!-- Cancel Order (for Placed, Processing, or Pending orders) -->
+                                    <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing' || isPaymentPending) { %>
                                         <button type="button" 
                                                 class="btn-order-cancel" 
                                                 onclick="promptCancelOrder('<%= order.orderId %>')">
-                                            Cancel Order
+                                            <%= isPaymentPending ? 'Cancel / Discard' : 'Cancel Order' %>
                                         </button>
                                     <% } %>
 
@@ -434,6 +470,107 @@
                     }
                 }
             });
+        }
+
+        async function retryOrderPayment(orderId) {
+            Swal.fire({
+                title: 'Connecting Gateway',
+                text: 'Opening secure payment concierge...',
+                background: '#141312',
+                color: '#eae6df',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch(`/checkout/retry-payment/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                Swal.close();
+
+                if (!data.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Gateway Notice',
+                        text: data.message || 'Unable to re-initialize payment.',
+                        background: '#141312',
+                        color: '#eae6df',
+                        confirmButtonColor: '#F6BD64'
+                    });
+                    return;
+                }
+
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'ROYAL IGNITE',
+                    description: `Acquisition Payment #${orderId}`,
+                    image: '/images/favicon.png',
+                    order_id: data.razorpayOrderId,
+                    handler: async function (paymentRes) {
+                        Swal.fire({
+                            title: 'Authenticating Settlement...',
+                            text: 'Please do not refresh the page.',
+                            background: '#141312',
+                            color: '#eae6df',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        try {
+                            const verifyRes = await fetch(`/checkout/verify-retry-payment/${orderId}`, {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpayOrderId: paymentRes.razorpay_order_id,
+                                    razorpayPaymentId: paymentRes.razorpay_payment_id,
+                                    razorpaySignature: paymentRes.razorpay_signature
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success && verifyData.redirect) {
+                                window.location.href = verifyData.redirect;
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Notice',
+                                    text: verifyData.message || 'Payment verification failed.',
+                                    background: '#141312',
+                                    color: '#eae6df',
+                                    confirmButtonColor: '#F6BD64'
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Verify retry error:', err);
+                            window.location.reload();
+                        }
+                    },
+                    prefill: {
+                        name: data.user?.name || '',
+                        email: data.user?.email || '',
+                        contact: data.user?.phone || ''
+                    },
+                    theme: { color: '#F6BD64' }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                console.error('Retry payment error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gateway Notice',
+                    text: 'Unable to connect to the payment gateway. Please try again.',
+                    background: '#141312',
+                    color: '#eae6df',
+                    confirmButtonColor: '#F6BD64'
+                });
+            }
         }
     </script>
 

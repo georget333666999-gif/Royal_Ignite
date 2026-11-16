@@ -1,16 +1,20 @@
 import Order from "../../models/orderModel.js";
 import Cart from "../../models/cartModel.js";
 import Product from "../../models/productModel.js";
+import Offer from "../../models/offerModel.js";
 import cartService from "./cartService.js";
 import addressService from "./addressService.js";
+import couponService from "./couponService.js";
+import walletService from "./walletService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
 
 /**
  * Get aggregated checkout information (Cart items, delivery addresses, pricing totals)
  * @param {string} userId
+ * @param {Object} [appliedCoupon=null]
  * @returns {Promise<Object>}
  */
-export const getCheckoutDetails = async (userId) => {
+export const getCheckoutDetails = async (userId, appliedCoupon = null) => {
     try {
         const cartData = await cartService.getCart(userId);
 
@@ -42,6 +46,27 @@ export const getCheckoutDetails = async (userId) => {
             ? cartData.savings
             : Math.max(0, regularTotal - cartData.subtotal);
 
+        let couponDiscount = 0;
+        let couponCode = null;
+
+        if (appliedCoupon && appliedCoupon.code) {
+            try {
+                const validation = await couponService.validateCoupon(
+                    appliedCoupon.code,
+                    userId,
+                    cartData.subtotal
+                );
+                couponDiscount = validation.discountAmount;
+                couponCode = validation.code;
+            } catch {
+                couponDiscount = 0;
+                couponCode = null;
+            }
+        }
+
+        const totalAmount = Math.max(0, cartData.totalPrice - couponDiscount);
+        const userWallet = await walletService.getOrCreateWallet(userId);
+
         return {
             isEmpty: false,
             hasBlockingIssues: false,
@@ -49,14 +74,17 @@ export const getCheckoutDetails = async (userId) => {
             items: cartData.items,
             addresses,
             selectedAddress,
+            walletBalance: userWallet.balance,
             financials: {
                 catalogTotal: regularTotal,
                 regularTotal,
                 subtotal: cartData.subtotal,
                 savings,
+                couponDiscount,
+                couponCode,
                 courierFee: 0,
                 tax: 0,
-                totalAmount: cartData.totalPrice
+                totalAmount
             }
         };
     } catch (error) {
@@ -74,7 +102,16 @@ export const getCheckoutDetails = async (userId) => {
  * @param {string} [param0.paymentMethod="COD"]
  * @returns {Promise<Object>}
  */
-export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) => {
+export const placeOrder = async ({
+    userId,
+    addressId,
+    paymentMethod = "COD",
+    appliedCoupon = null,
+    paymentStatus = "Pending",
+    razorpayOrderId = null,
+    razorpayPaymentId = null,
+    razorpaySignature = null
+}) => {
     try {
         if (!addressId) {
             const err = new Error(RESPONSE_MESSAGES.CHECKOUT.ADDRESS_REQUIRED);
@@ -137,6 +174,9 @@ export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) =
             );
         }
 
+        const isPaymentPending = paymentStatus === "Failed" || paymentStatus === "Pending";
+        const initialOrderStatus = isPaymentPending ? "Pending" : "Placed";
+
         // 5. Build order items snapshot
         const orderItems = cartData.items.map((item) => ({
             product: item.productId,
@@ -147,7 +187,7 @@ export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) =
             regularPrice: item.regularPrice || item.price,
             quantity: item.quantity,
             lineTotal: item.lineTotal,
-            status: "Placed"
+            status: initialOrderStatus
         }));
 
         const regularTotal = cartData.items.reduce(
@@ -156,17 +196,48 @@ export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) =
         );
         const savings = Math.max(0, regularTotal - cartData.subtotal);
 
+        let couponDiscount = 0;
+        let couponCode = null;
+        if (appliedCoupon && appliedCoupon.code) {
+            try {
+                const validation = await couponService.validateCoupon(
+                    appliedCoupon.code,
+                    userId,
+                    cartData.subtotal
+                );
+                couponDiscount = validation.discountAmount;
+                couponCode = validation.code;
+            } catch {
+                couponDiscount = 0;
+                couponCode = null;
+            }
+        }
+
+        const totalPayable = Math.max(0, cartData.totalPrice - couponDiscount);
+
         const pricing = {
             subtotal: cartData.subtotal,
             discount: savings,
+            couponDiscount,
             tax: 0,
             shippingFee: 0,
-            totalAmount: cartData.totalPrice
+            totalAmount: totalPayable
         };
 
         const uniqueOrderId = Order.generateOrderId();
 
-        // 6. Persist order
+        // 6. If Wallet payment, debit wallet balance
+        if (paymentMethod === "Wallet") {
+            await walletService.debitWallet(userId, {
+                amount: totalPayable,
+                description: `Acquisition payment for order #${uniqueOrderId}`,
+                source: "checkout_payment",
+                orderId: uniqueOrderId
+            });
+            paymentStatus = "Completed";
+        }
+
+        // 7. Persist order
         const newOrder = await Order.create({
             orderId: uniqueOrderId,
             user: userId,
@@ -181,14 +252,29 @@ export const placeOrder = async ({ userId, addressId, paymentMethod = "COD" }) =
                 country: address.country || "India",
                 addressType: address.addressType || "Home"
             },
-            paymentMethod: "COD",
-            paymentStatus: "Pending",
+            paymentMethod: paymentMethod === "Razorpay" ? "Razorpay" : (paymentMethod === "Wallet" ? "Wallet" : "COD"),
+            paymentStatus: paymentStatus || (paymentMethod === "Razorpay" || paymentMethod === "Wallet" ? "Completed" : "Pending"),
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature,
+            coupon: {
+                code: couponCode,
+                discountAmount: couponDiscount
+            },
             pricing,
-            orderStatus: "Placed"
+            orderStatus: initialOrderStatus
         });
 
-        // 7. Clear the user's cart
-        await Cart.updateOne({ user: userId }, { $set: { items: [] } });
+        // 8. Clear the user's cart ONLY IF the order is placed/confirmed!
+        // If payment is pending or failed, preserve items in cart so the user does not lose their selection.
+        if (!isPaymentPending) {
+            await Cart.updateOne({ user: userId }, { $set: { items: [] } });
+        }
+
+        // 9. Record coupon redemption ONLY IF payment was completed and order is placed
+        if (couponCode && !isPaymentPending) {
+            await couponService.recordCouponUsage(couponCode, userId, newOrder._id);
+        }
 
         return newOrder;
     } catch (error) {
@@ -207,11 +293,14 @@ export const getOrderByIdentifier = async (orderIdentifier, userId) => {
     try {
         const query = {
             user: userId,
-            $or: [{ orderId: orderIdentifier }]
+            $or: [
+                { orderId: orderIdentifier },
+                { "paymentDetails.razorpayOrderId": orderIdentifier }
+            ]
         };
 
         // If it's a valid ObjectId, search by _id too
-        if (orderIdentifier.match(/^[0-9a-fA-F]{24}$/)) {
+        if (orderIdentifier && typeof orderIdentifier === "string" && orderIdentifier.match(/^[0-9a-fA-F]{24}$/)) {
             query.$or.push({ _id: orderIdentifier });
         }
 
@@ -222,6 +311,21 @@ export const getOrderByIdentifier = async (orderIdentifier, userId) => {
     }
 };
 
+const getProductPricing = (product, qty) => {
+    const regularPrice = Number(product.regularPrice) || 0;
+    const hasDiscount = Boolean(product.salePrice && product.salePrice > 0 && product.salePrice < regularPrice);
+    const price = hasDiscount ? Number(product.salePrice) : regularPrice;
+    const lineTotal = price * qty;
+    const regularTotal = regularPrice * qty;
+    return {
+        regularPrice,
+        price,
+        lineTotal,
+        regularTotal,
+        savings: Math.max(0, regularTotal - lineTotal)
+    };
+};
+
 /**
  * Get aggregated checkout details for a single "Buy Now" product without touching the cart
  * @param {string} userId
@@ -229,13 +333,13 @@ export const getOrderByIdentifier = async (orderIdentifier, userId) => {
  * @param {number} [quantity=1]
  * @returns {Promise<Object>}
  */
-export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1) => {
+export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1, appliedCoupon = null) => {
     try {
         const product = await Product.findOne({
             _id: productId,
             isDeleted: false,
             isListed: true
-        }).populate("category");
+        }).populate("category").populate("appliedOffer");
 
         if (!product) {
             return {
@@ -256,14 +360,58 @@ export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1) 
         }
 
         const effectiveQty = Math.min(qty, product.stock);
-        const regularPrice = product.regularPrice || product.price;
-        const price = product.price;
-        const lineTotal = price * effectiveQty;
-        const regularTotal = regularPrice * effectiveQty;
-        const savings = Math.max(0, regularTotal - lineTotal);
+        const { regularPrice, price, lineTotal, regularTotal, savings } = getProductPricing(product, effectiveQty);
 
         const addresses = await addressService.getUserAddresses(userId);
         const selectedAddress = addresses.find((addr) => addr.isDefault) || addresses[0] || null;
+
+        let couponDiscount = 0;
+        let couponCode = null;
+        if (appliedCoupon && appliedCoupon.code) {
+            try {
+                const validation = await couponService.validateCoupon(
+                    appliedCoupon.code,
+                    userId,
+                    lineTotal
+                );
+                couponDiscount = validation.discountAmount;
+                couponCode = validation.code;
+            } catch {
+                couponDiscount = 0;
+                couponCode = null;
+            }
+        }
+
+        const totalAmount = Math.max(0, lineTotal - couponDiscount);
+
+        let appliedOffer = product.appliedOffer || null;
+        if (!appliedOffer && (product.category || product._id)) {
+            const now = new Date();
+            const directOffer = await Offer.findOne({
+                isActive: true,
+                isDeleted: false,
+                offerType: "product",
+                product: product._id,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }).lean();
+            if (directOffer) {
+                appliedOffer = directOffer;
+            } else if (product.category) {
+                const catId = product.category._id || product.category;
+                const catOffer = await Offer.findOne({
+                    isActive: true,
+                    isDeleted: false,
+                    offerType: "category",
+                    category: catId,
+                    startDate: { $lte: now },
+                    endDate: { $gte: now }
+                }).lean();
+                if (catOffer) {
+                    appliedOffer = catOffer;
+                }
+            }
+        }
 
         const item = {
             productId: product._id,
@@ -272,9 +420,12 @@ export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1) 
             categoryName: product.category?.name || "Exclusive Edition",
             price,
             regularPrice,
+            appliedOffer: appliedOffer,
             quantity: effectiveQty,
             lineTotal
         };
+
+        const userWallet = await walletService.getOrCreateWallet(userId);
 
         return {
             isBuyNow: true,
@@ -283,19 +434,22 @@ export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1) 
             cart: {
                 itemCount: effectiveQty,
                 subtotal: lineTotal,
-                totalPrice: lineTotal
+                totalPrice: totalAmount
             },
             items: [item],
             addresses,
             selectedAddress,
+            walletBalance: userWallet.balance,
             financials: {
                 catalogTotal: regularTotal,
                 regularTotal,
                 subtotal: lineTotal,
                 savings,
+                couponDiscount,
+                couponCode,
                 courierFee: 0,
                 tax: 0,
-                totalAmount: lineTotal
+                totalAmount
             }
         };
     } catch (error) {
@@ -312,6 +466,11 @@ export const getBuyNowCheckoutDetails = async (userId, productId, quantity = 1) 
  * @param {string} param0.productId
  * @param {number} param0.quantity
  * @param {string} [param0.paymentMethod="COD"]
+ * @param {Object} [param0.appliedCoupon=null]
+ * @param {string} [param0.paymentStatus="Pending"]
+ * @param {string} [param0.razorpayOrderId=null]
+ * @param {string} [param0.razorpayPaymentId=null]
+ * @param {string} [param0.razorpaySignature=null]
  * @returns {Promise<Object>}
  */
 export const placeBuyNowOrder = async ({
@@ -319,7 +478,12 @@ export const placeBuyNowOrder = async ({
     addressId,
     productId,
     quantity = 1,
-    paymentMethod = "COD"
+    paymentMethod = "COD",
+    appliedCoupon = null,
+    paymentStatus = "Pending",
+    razorpayOrderId = null,
+    razorpayPaymentId = null,
+    razorpaySignature = null
 }) => {
     try {
         if (!addressId) {
@@ -339,7 +503,7 @@ export const placeBuyNowOrder = async ({
             _id: productId,
             isDeleted: false,
             isListed: true
-        }).populate("category");
+        }).populate("category").populate("appliedOffer");
 
         if (!product) {
             const err = new Error("Selected creation is no longer available.");
@@ -360,25 +524,55 @@ export const placeBuyNowOrder = async ({
             { $inc: { stock: -qty } }
         );
 
-        const regularPrice = product.regularPrice || product.price;
-        const lineTotal = product.price * qty;
-        const regularTotal = regularPrice * qty;
-        const savings = Math.max(0, regularTotal - lineTotal);
+        const { regularPrice, price, lineTotal, savings } = getProductPricing(product, qty);
+
+        let couponDiscount = 0;
+        let couponCode = null;
+        if (appliedCoupon && appliedCoupon.code) {
+            try {
+                const validation = await couponService.validateCoupon(
+                    appliedCoupon.code,
+                    userId,
+                    lineTotal
+                );
+                couponDiscount = validation.discountAmount;
+                couponCode = validation.code;
+            } catch {
+                couponDiscount = 0;
+                couponCode = null;
+            }
+        }
+
+        const totalPayable = Math.max(0, lineTotal - couponDiscount);
+        const uniqueOrderId = Order.generateOrderId();
+
+        if (paymentMethod === "Wallet") {
+            await walletService.debitWallet(userId, {
+                amount: totalPayable,
+                description: `Acquisition payment for direct buy order #${uniqueOrderId}`,
+                source: "checkout_payment",
+                orderId: uniqueOrderId
+            });
+            paymentStatus = "Completed";
+        }
+
+        const isPaymentPending = paymentStatus === "Failed" || paymentStatus === "Pending";
+        const initialOrderStatus = isPaymentPending ? "Pending" : "Placed";
 
         const orderItem = {
             product: product._id,
             name: product.name,
             image: (product.images && product.images[0]) || "/uploads/hero_lighter.png",
             categoryName: product.category?.name || "Exclusive Edition",
-            price: product.price,
+            price,
             regularPrice,
             quantity: qty,
             lineTotal,
-            status: "Placed"
+            status: initialOrderStatus
         };
 
         const newOrder = await Order.create({
-            orderId: Order.generateOrderId(),
+            orderId: uniqueOrderId,
             user: userId,
             items: [orderItem],
             shippingAddress: {
@@ -391,17 +585,29 @@ export const placeBuyNowOrder = async ({
                 country: address.country || "India",
                 addressType: address.addressType || "Home"
             },
-            paymentMethod: "COD",
-            paymentStatus: "Pending",
+            paymentMethod: paymentMethod === "Razorpay" ? "Razorpay" : (paymentMethod === "Wallet" ? "Wallet" : "COD"),
+            paymentStatus: paymentStatus || (paymentMethod === "Razorpay" || paymentMethod === "Wallet" ? "Completed" : "Pending"),
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature,
+            coupon: {
+                code: couponCode,
+                discountAmount: couponDiscount
+            },
             pricing: {
                 subtotal: lineTotal,
                 discount: savings,
+                couponDiscount,
                 tax: 0,
                 shippingFee: 0,
-                totalAmount: lineTotal
+                totalAmount: totalPayable
             },
-            orderStatus: "Placed"
+            orderStatus: initialOrderStatus
         });
+
+        if (couponCode && !isPaymentPending) {
+            await couponService.recordCouponUsage(couponCode, userId, newOrder._id);
+        }
 
         // The user's regular Cart in MongoDB is NOT cleared or touched!
         return newOrder;
