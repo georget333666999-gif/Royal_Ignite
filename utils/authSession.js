@@ -10,8 +10,12 @@
 export const getAuthenticatedUserId = (req) => {
     try {
         const session = req.session;
-        if (session && session.isUserLoggedIn) {
+        if (session && (session.isUserLoggedIn || session.userId)) {
             return session.userId || null;
+        }
+
+        if (typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user?._id) {
+            return req.user._id.toString();
         }
 
         const user = req.user;

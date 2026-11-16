@@ -24,6 +24,9 @@ export const userMiddleware = async (req, res, next) => {
 export const redirectIfUserLoggedIn = (req, res, next) => {
     try {
         if (getAuthenticatedUserId(req)) {
+            res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+            res.set("Pragma", "no-cache");
+            res.set("Expires", "0");
             return res.redirect("/");
         }
         next();

@@ -15,8 +15,7 @@ router.get(
 );
 
 // Google OAuth Callback
- 
-router.get("/google/callback", (req, res, next) => {
+router.get("/google/callback", redirectIfUserLoggedIn, (req, res, next) => {
     try {
         passport.authenticate("google", (err, user, info) => {
             if (err) {
@@ -44,7 +43,29 @@ router.get("/google/callback", (req, res, next) => {
                         console.error("Session save error after Google auth:", saveErr);
                     }
                     console.log(`[GOOGLE AUTH] Successfully authenticated: ${user.email}`);
-                    return res.redirect("/");
+
+                    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+                    res.set("Pragma", "no-cache");
+                    res.set("Expires", "0");
+                    return res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <title>Redirecting - ROYAL IGNITE</title>
+    <script>
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, null, '/');
+        }
+        window.location.replace('/');
+    </script>
+</head>
+<body>
+    <script>
+        window.location.replace('/');
+    </script>
+</body>
+</html>`);
                 });
             });
         })(req, res, next);
