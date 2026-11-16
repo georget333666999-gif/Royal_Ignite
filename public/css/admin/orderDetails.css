@@ -298,7 +298,7 @@ body {
     color: #000000;
 }
 
-/* Status Update Control Banner (a.iii) */
+/* Status Update Control Banner */
 .status-controller-card {
     background: #ffffff;
     border: 1px solid var(--gold-border);

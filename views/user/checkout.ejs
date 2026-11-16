@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/css/user/index.css" />
     <link rel="stylesheet" href="/css/user/checkout.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Notifications -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -99,7 +99,7 @@
                     <!-- LEFT COLUMN: Addresses and Payment -->
                     <div class="checkout-sections">
 
-                        <!-- SECTION 1: DELIVERY ADDRESS (b.i) -->
+                        <!-- Delivery address section -->
                         <section class="checkout-section-card">
                             <div class="section-header-row">
                                 <div class="section-title-wrap">
@@ -176,7 +176,7 @@
                             </div>
                         </section>
 
-                        <!-- SECTION 2: PAYMENT METHOD (b.iii, a) -->
+                        <!-- Payment method section -->
                         <section class="checkout-section-card">
                             <div class="section-header-row">
                                 <div class="section-title-wrap">
@@ -220,7 +220,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Royal Ignite Wallet Card (c) -->
+                                <!-- Royal Ignite Wallet Card -->
                                 <% const isWalletSufficient = (typeof walletBalance !== 'undefined' ? walletBalance : 0) >= (financials ? financials.totalAmount : 0); %>
                                 <div class="payment-method-item <%= isWalletSufficient ? '' : 'disabled-method' %>" 
                                      id="paymentMethodWallet" 
@@ -257,7 +257,7 @@
 
                     </div>
 
-                    <!-- RIGHT COLUMN: ORDER SUMMARY & TOTALS (b.ii) -->
+                    <!-- Right column: order summary and totals -->
                     <aside class="checkout-summary-wrap">
                         <div class="checkout-summary-card">
                             <h3 class="summary-title"><%= (typeof isBuyNow !== 'undefined' && isBuyNow) ? 'Instant Acquisition Summary' : 'Acquisition Summary' %></h3>
@@ -291,7 +291,7 @@
                                 <% } %>
                             </div>
 
-                            <!-- Coupon Redemption Card (e.i, e.ii, e.iii) -->
+                            <!-- Coupon Redemption Card -->
                             <div class="coupon-box-card">
                                 <div class="coupon-header-title">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

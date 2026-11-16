@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/css/user/index.css" />
     <link rel="stylesheet" href="/css/user/orderList.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Dialogs -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -88,7 +88,7 @@
                 </p>
             </div>
 
-            <!-- Search & Filter Toolbar (c.i, c.vii) -->
+            <!-- Search & Filter Toolbar -->
             <div class="orders-toolbar">
                 <form action="/orders" method="GET" class="order-search-form">
                     <input type="hidden" name="status" value="<%= status || 'all' %>" />
@@ -223,7 +223,7 @@
                                 <% }); %>
                             </div>
 
-                            <!-- Footer: Total & Actions (c.ii, c.iv, c.v, c.vi) -->
+                            <!-- Footer: Total & Actions -->
                             <div class="order-card-footer">
                                 <div class="order-total-col">
                                     <span class="order-total-label">Total Amount (<%= order.paymentMethod %>)</span>
@@ -265,7 +265,7 @@
                                         </button>
                                     <% } %>
 
-                                    <!-- Return Order (c.iv) -->
+                                    <!-- Return Order -->
                                     <% if (order.orderStatus === 'Delivered') { %>
                                         <button type="button" 
                                                 class="btn-order-return" 
@@ -274,7 +274,7 @@
                                         </button>
                                     <% } %>
 
-                                    <!-- View Details (c.v) -->
+                                    <!-- View Details -->
                                     <a href="/orders/<%= order.orderId %>" class="btn-order-view">
                                         View Details →
                                     </a>
@@ -329,7 +329,7 @@
 
     <!-- Order Actions Logic Scripts -->
     <script>
-        // Prompt Cancel Order with Optional Reason (c.ii, c.iii)
+        // Prompt Cancel Order with Optional Reason
         function promptCancelOrder(orderId) {
             Swal.fire({
                 title: 'Cancel Acquisition?',
@@ -398,7 +398,7 @@
             });
         }
 
-        // Prompt Return Order with Mandatory Reason (c.iv)
+        // Prompt Return Order with Mandatory Reason
         function promptReturnOrder(orderId) {
             Swal.fire({
                 title: 'Initiate the Order Return',

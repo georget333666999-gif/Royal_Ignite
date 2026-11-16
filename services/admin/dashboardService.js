@@ -5,7 +5,7 @@ import User from "../../models/userModel.js";
 import Wallet from "../../models/walletModel.js";
 
 /**
- * Get Top 10 Best-Selling Products (f.ii)
+ * Get top 10 best-selling products
  */
 export const getTop10Products = async () => {
     try {
@@ -37,7 +37,7 @@ export const getTop10Products = async () => {
 };
 
 /**
- * Get Top 10 Best-Selling Categories (f.iii)
+ * Get top 10 best-selling categories
  */
 export const getTop10Categories = async () => {
     try {
@@ -66,7 +66,7 @@ export const getTop10Categories = async () => {
 };
 
 /**
- * Get Top 10 Best-Selling Brands / Collections (f.iv)
+ * Get top 10 best-selling brands and collections
  */
 export const getTop10Brands = async () => {
     try {
@@ -138,7 +138,7 @@ export const getTop10Brands = async () => {
 };
 
 /**
- * Get Chart Data with Filters: yearly, monthly, weekly (f.i)
+ * Get chart data filtered by period (yearly, monthly, weekly)
  */
 export const getChartData = async (filter = "monthly") => {
     try {
@@ -265,7 +265,7 @@ export const getChartData = async (filter = "monthly") => {
 };
 
 /**
- * Generate Ledger Summary Book (f.v)
+ * Generate ledger summary book
  */
 export const getLedgerBookSummary = async () => {
     try {

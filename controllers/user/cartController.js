@@ -3,7 +3,7 @@ import cartService from "../../services/user/cartService.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
 import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
 
-// Render the User's Shopping Bag / Cart Page (d.i, d.vii)/
+// Render user shopping cart page
 export const getCartPage = async (req, res, next) => {
     try {
         const userId = getAuthenticatedUserId(req);
@@ -40,8 +40,7 @@ export const getCartPage = async (req, res, next) => {
     }
 };
 
-// Add a product to the cart (d.i, d.ii, d.iii, d.iv, d.vi)
-
+// Add a product to the cart
 export const postAddToCart = async (req, res, next) => {
     try {
         const userId = getAuthenticatedUserId(req);
@@ -99,8 +98,7 @@ export const postAddToCart = async (req, res, next) => {
     }
 };
 
-// Update quantity of a cart item with stock validations (d.v, d.vi)
-
+// Update quantity of a cart item with stock validations
 export const postUpdateQuantity = async (req, res, next) => {
     try {
         const userId = getAuthenticatedUserId(req);
@@ -138,8 +136,7 @@ export const postUpdateQuantity = async (req, res, next) => {
     }
 };
 
-// Remove an item from the cart (d.i)
-
+// Remove an item from the cart
 export const postRemoveFromCart = async (req, res, next) => {
     try {
         const userId = getAuthenticatedUserId(req);
@@ -174,8 +171,7 @@ export const postRemoveFromCart = async (req, res, next) => {
     }
 };
 
-// Checkout validation check: restricts checkout if any item is out-of-stock or unlisted (d.vii)
-
+// Validate cart items before proceeding to checkout
 export const getCheckout = async (req, res, next) => {
     try {
         const userId = getAuthenticatedUserId(req);
@@ -189,13 +185,13 @@ export const getCheckout = async (req, res, next) => {
             return res.redirect("/cart?error=" + encodeURIComponent(RESPONSE_MESSAGES.CART.EMPTY_CART));
         }
 
-        // Restrict checkout if out-of-stock, unlisted, or exceeding available inventory (d.vii)
+        // Prevent checkout if any item is out of stock, unlisted, or exceeds inventory
         if (cartData.hasBlockingIssues) {
             const firstReason = cartData.blockingReasons?.[0] || RESPONSE_MESSAGES.CART.CHECKOUT_BLOCKED;
             return res.redirect("/cart?error=" + encodeURIComponent(firstReason));
         }
 
-        // Redirect to the Atelier Checkout page
+        // Proceed to checkout
         return res.redirect(HTTP_STATUS.SEE_OTHER, "/checkout");
     } catch (err) {
         console.error("User cartController getCheckout error:", err);

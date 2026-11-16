@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="/css/user/shop.css" />
     <link rel="stylesheet" href="/css/user/wishlist.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Notifications -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -245,7 +245,7 @@
             }
         });
 
-        // Luxury Toast Notification Helper
+        // Toast notification helper
         function showToast(message, icon = 'success') {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
@@ -319,7 +319,7 @@
             }
         }
 
-        // Luxury Confirm Remove Dialog
+        // Confirm remove dialog
         function confirmRemoveWishlist(productId, productName) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
@@ -399,7 +399,7 @@
             }
         }
 
-        // Move to Bag: Calls /wishlist/move-to-cart/:productId (a.ii)
+        // Move item from wishlist to cart
         async function handleMoveToBag(productId, btn) {
             if (!btn || btn.disabled) return;
 

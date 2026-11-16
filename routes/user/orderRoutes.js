@@ -3,22 +3,22 @@ import orderController from "../../controllers/user/orderController.js";
 
 const router = express.Router();
 
-// Order Listing with search & filters (c.i, c.vii)
+// Order listing with search and filters
 router.get("/orders", orderController.getOrderListPage);
 
-// Order Details View (c.v)
+// Order details view
 router.get("/orders/:orderId", orderController.getOrderDetailPage);
 
-// Download Invoice PDF (c.vi)
+// Download invoice PDF
 router.get("/orders/:orderId/invoice", orderController.downloadInvoice);
 
-// Cancel Entire Order (c.ii, c.iii)
+// Cancel entire order
 router.post("/orders/:orderId/cancel", orderController.postCancelOrder);
 
-// Cancel Individual Product in Order (c.ii, c.iii)
+// Cancel individual product in order
 router.post("/orders/:orderId/items/:itemId/cancel", orderController.postCancelOrderItem);
 
-// Return Delivered Order (c.iv)
+// Return delivered order
 router.post("/orders/:orderId/return", orderController.postReturnOrder);
 
 // Return Individual Product in Delivered Order

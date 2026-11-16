@@ -54,7 +54,7 @@ export const validateProductForCart = async (productId) => {
  */
 export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow = false } = {}) => {
     try {
-        // 1. Validate product visibility and active status (d.ii)
+        // 1. Validate product availability and status
         const validation = await validateProductForCart(productId);
         if (!validation.valid) {
             throw new Error(validation.message);
@@ -62,7 +62,7 @@ export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow 
 
         const { product, effectivePrice } = validation;
 
-        // 2. Determine quantity limits (d.vi)
+        // 2. Determine quantity limits
         const maxAllowedPerItem = Math.min(CART.MAX_QUANTITY_PER_ITEM, product.stock);
         const qtyToAdd = Math.max(1, parseInt(requestedQty, 10) || 1);
 
@@ -102,7 +102,7 @@ export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow 
 
         await cart.save();
 
-        // 5. Remove from wishlist when added to cart (d.iv)
+        // 5. Remove from wishlist if present
         try {
             await Wishlist.updateOne(
                 { user: userId },
@@ -193,7 +193,7 @@ export const getCart = async (userId) => {
                 continue;
             }
 
-            // Check if unlisted, soft deleted, or category unlisted/deleted (d.ii)
+            // Check if product or category is unlisted/deleted
             const isUnlisted = !prod.isListed || prod.isDeleted;
             const isCatUnlisted = !prod.category || prod.category.isDeleted || !prod.category.isListed;
 
@@ -217,7 +217,7 @@ export const getCart = async (userId) => {
             const hasDiscount = Boolean(prod.salePrice && prod.salePrice > 0 && prod.salePrice < prod.regularPrice);
             const currentEffectivePrice = hasDiscount ? prod.salePrice : prod.regularPrice;
 
-            // Check stock status (d.vii)
+            // Check inventory stock status
             const isOutOfStock = prod.stock <= 0;
             const isInsufficientStock = !isOutOfStock && item.quantity > prod.stock;
 
@@ -318,7 +318,7 @@ export const getCart = async (userId) => {
 };
 
 /**
- * Update cart item quantity with strict stock bounds (d.v, d.vi)
+ * Update cart item quantity with inventory stock validation
  */
 export const updateCartItemQuantity = async (userId, productId, requestedQty) => {
     try {
@@ -371,7 +371,7 @@ export const updateCartItemQuantity = async (userId, productId, requestedQty) =>
 };
 
 /**
- * Remove an item from the user's cart (d.i)
+ * Remove an item from the user's cart
  */
 export const removeFromCart = async (userId, productId) => {
     try {

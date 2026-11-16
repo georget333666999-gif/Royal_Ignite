@@ -4,7 +4,7 @@ import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
 import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
 
 /**
- * Render User Order Listing Page with search and status filters (c.i, c.vii)
+ * Render user order listing page with search and status filters
  */
 export const getOrderListPage = async (req, res, next) => {
     try {
@@ -58,7 +58,7 @@ export const getOrderListPage = async (req, res, next) => {
 };
 
 /**
- * Render Single Order Detail Page (c.v)
+ * Render order details page
  */
 export const getOrderDetailPage = async (req, res, next) => {
     try {
@@ -104,7 +104,7 @@ export const getOrderDetailPage = async (req, res, next) => {
 };
 
 /**
- * Cancel entire order (c.ii, c.iii)
+ * Cancel entire order
  */
 export const postCancelOrder = async (req, res, next) => {
     const isAjax = Boolean(
@@ -150,7 +150,7 @@ export const postCancelOrder = async (req, res, next) => {
 };
 
 /**
- * Cancel individual product in order (c.ii, c.iii)
+ * Cancel individual product in order
  */
 export const postCancelOrderItem = async (req, res, next) => {
     const isAjax = Boolean(
@@ -248,7 +248,7 @@ const handleReturnRequest = async (req, res, action) => {
 };
 
 /**
- * Return delivered order with mandatory reason (c.iv)
+ * Return delivered order with mandatory reason
  */
 export const postReturnOrder = (req, res) =>
     handleReturnRequest(req, res, (userId, reason) =>
@@ -264,7 +264,7 @@ export const postReturnOrderItem = (req, res) =>
     );
 
 /**
- * Download Invoice PDF (c.vi)
+ * Download Invoice PDF
  */
 export const downloadInvoice = async (req, res, next) => {
     try {

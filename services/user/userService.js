@@ -205,7 +205,7 @@ const verifyOTP = async (userId, enteredOTP) => {
 
         user.isVerified = true;
 
-        // Process referral offer rewards upon successful verification (b.iii)
+        // Process referral rewards upon successful verification
         if (user.referredBy && !user.referralRewarded) {
             try {
                 const referralOffer = await offerService.getActiveReferralOffer();

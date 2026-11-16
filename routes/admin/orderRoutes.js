@@ -3,13 +3,13 @@ import orderController from "../../controllers/admin/orderController.js";
 
 const router = express.Router();
 
-// Order Listing with search, sort, filter & pagination (a.i, a.ii, a.iv, a.v)
+// Order listing with search, sort, filter, and pagination
 router.get("/orders", orderController.getOrderListPage);
 
-// View Order Details dossier (a.ii)
+// View order details
 router.get("/orders/:orderId", orderController.getOrderDetail);
 
-// Update Order Fulfillment Status (a.iii)
+// Update order fulfillment status
 router.post("/orders/:orderId/status", orderController.updateOrderStatus);
 
 // Approve / Reject Return Requests

@@ -59,7 +59,7 @@ export const postBuyNow = async (req, res, next) => {
 };
 
 /**
- * Render the Bespoke Checkout Page (b.i, b.ii, b.iii)
+ * Render user checkout page
  */
 export const getCheckoutPage = async (req, res, next) => {
     try {
@@ -138,7 +138,7 @@ export const getCheckoutPage = async (req, res, next) => {
 };
 
 /**
- * Place Order with Cash on Delivery (b.iii)
+ * Place order using Cash on Delivery
  */
 export const postPlaceOrder = async (req, res, next) => {
     const isAjax = Boolean(
@@ -217,7 +217,7 @@ export const postPlaceOrder = async (req, res, next) => {
 };
 
 /**
- * Render the Order Success Page (b.iv)
+ * Render order confirmation success page
  */
 export const getOrderSuccessPage = async (req, res, next) => {
     try {
@@ -259,7 +259,7 @@ export const getOrderSuccessPage = async (req, res, next) => {
 };
 
 /**
- * Asynchronous add address endpoint for checkout modal (b.i)
+ * Add new shipping address during checkout
  */
 export const postAddAddressCheckout = async (req, res, next) => {
     try {
@@ -318,7 +318,7 @@ export const postAddAddressCheckout = async (req, res, next) => {
 };
 
 /**
- * Asynchronous edit address endpoint for checkout modal (b.i)
+ * Edit shipping address during checkout
  */
 export const postEditAddressCheckout = async (req, res, next) => {
     try {
@@ -377,7 +377,7 @@ export const postEditAddressCheckout = async (req, res, next) => {
 };
 
 /**
- * Apply coupon code at checkout (e.i, e.ii, e.iii)
+ * Apply coupon code at checkout
  */
 export const postApplyCoupon = async (req, res) => {
     try {
@@ -397,7 +397,7 @@ export const postApplyCoupon = async (req, res) => {
             });
         }
 
-        // Prevent multiple coupons (e.ii)
+        // Disallow applying multiple coupons simultaneously
         if (req.session?.appliedCoupon) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
@@ -450,7 +450,7 @@ export const postApplyCoupon = async (req, res) => {
 };
 
 /**
- * Remove applied coupon from checkout (e.i)
+ * Remove applied coupon from checkout
  */
 export const postRemoveCoupon = async (req, res) => {
     try {
@@ -488,7 +488,7 @@ export const postRemoveCoupon = async (req, res) => {
 };
 
 /**
- * Create a secure Razorpay order token for online checkout (a)
+ * Create Razorpay order token for online checkout
  */
 export const postCreateRazorpayOrder = async (req, res) => {
     try {
@@ -666,7 +666,7 @@ export const postVerifyPayment = async (req, res) => {
 };
 
 /**
- * Record a failed/dismissed online transaction for retry (c)
+ * Record a failed online transaction for retry
  */
 export const postPaymentFailed = async (req, res) => {
     try {
@@ -721,7 +721,7 @@ export const postPaymentFailed = async (req, res) => {
 };
 
 /**
- * Render Payment Failure Page with Retry and Redirect options (c)
+ * Render payment failure page with retry and redirect options
  */
 export const getPaymentFailurePage = async (req, res, next) => {
     try {
@@ -765,7 +765,7 @@ export const getPaymentFailurePage = async (req, res, next) => {
 };
 
 /**
- * Retry Payment: Generate new Razorpay order for existing failed order (c)
+ * Generate new Razorpay order to retry payment on existing order
  */
 export const postRetryPayment = async (req, res) => {
     try {
@@ -834,7 +834,7 @@ export const postRetryPayment = async (req, res) => {
 };
 
 /**
- * Verify Razorpay payment on retry and complete order (c)
+ * Verify Razorpay payment on retry and complete order
  */
 export const postVerifyRetryPayment = async (req, res) => {
     try {

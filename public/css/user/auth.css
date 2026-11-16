@@ -863,7 +863,7 @@ input, textarea, [contenteditable="true"] {
     }
 }
 
-/* SweetAlert2 Quiet Luxury Theme Overrides */
+/* SweetAlert2 Theme Overrides */
 .swal2-popup.swal2-toast {
     background: #141312 !important;
     border: 1px solid rgba(212, 136, 51, 0.35) !important;

@@ -13,7 +13,7 @@ const isJsonRequest = (req) => {
 };
 
 /**
- * Render Admin Orders Listing Page (a.i, a.ii, a.iv, a.v)
+ * Render admin orders listing page with filters and pagination
  */
 export const getOrderListPage = async (req, res, next) => {
     const isJson = isJsonRequest(req);
@@ -76,7 +76,7 @@ export const getOrderListPage = async (req, res, next) => {
 };
 
 /**
- * Get single order details as JSON or render dossier (a.ii)
+ * Get single order details as JSON or render details view
  */
 export const getOrderDetail = async (req, res, next) => {
     const isJson = isJsonRequest(req);
@@ -122,7 +122,7 @@ export const getOrderDetail = async (req, res, next) => {
 };
 
 /**
- * Update order fulfillment status (a.iii)
+ * Update order status and adjust inventory if needed
  */
 export const updateOrderStatus = async (req, res, next) => {
     const isJson = isJsonRequest(req);

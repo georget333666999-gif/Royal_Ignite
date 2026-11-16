@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/css/user/index.css" />
     <link rel="stylesheet" href="/css/user/shop.css" />
     <link rel="stylesheet" href="/css/user/cart.css" />
-    <!-- SweetAlert2 for Quiet Luxury Pop-ups & Notifications -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -410,7 +410,7 @@
             }
         });
 
-        // Luxury SweetAlert2 Confirmation for Removing Items from Bag
+        // SweetAlert2 confirmation for removing items from cart
         document.addEventListener('submit', function (e) {
             const form = e.target;
             if (!form.classList || !form.classList.contains('cart-remove-form')) return;

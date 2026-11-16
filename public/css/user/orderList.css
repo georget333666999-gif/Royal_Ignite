@@ -93,7 +93,7 @@ body.orders-body {
     margin: 0;
 }
 
-/* Search & Filter Toolbar (c.vii) */
+/* Search & Filter Toolbar */
 .orders-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -301,7 +301,7 @@ body.orders-body {
     color: #f87171;
 }
 
-/* Ribbons for Return Statuses on Order Cards (Quiet Luxury Aesthetic) */
+/* Ribbons for Return Statuses on Order Cards */
 .order-notice-ribbon {
     padding: 14px 24px;
     font-size: 13px;

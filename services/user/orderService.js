@@ -92,7 +92,7 @@ export const getOrderDetails = async (orderIdentifier, userId) => {
 };
 
 /**
- * Cancel entire order (c.ii, c.iii)
+ * Cancel entire order
  * Increments inventory for all cancelled items
  * @param {string} orderIdentifier
  * @param {string} userId
@@ -164,7 +164,7 @@ export const cancelOrder = async (orderIdentifier, userId, reason = "") => {
 };
 
 /**
- * Cancel single product within an order (c.ii, c.iii)
+ * Cancel single product within an order
  * Increments stock specifically for that piece
  * @param {string} orderIdentifier
  * @param {string} itemId
@@ -256,7 +256,7 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
 };
 
 /**
- * Return an order (c.iv)
+ * Return an order
  * Mandatory reason required
  * @param {string} orderIdentifier
  * @param {string} userId
@@ -391,7 +391,7 @@ export const returnOrderItem = async (orderIdentifier, itemId, userId, reason) =
 };
 
 /**
- * Generate luxury atelier PDF invoice (c.vi)
+ * Generate PDF invoice
  * @param {string} orderIdentifier
  * @param {string} userId
  * @param {import("express").Response} res

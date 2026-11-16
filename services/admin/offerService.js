@@ -4,7 +4,7 @@ import Category from "../../models/categoryModel.js";
 
 /**
  * Reconcile product sale prices based on active product and category offers.
- * Requirement b.ii: "apply the largest between product and category offer"
+ * Applies the greater discount between product and category offers.
  *
  * @param {Object} options
  * @param {string} [options.productId]
@@ -69,7 +69,7 @@ export const reconcileProductPrices = async ({ productId, categoryId, all = fals
                 }
             }
 
-            // Apply the largest between product and category offer (b.ii)
+            // Pick the higher discount between product and category offers
             const largestDiscount = Math.max(productDiscount, categoryDiscount);
 
             if (largestDiscount > 0) {

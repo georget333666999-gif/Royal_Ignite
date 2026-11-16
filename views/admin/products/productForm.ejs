@@ -9,7 +9,7 @@
     <!-- Cropper.js for Client-Side Image Cropping and Resizing Before Upload -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-    <!-- SweetAlert2 for Quiet Luxury Alerts -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -256,7 +256,7 @@
                         Upload high-resolution product photographs. Each image can be cropped and resized to a standardized 1:1 aspect ratio before submission.
                     </p>
 
-                    <!-- Requirement Tracker Badge -->
+                    <!-- Image count indicator -->
                     <div id="imageCountBadge" class="upload-requirement-badge">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -589,9 +589,9 @@
                 cropperInstance.destroy();
             }
 
-            // Initialize Cropper with luxury 1:1 aspect ratio preset
+            // Initialize Cropper with 1:1 aspect ratio preset
             cropperInstance = new Cropper(cropperImg, {
-                aspectRatio: 1, // Standard 1:1 luxury product ratio
+                aspectRatio: 1, // Standard 1:1 square ratio
                 viewMode: 1,
                 autoCropArea: 0.9,
                 responsive: true,

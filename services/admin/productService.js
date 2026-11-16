@@ -89,7 +89,7 @@ const getProducts = async ({
         const currentPage = Math.min(Math.max(1, page), totalPages);
         const skip = (currentPage - 1) * limit;
 
-        // Requirement: Sort table in descending order (newest first)
+        // Sort products by creation date descending
         const products = await Product.find(filter)
             .populate("category", "name isListed isDeleted")
             .sort({ createdAt: -1 })

@@ -7,7 +7,7 @@
     <title><%= typeof pageTitle !== 'undefined' ? pageTitle : `Order #${order.orderId} — ROYAL IGNITE Admin` %></title>
     <link rel="stylesheet" href="/css/admin/orderDetails.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Confirmation -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -50,7 +50,7 @@
                 </div>
             <% } %>
 
-            <!-- Order Header Card (a.ii) -->
+            <!-- Order header card -->
             <% const statusSlug = (order.orderStatus || 'placed').toLowerCase().replace(/\s+/g, '-'); %>
             <div class="order-header-card">
                 <div class="header-left-col">
@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Fulfillment Status Transition Controller (a.iii) -->
+            <!-- Status update controller -->
             <%
                 const nextStatuses = (allowedTransitions && allowedTransitions[order.orderStatus]) || [];
                 const currentLabel = order.orderStatus === 'Pending' ? 'Placed' : order.orderStatus;
@@ -225,7 +225,7 @@
             </div>
             <% } %>
 
-            <!-- Main Dossier Grid -->
+            <!-- Main order details grid -->
             <div class="dossier-grid">
 
                 <!-- Left Column: Itemized Creations & Activity Timeline -->
@@ -388,7 +388,7 @@
                 <!-- Right Column: Customer Profile, Delivery Address, Financials -->
                 <div class="dossier-col-side">
 
-                    <!-- Customer Profile Card (a.ii) -->
+                    <!-- Customer Profile Card -->
                     <div class="dossier-card">
                         <div class="dossier-card-header">
                             <h2 class="dossier-card-title">

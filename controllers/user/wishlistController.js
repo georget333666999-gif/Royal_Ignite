@@ -4,7 +4,7 @@ import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
 import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
 
 /**
- * Render the User's Wishlist Page (a.i, a.iii)
+ * Render wishlist page
  */
 export const getWishlistPage = async (req, res, next) => {
     try {
@@ -129,7 +129,7 @@ export const removeFromWishlist = async (req, res, next) => {
 };
 
 /**
- * Move product from wishlist to cart (a.ii)
+ * Move item from wishlist to shopping cart
  */
 export const moveToCart = async (req, res, next) => {
     try {

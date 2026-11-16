@@ -75,7 +75,7 @@ const getCategories = async (search = "", statusFilter = "all", page = 1, limit 
         const currentPage = Math.min(Math.max(1, page), totalPages);
         const skip = (currentPage - 1) * limit;
 
-        // Requirement: Sort the category table in descending order (newest first)
+        // Sort categories descending by creation date
         const categories = await Category.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)

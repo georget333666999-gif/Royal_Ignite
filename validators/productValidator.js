@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 /**
- * Validate product input fields and image requirements
+ * Validate product input fields and images
  */
 export const validateProductInput = ({
     name,
@@ -66,7 +66,7 @@ export const validateProductInput = ({
             errors.push("Stock must be a valid whole number (0 or greater).");
         }
 
-        // Images count validation (Requirement: minimum 3 images)
+        // Ensure minimum 3 images are provided
         if (!Array.isArray(images) || images.length < 3) {
             errors.push("A minimum of 3 product images are required.");
         }

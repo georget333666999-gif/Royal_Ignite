@@ -2,7 +2,7 @@ import salesReportService from "../../services/admin/salesReportService.js";
 import { HTTP_STATUS } from "../../constants/index.js";
 
 /**
- * Render Sales Report Dossier Console (Requirement d)
+ * Render sales report page
  */
 export const getSalesReportPage = async (req, res, next) => {
     try {
@@ -37,7 +37,7 @@ export const getSalesReportPage = async (req, res, next) => {
 };
 
 /**
- * Download Sales Report as PDF (Requirement e)
+ * Download sales report as PDF
  */
 export const downloadSalesReportPDF = async (req, res, next) => {
     try {
@@ -57,7 +57,7 @@ export const downloadSalesReportPDF = async (req, res, next) => {
 };
 
 /**
- * Download Sales Report as Excel (.xlsx) (Requirement e)
+ * Download sales report as Excel spreadsheet (.xlsx)
  */
 export const downloadSalesReportExcel = async (req, res, next) => {
     try {

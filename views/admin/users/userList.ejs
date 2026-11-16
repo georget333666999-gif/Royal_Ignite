@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Customer Management - ROYAL IGNITE Admin</title>
     <link rel="stylesheet" href="/css/admin/userList.css" />
-    <!-- SweetAlert2 for Quiet Luxury Confirmations & Alerts -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -363,7 +363,7 @@
             });
         }
 
-        // Luxury SweetAlert2 confirmation for blocking & unblocking users
+        // SweetAlert2 confirmation for blocking & unblocking users
         document.addEventListener('submit', function (e) {
             const form = e.target;
             if (!form.classList || !form.classList.contains('user-action-form')) return;

@@ -163,7 +163,7 @@
                     </p>
                 </div>
 
-                <!-- Structured 3-Column Luxury Grid (Well-Proportioned) -->
+                <!-- Product card grid -->
                 <div class="care-cards-grid">
                     <% products.forEach(function(product, index) { 
                         const frontImg = (product.images && product.images[0]) || '/uploads/care/collector_care_kit.jpg';
@@ -181,7 +181,7 @@
                                 <span class="care-card-edition-num"><%= editionNum %></span>
                             </div>
 
-                            <!-- Controlled Image Stage (Well-Proportioned) -->
+                            <!-- Product image stage -->
                             <div class="care-card-stage">
                                 <% if (product.appliedOffer && product.appliedOffer.name) { %>
                                     <span class="collection-card-offer-badge" title="Live Privilege: <%= product.appliedOffer.name %>">

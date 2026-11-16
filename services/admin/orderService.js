@@ -48,7 +48,7 @@ export const ORDER_STATUS_TRANSITIONS = Object.freeze({
 });
 
 /**
- * Fetch filtered, sorted, and paginated orders for administration (a.i, a.iv, a.v)
+ * Fetch filtered, sorted, and paginated orders for administration
  * @param {Object} options
  * @param {string} [options.search=""]
  * @param {string} [options.status="all"]
@@ -67,7 +67,7 @@ export const getAdminOrders = async ({
     try {
         const query = {};
 
-        // 1. Status Filter (a.iv)
+        // 1. Status Filter
         if (status && status !== "all") {
             if (status === "Pending") {
                 query.orderStatus = { $in: ["Pending", "Placed"] };
@@ -76,7 +76,7 @@ export const getAdminOrders = async ({
             }
         }
 
-        // 2. Search Functionality (a.iv: orderID, user details, items)
+        // 2. Search functionality (order ID, customer details, product names)
         if (search && search.trim() !== "") {
             const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             const cleanSearch = search.trim();
@@ -133,7 +133,7 @@ export const getAdminOrders = async ({
             });
         }
 
-        // 3. Sorting Criteria (a.i: default descending order date)
+        // 3. Sorting criteria (default: newest first)
         let sortCriteria = { createdAt: -1 };
         if (sort === "oldest") {
             sortCriteria = { createdAt: 1 };
@@ -143,7 +143,7 @@ export const getAdminOrders = async ({
             sortCriteria = { "pricing.totalAmount": 1 };
         }
 
-        // 4. Pagination (a.v)
+        // 4. Pagination calculation
         const currentPage = Math.max(1, parseInt(page, 10) || 1);
         const pageSize = Math.max(1, parseInt(limit, 10) || 10);
         const skip = (currentPage - 1) * pageSize;
@@ -233,7 +233,7 @@ export const getAdminOrders = async ({
 };
 
 /**
- * Fetch detailed single order for admin dossier (a.ii)
+ * Fetch detailed single order for admin inspection
  * @param {string} orderIdentifier
  * @returns {Promise<Object|null>}
  */
@@ -256,7 +256,7 @@ export const getAdminOrderDetails = async (orderIdentifier) => {
 };
 
 /**
- * Update order fulfillment status with inventory reconciliation (a.iii)
+ * Update order status and reconcile inventory
  * @param {string} orderIdentifier
  * @param {string} newStatus
  * @param {string} [adminNotes=""]

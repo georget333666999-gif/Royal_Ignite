@@ -481,7 +481,7 @@ body {
     color: var(--admin-text-muted);
 }
 
-/* Prestige Hero Card for Net Atelier Revenue */
+/* Net Revenue Card */
 .kpi-card-hero {
     background: linear-gradient(135deg, #FFFDF8 0%, #FFF5E6 100%);
     border: 1.5px solid rgba(212, 136, 51, 0.45);

@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/css/user/index.css" />
     <link rel="stylesheet" href="/css/user/orderDetails.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Dialogs -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -73,7 +73,7 @@
     <main class="order-details-main">
         <div class="order-details-container">
 
-            <!-- Breadcrumbs & Header Bar (c.v) -->
+            <!-- Breadcrumbs & Header Bar -->
             <div class="order-details-header">
                 <div class="order-details-breadcrumbs">
                     <a href="/user/profile">Atelier Profile</a>
@@ -106,7 +106,7 @@
                         </div>
                     </div>
 
-                    <!-- Actions (c.ii, c.iv, c.vi) -->
+                    <!-- Actions -->
                     <div class="order-header-actions">
                         <!-- Pay Now Button if payment pending -->
                         <% if (isPaymentPending) { %>
@@ -136,7 +136,7 @@
                             </a>
                         <% } %>
 
-                        <!-- Cancel Entire Order (c.ii, c.iii) -->
+                        <!-- Cancel Entire Order -->
                         <% if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing' || isPaymentPending) { %>
                             <button type="button" 
                                     class="btn-header-cancel" 
@@ -145,7 +145,7 @@
                             </button>
                         <% } %>
 
-                        <!-- Return Order (c.iv) -->
+                        <!-- Return Order -->
                         <% const hasReturnableItems = Array.isArray(order.items) && order.items.some(i => i.status === 'Delivered'); %>
                         <% const isDeliveredStage = Boolean(order.deliveredAt) || ['Delivered', 'Return Requested', 'Return Rejected', 'Returned'].includes(order.orderStatus); %>
                         <% if (isDeliveredStage && hasReturnableItems) { %>
@@ -187,7 +187,7 @@
                 </div>
             <% } %>
 
-            <!-- Visual Progress Stepper (c.v) -->
+            <!-- Visual Progress Stepper -->
             <section class="order-stepper-card">
                 <div class="stepper-header">
                     <span class="stepper-title">Craftsmanship & Delivery Trajectory</span>
@@ -369,7 +369,7 @@
             <!-- Main Order Details Grid -->
             <div class="order-grid">
 
-                <!-- Left Column: Itemized Creations (c.ii, c.iii, c.v) -->
+                <!-- Left Column: Itemized Creations -->
                 <div class="order-items-column">
                     <div class="order-items-card">
                         <div class="card-title-bar">
@@ -431,7 +431,7 @@
                                         <% if (isPieceCancelled) { %>
                                             <span class="item-cancelled-tag">Cancelled</span>
                                         <% } else if (order.orderStatus === 'Placed' || order.orderStatus === 'Processing') { %>
-                                            <!-- Specific Product Cancel Button (c.ii, c.iii) -->
+                                            <!-- Specific Product Cancel Button -->
                                             <button type="button" 
                                                     class="btn-cancel-piece"
                                                     onclick="promptCancelPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
@@ -567,7 +567,7 @@
 
     <!-- Action Handlers Script -->
     <script>
-        // Prompt Cancel Entire Order with Optional Reason (c.ii, c.iii)
+        // Prompt Cancel Entire Order with Optional Reason
         function promptCancelOrder(orderId) {
             Swal.fire({
                 title: 'Cancel Entire Acquisition?',
@@ -636,7 +636,7 @@
             });
         }
 
-        // Prompt Cancel Specific Product in Order with Optional Reason (c.ii, c.iii)
+        // Prompt Cancel Specific Product in Order with Optional Reason
         function promptCancelPiece(orderId, itemId, itemName) {
             Swal.fire({
                 title: 'Cancel This Piece?',
@@ -778,7 +778,7 @@
             });
         }
 
-        // Prompt Return Delivered Order with Mandatory Reason (c.iv)
+        // Prompt Return Delivered Order with Mandatory Reason
         function promptReturnOrder(orderId) {
             submitReturnPrompt(
                 `/orders/${orderId}/return`,

@@ -116,7 +116,7 @@ export const getProductDetails = async (req, res, next) => {
         // 2. Fetch product by ID
         const result = await productService.getProductDetailsById(id);
 
-        // Requirement: Redirect to listing if product blocked/unavailable/unlisted
+        // Redirect to listing if product is blocked, unlisted, or unavailable
         if (!result || result.unavailable || !result.product) {
             const redirectReason = result?.reason || RESPONSE_MESSAGES.PRODUCT.UNAVAILABLE_BANNER;
             if (isAjax) {

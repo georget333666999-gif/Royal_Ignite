@@ -178,7 +178,7 @@ export const getAllSalesReportOrders = async ({ period = "daily", startDate = nu
 };
 
 /**
- * Generate PDF Sales Report (Requirement e)
+ * Generate PDF sales report
  */
 export const generatePDFReport = async (reportData, res) => {
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -301,7 +301,7 @@ export const generatePDFReport = async (reportData, res) => {
 };
 
 /**
- * Generate Excel (.xlsx) Sales Report (Requirement e)
+ * Generate Excel (.xlsx) sales report
  */
 export const generateExcelReport = async (reportData, res) => {
     const workbook = new ExcelJS.Workbook();

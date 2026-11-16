@@ -7,7 +7,7 @@
     <title>Saved Addresses - ROYAL IGNITE</title>
     <link rel="stylesheet" href="/css/user/auth.css" />
     <link rel="stylesheet" href="/css/user/profile.css" />
-    <!-- SweetAlert2 for Quiet Luxury Pop-ups -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -253,7 +253,7 @@
     <%- include('partials/footer') %>
 
     <script>
-        // Luxury SweetAlert2 confirmation for deleting an address
+        // SweetAlert2 confirmation for deleting an address
         document.addEventListener('submit', function (e) {
             const form = e.target;
             if (!form.classList || !form.classList.contains('delete-address-form')) return;

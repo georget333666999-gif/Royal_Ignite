@@ -2,7 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-    // 1. Globally ignored files and directories
+    // Ignored paths
     {
         ignores: [
             "node_modules/**",
@@ -12,10 +12,10 @@ export default [
         ]
     },
 
-    // 2. Base ESLint recommended rules
+    // Base ESLint recommended rules
     js.configs.recommended,
 
-    // 3. Node.js backend environment (all server, controllers, models, routes, services, utils, etc.)
+    // Node.js backend environment
     {
         files: ["**/*.js"],
         languageOptions: {
@@ -40,7 +40,7 @@ export default [
         }
     },
 
-    // 4. Browser frontend scripts (public/js)
+    // Browser scripts
     {
         files: ["public/js/**/*.js"],
         languageOptions: {

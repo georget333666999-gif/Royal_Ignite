@@ -7,7 +7,7 @@
     <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Order Management — ROYAL IGNITE Admin' %></title>
     <link rel="stylesheet" href="/css/admin/orderList.css" />
 
-    <!-- SweetAlert2 for Quiet Luxury Status Transitions -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -122,11 +122,11 @@
                 </section>
             <% } %>
 
-            <!-- Search, Filter, Sort Toolbar (a.iv: with Clear functionality) -->
+            <!-- Search, filter, and sort toolbar -->
             <section class="toolbar-card">
                 <form action="/admin/orders" method="GET" id="orderFilterForm">
                     <div class="toolbar-row">
-                        <!-- Search Box (a.iv) -->
+                        <!-- Search Box -->
                         <div class="search-box-wrapper">
                             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -155,7 +155,7 @@
                                 <option value="Return Rejected" <%= status === 'Return Rejected' ? 'selected' : '' %>>Return Rejected</option>
                             </select>
 
-                            <!-- Sort Dropdown (a.i: Descending by date default) -->
+                            <!-- Sort Dropdown (newest first by default) -->
                             <select name="sort" class="sort-select" onchange="this.form.submit()">
                                 <option value="newest" <%= (!sort || sort === 'newest') ? 'selected' : '' %>>Date: Newest First (Default)</option>
                                 <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Date: Oldest First</option>
@@ -166,7 +166,7 @@
                             <!-- Apply Button -->
                             <button type="submit" class="btn-filter-apply">Filter</button>
 
-                            <!-- Clear Filters Button (a.iv) -->
+                            <!-- Clear Filters Button -->
                             <a href="/admin/orders" class="btn-filter-clear" title="Reset all search queries and filters">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -178,7 +178,7 @@
                     </div>
                 </form>
 
-                <!-- Status Filter Pills Quick Links (a.iv) -->
+                <!-- Status Filter Pills Quick Links -->
                 <% 
                     const buildPillUrl = (st) => {
                         const p = new URLSearchParams();
@@ -204,7 +204,7 @@
                 </div>
             </section>
 
-            <!-- Orders Listing Table (a.i, a.ii) -->
+            <!-- Orders listing table -->
             <section class="table-card">
                 <div class="table-responsive">
                     <table class="orders-table">
@@ -229,7 +229,7 @@
                                         const firstLetter = customerName.charAt(0).toUpperCase();
                                     %>
                                     <tr id="order-row-<%= order.orderId %>">
-                                        <!-- i. OrderID and Date (a.i, a.ii) -->
+                                        <!-- Order ID and Date -->
                                         <td>
                                             <div class="order-id-cell">
                                                 <span class="order-id-code">#<%= order.orderId %></span>
@@ -240,7 +240,7 @@
                                             </div>
                                         </td>
 
-                                        <!-- ii. User Details (a.ii) -->
+                                        <!-- Customer Details -->
                                         <td>
                                             <div class="user-info-cell">
                                                 <div class="user-avatar-mini"><%= firstLetter %></div>
@@ -279,7 +279,7 @@
                                             </div>
                                         </td>
 
-                                        <!-- Fulfillment Status Badge + Quick Action (a.iii) -->
+                                        <!-- Fulfillment Status Badge + Quick Action -->
                                         <td>
                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                 <span class="status-badge <%= statusSlug %>">
@@ -303,7 +303,7 @@
                                             </div>
                                         </td>
 
-                                        <!-- View Detail Button (a.ii) -->
+                                        <!-- View Detail Button -->
                                         <td style="text-align: right;">
                                             <div class="actions-cell" style="justify-content: flex-end;">
                                                 <a href="/admin/orders/<%= order.orderId %>" class="btn-view-detail" title="Inspect full order dossier">
@@ -345,7 +345,7 @@
                     </table>
                 </div>
 
-                <!-- Pagination Toolbar (a.v) -->
+                <!-- Pagination Toolbar -->
                 <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
                     <% 
                         const buildPageUrl = (p) => {
@@ -392,7 +392,7 @@
         </div>
     </main>
 
-    <!-- Quick Status Transition Dialog Script (a.iii) -->
+    <!-- Status Dialog Script -->
     <script>
         function promptChangeStatus(orderId, currentStatus) {
             const transitions = <%- JSON.stringify(allowedTransitions) %>;

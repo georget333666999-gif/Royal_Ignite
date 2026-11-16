@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="/css/user/index.css" />
     <link rel="stylesheet" href="/css/user/shop.css" />
     <link rel="stylesheet" href="/css/user/productDetails.css?v=2.1" />
-    <!-- SweetAlert2 for Quiet Luxury Alerts & Notifications -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -1023,7 +1023,7 @@
             }
         }
 
-        // 6b. Add to Cart AJAX Form Submission (Quiet Luxury In-Page Feedback)
+        // Add to Cart AJAX Form Submission
         const productForm = document.getElementById("productPurchaseForm");
         if (productForm) {
             productForm.addEventListener("submit", async function(e) {
@@ -1224,7 +1224,7 @@
                         headerCartIcon.classList.add("cart-pulse-active");
                     }
 
-                    // Quiet Luxury success toast notification on product details page displaying item count
+                    // Success toast notification displaying item count
                     if (typeof Swal !== 'undefined') {
                         const countText = cartItemCount 
                             ? `${cartItemCount} ${cartItemCount === 1 ? 'item' : 'items'} in your bag` 

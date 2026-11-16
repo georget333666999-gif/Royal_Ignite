@@ -262,7 +262,7 @@ body {
     color: var(--text-subtle);
 }
 
-/* Search, Filter, Sort Toolbar (a.iv) */
+/* Search, Filter, Sort Toolbar */
 .toolbar-card {
     background: #ffffff;
     border: 0.8px solid var(--border-color);
@@ -361,7 +361,7 @@ body {
     background: #27272a;
 }
 
-/* Clear Functionality Button (a.iv) */
+/* Clear Functionality Button */
 .btn-filter-clear {
     height: 42px;
     padding: 0 16px;
@@ -465,7 +465,7 @@ body {
     background-color: #fafafa;
 }
 
-/* Order ID & Date cell (a.ii) */
+/* Order ID & Date cell */
 .order-id-cell {
     display: flex;
     flex-direction: column;
@@ -485,7 +485,7 @@ body {
     color: var(--text-muted);
 }
 
-/* User Details cell (a.ii) */
+/* Customer Details cell */
 .user-info-cell {
     display: flex;
     align-items: center;
@@ -637,7 +637,7 @@ body {
 }
 .status-badge.returned .status-dot { background: #c2410c; }
 
-/* Action Buttons (a.ii: view detail button) */
+/* Action Buttons */
 .actions-cell {
     display: flex;
     align-items: center;
@@ -718,7 +718,7 @@ body {
     max-width: 360px;
 }
 
-/* Pagination (a.v) */
+/* Pagination */
 .pagination-wrapper {
     display: flex;
     align-items: center;

@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(adminMiddleware);
 
 // ========================================
-// Admin Dashboard & Analytics (Requirement f)
+// Admin dashboard & analytics
 // ========================================
 router.get("/dashboard", adminController.getDashboard);
 router.get("/dashboard/chart-data", adminController.getChartDataApi);

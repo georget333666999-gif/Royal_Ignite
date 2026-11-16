@@ -41,7 +41,7 @@ const login = async (req, res) => {
     }
 };
 
-// Admin Dashboard GET (Requirement f)
+// Render admin dashboard
 const getDashboard = async (req, res) => {
     try {
         const [
@@ -91,7 +91,7 @@ const getDashboard = async (req, res) => {
     }
 };
 
-// Admin Chart Data API (AJAX filter: yearly, monthly, weekly) (f.i)
+// Fetch chart data by timeframe (yearly, monthly, weekly)
 const getChartDataApi = async (req, res) => {
     try {
         const { filter = "monthly" } = req.query;
@@ -106,7 +106,7 @@ const getChartDataApi = async (req, res) => {
     }
 };
 
-// Admin Ledger Book Summary (f.v)
+// Generate ledger summary
 const getLedgerBook = async (req, res) => {
     try {
         const ledger = await dashboardService.getLedgerBookSummary();

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Product Management - ROYAL IGNITE Admin</title>
     <link rel="stylesheet" href="/css/admin/productList.css" />
-    <!-- SweetAlert2 for Quiet Luxury Confirmations & Alerts -->
+    <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .royal-luxury-swal {
@@ -439,7 +439,7 @@
             if (form) form.submit();
         }
 
-        // SweetAlert2 Quiet Luxury helper
+        // Custom themed SweetAlert2 dialog helper
         const luxurySwal = Swal.mixin({
             customClass: {
                 popup: 'royal-luxury-swal',
