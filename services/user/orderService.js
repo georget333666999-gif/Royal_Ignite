@@ -1,9 +1,11 @@
-import PDFDocument from "pdfkit";
 import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 import couponService from "./couponService.js";
 import walletService from "./walletService.js";
+import userService from "./userService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
+import { renderInvoicePDF } from "../../utils/invoicePdf.js";
 
 /**
  * Get paginated and filtered user orders
@@ -27,12 +29,13 @@ export const getUserOrders = async (
             query.orderStatus = status;
         }
 
-        // Search by orderId or product name
-        if (search && search.trim() !== "") {
-            const cleanSearch = search.trim();
+        // Search by orderId or product name (validated & regex-escaped)
+        const { value: cleanSearch, error: searchError } = sanitizeSearchQuery(search);
+        if (cleanSearch) {
+            const safeSearch = escapeRegex(cleanSearch);
             query.$or = [
-                { orderId: { $regex: cleanSearch, $options: "i" } },
-                { "items.name": { $regex: cleanSearch, $options: "i" } }
+                { orderId: { $regex: safeSearch, $options: "i" } },
+                { "items.name": { $regex: safeSearch, $options: "i" } }
             ];
         }
 
@@ -57,8 +60,9 @@ export const getUserOrders = async (
             totalPages,
             currentPage,
             limit: pageSize,
-            search: search.trim(),
-            status: status.trim()
+            search: cleanSearch,
+            searchError,
+            status: typeof status === "string" ? status.trim() : "all"
         };
     } catch (error) {
         console.error("orderService getUserOrders error:", error);
@@ -144,12 +148,16 @@ export const cancelOrder = async (orderIdentifier, userId, reason = "") => {
         order.orderStatus = "Cancelled";
         order.cancellationReason = reason.trim() || "Order cancelled by client";
         order.cancelledAt = new Date();
+        order.pricing.totalAmount = 0;
 
         await order.save();
 
         // 4. Revert coupon usage if applied
         if (order.coupon && order.coupon.code) {
             await couponService.revertCouponUsage(order.coupon.code, order.user);
+        }
+        if (order.unlockedReferralBonus?.referrerId && !order.unlockedReferralBonus.isRevoked) {
+            await userService.revokeReferralRewardOnOrderSettlement(order);
         }
 
         return {
@@ -211,10 +219,14 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
         item.cancelReason = reason.trim() || "Item cancelled by customer";
         item.cancelledAt = new Date();
 
-        // 3. Direct Refund to Wallet if piece was prepaid
-        if (order.paymentStatus === "Completed" && item.lineTotal > 0) {
+        // 3. Direct Refund to Wallet if piece was prepaid (refund net payable amount after discount share)
+        const itemRefundAmount = (typeof item.netRefundableAmount === "number" && item.netRefundableAmount >= 0)
+            ? item.netRefundableAmount
+            : Math.max(0, item.lineTotal - (item.discountShare || 0));
+
+        if (order.paymentStatus === "Completed" && itemRefundAmount > 0) {
             await walletService.creditWallet(userId, {
-                amount: item.lineTotal,
+                amount: itemRefundAmount,
                 description: `Direct refund for cancellation of "${item.name}" from order #${order.orderId}`,
                 source: "item_cancellation",
                 orderId: order.orderId
@@ -234,11 +246,19 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
             if (order.coupon && order.coupon.code) {
                 await couponService.revertCouponUsage(order.coupon.code, order.user);
             }
+            if (order.unlockedReferralBonus?.referrerId && !order.unlockedReferralBonus.isRevoked) {
+                await userService.revokeReferralRewardOnOrderSettlement(order);
+            }
         } else {
-            // Adjust total payable for remaining active items
+            // Adjust total payable for remaining active items using their net payable amounts
             const activeTotal = order.items
                 .filter((i) => i.status !== "Cancelled")
-                .reduce((acc, i) => acc + i.lineTotal, 0);
+                .reduce((acc, i) => {
+                    const itemNet = (typeof i.netRefundableAmount === "number" && i.netRefundableAmount >= 0)
+                        ? i.netRefundableAmount
+                        : Math.max(0, i.lineTotal - (i.discountShare || 0));
+                    return acc + itemNet;
+                }, 0);
             order.pricing.totalAmount = activeTotal;
         }
 
@@ -255,15 +275,19 @@ export const cancelOrderItem = async (orderIdentifier, itemId, userId, reason = 
     }
 };
 
+export const MAX_RETURN_ATTEMPTS = 3;
+
 /**
- * Return an order
+ * Return an order (initial return or re-return request after rejection)
  * Mandatory reason required
  * @param {string} orderIdentifier
  * @param {string} userId
  * @param {string} reason
+ * @param {Object} [options={}]
+ * @param {boolean} [options.isReReturn=false]
  * @returns {Promise<Object>}
  */
-export const returnOrder = async (orderIdentifier, userId, reason) => {
+export const returnOrder = async (orderIdentifier, userId, reason, { isReReturn = false } = {}) => {
     try {
         if (!reason || reason.trim() === "") {
             const err = new Error(RESPONSE_MESSAGES.ORDER.RETURN_REASON_REQUIRED);
@@ -279,31 +303,68 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
         }
 
         const isDeliveredOrder = order.deliveredAt || ["Delivered", "Return Requested", "Return Rejected", "Returned"].includes(order.orderStatus);
-        const returnableItems = order.items.filter(
+        const deliveredItems = order.items.filter(
             (i) => i.status === "Delivered" || (order.orderStatus === "Delivered" && i.status === "Placed")
         );
+        const rejectedItems = order.items.filter((i) => i.status === "Return Rejected");
+
+        const targetReReturn = isReReturn || (deliveredItems.length === 0 && rejectedItems.length > 0);
+        let returnableItems = deliveredItems;
+
+        if (targetReReturn) {
+            const eligibleRejected = rejectedItems.filter(
+                (i) => Math.max(1, i.returnRequestCount || 0) < MAX_RETURN_ATTEMPTS
+            );
+            if (rejectedItems.length > 0 && eligibleRejected.length === 0) {
+                const err = new Error(
+                    `Maximum return request attempts (${MAX_RETURN_ATTEMPTS}) have already been reached for this order.`
+                );
+                err.code = "MAX_RETURN_ATTEMPTS_REACHED";
+                throw err;
+            }
+            returnableItems = eligibleRejected;
+        }
 
         if (!isDeliveredOrder || returnableItems.length === 0) {
-            const err = new Error("Return requests can only be submitted for delivered items.");
+            const err = new Error("Return requests can only be submitted for delivered or eligible return-rejected items.");
             err.code = "CANNOT_RETURN";
             throw err;
         }
 
         const cleanReason = reason.trim();
         const now = new Date();
-        order.orderStatus = "Return Requested";
-        order.returnReason = cleanReason;
-        order.returnRequestedAt = now;
-        order.returnRejectReason = null;
-        order.returnRejectedAt = null;
+        let maxAttemptCount = order.returnRequestCount || 0;
+
+        if (targetReReturn && order.returnRejectReason) {
+            order.previousReturnRejectReason = order.returnRejectReason;
+        }
 
         for (const item of returnableItems) {
+            const wasRejected = item.status === "Return Rejected";
+            if (wasRejected && item.returnRejectReason) {
+                item.previousReturnRejectReason = item.returnRejectReason;
+            }
+            const nextCount = wasRejected
+                ? Math.max(1, item.returnRequestCount || 0) + 1
+                : (item.returnRequestCount || 0) + 1;
+
             item.status = "Return Requested";
             item.returnReason = cleanReason;
             item.returnRequestedAt = now;
             item.returnRejectReason = null;
             item.returnRejectedAt = null;
+            item.returnRequestCount = nextCount;
+            if (nextCount > maxAttemptCount) {
+                maxAttemptCount = nextCount;
+            }
         }
+
+        order.orderStatus = "Return Requested";
+        order.returnReason = cleanReason;
+        order.returnRequestedAt = now;
+        order.returnRejectReason = null;
+        order.returnRejectedAt = null;
+        order.returnRequestCount = maxAttemptCount;
 
         // Note: Inventory is NOT re-stocked now. It will only be re-stocked once the admin approves the return.
         await order.save();
@@ -311,7 +372,10 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
         return {
             success: true,
             order,
-            message: RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted successfully. We will notify you once approved."
+            isReReturn: targetReReturn,
+            message: targetReReturn
+                ? "Return request re-submitted successfully. Our atelier concierge will re-evaluate your request."
+                : (RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted successfully. We will notify you once approved.")
         };
     } catch (error) {
         console.error("orderService returnOrder error:", error);
@@ -320,7 +384,7 @@ export const returnOrder = async (orderIdentifier, userId, reason) => {
 };
 
 /**
- * Request return for a single delivered product within an order
+ * Request return (or re-return after rejection) for a single delivered product within an order
  * @param {string} orderIdentifier
  * @param {string} itemId
  * @param {string} userId
@@ -357,32 +421,57 @@ export const returnOrderItem = async (orderIdentifier, itemId, userId, reason) =
         }
 
         const isItemDelivered = item.status === "Delivered" || (order.orderStatus === "Delivered" && item.status === "Placed");
-        if (!isItemDelivered) {
+        const isItemRejected = item.status === "Return Rejected";
+
+        if (!isItemDelivered && !isItemRejected) {
             const err = new Error(`This item cannot be returned because its status is "${item.status}".`);
             err.code = "CANNOT_RETURN";
             throw err;
         }
 
+        if (isItemRejected && Math.max(1, item.returnRequestCount || 0) >= MAX_RETURN_ATTEMPTS) {
+            const err = new Error(
+                `Maximum return request attempts (${MAX_RETURN_ATTEMPTS}) have already been reached for this piece.`
+            );
+            err.code = "MAX_RETURN_ATTEMPTS_REACHED";
+            throw err;
+        }
+
         const cleanReason = reason.trim();
         const now = new Date();
+
+        if (isItemRejected && item.returnRejectReason) {
+            item.previousReturnRejectReason = item.returnRejectReason;
+            order.previousReturnRejectReason = item.returnRejectReason;
+        }
+
+        const nextCount = isItemRejected
+            ? Math.max(1, item.returnRequestCount || 0) + 1
+            : (item.returnRequestCount || 0) + 1;
+
         item.status = "Return Requested";
         item.returnReason = cleanReason;
         item.returnRequestedAt = now;
         item.returnRejectReason = null;
         item.returnRejectedAt = null;
+        item.returnRequestCount = nextCount;
 
         order.orderStatus = "Return Requested";
         order.returnReason = cleanReason;
         order.returnRequestedAt = now;
         order.returnRejectReason = null;
         order.returnRejectedAt = null;
+        order.returnRequestCount = Math.max(order.returnRequestCount || 0, nextCount);
 
         await order.save();
 
         return {
             success: true,
             order,
-            message: RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted for the selected product."
+            isReReturn: isItemRejected,
+            message: isItemRejected
+                ? "Return request re-submitted for this piece. Our atelier concierge will review it shortly."
+                : (RESPONSE_MESSAGES.ORDER.RETURN_REQUESTED || "Return request submitted for the selected product.")
         };
     } catch (error) {
         console.error("orderService returnOrderItem error:", error);
@@ -405,184 +494,7 @@ export const generateInvoicePDF = async (orderIdentifier, userId, res) => {
             throw err;
         }
 
-        const doc = new PDFDocument({
-            size: "A4",
-            margin: 40,
-            info: {
-                Title: `Invoice ${order.orderId} - ROYAL IGNITE`,
-                Author: "Royal Ignite Haute Briquet Atelier"
-            }
-        });
-
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="Invoice-${order.orderId}.pdf"`
-        );
-
-        doc.pipe(res);
-
-        // Styling helpers
-        const GOLD = "#C59B4E";
-        const DARK = "#121216";
-        const GRAY = "#5A5A65";
-        const LIGHT_GRAY = "#EEEEF0";
-
-        // Top Brand Header
-        doc.rect(40, 40, 515, 80).fill(DARK);
-
-        doc.fillColor("#FFFFFF")
-            .font("Helvetica-Bold")
-            .fontSize(22)
-            .text("ROYAL IGNITE", 60, 58, { characterSpacing: 2 });
-
-        doc.fillColor(GOLD)
-            .font("Helvetica")
-            .fontSize(9)
-            .text("HAUTE ATELIER & PRECISION FLAME HORLOGERIE", 60, 84, { characterSpacing: 1.5 });
-
-        doc.fillColor("#FFFFFF")
-            .font("Helvetica-Bold")
-            .fontSize(12)
-            .text("OFFICIAL PROVENANCE INVOICE", 340, 68, { align: "right" });
-
-        // Invoice Meta Block
-        let y = 140;
-        doc.fillColor(DARK).font("Helvetica-Bold").fontSize(10);
-        doc.text("ORDER REFERENCE:", 40, y);
-        doc.font("Helvetica").text(order.orderId, 160, y);
-
-        doc.font("Helvetica-Bold").text("INVOICE DATE:", 340, y);
-        doc.font("Helvetica").text(
-            new Date(order.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-            }),
-            430,
-            y
-        );
-
-        y += 18;
-        doc.font("Helvetica-Bold").text("ORDER STATUS:", 40, y);
-        doc.font("Helvetica").text(order.orderStatus.toUpperCase(), 160, y);
-
-        doc.font("Helvetica-Bold").text("PAYMENT MODE:", 340, y);
-        doc.font("Helvetica").text("Cash on Delivery (COD)", 430, y);
-
-        // Divider
-        y += 24;
-        doc.strokeColor(GOLD).lineWidth(1).moveTo(40, y).lineTo(555, y).stroke();
-
-        // Sold By & Shipped To Columns
-        y += 15;
-        doc.fillColor(GOLD).font("Helvetica-Bold").fontSize(10).text("ATELIER HEADQUARTERS", 40, y);
-        doc.text("DELIVERY DESTINATION", 300, y);
-
-        y += 15;
-        doc.fillColor(DARK).font("Helvetica").fontSize(9);
-        doc.text("Royal Ignite Luxury Atelier Pvt. Ltd.", 40, y);
-        doc.text(order.shippingAddress.fullName, 300, y);
-
-        y += 13;
-        doc.text("The Palladium Pavilion, Level 4", 40, y);
-        doc.text(order.shippingAddress.addressLine, 300, y);
-
-        y += 13;
-        doc.text("Senapati Bapat Marg, Lower Parel", 40, y);
-        doc.text(
-            `${order.shippingAddress.city}, ${order.shippingAddress.state} — ${order.shippingAddress.pincode}`,
-            300,
-            y
-        );
-
-        y += 13;
-        doc.text("Mumbai, Maharashtra 400013, India", 40, y);
-        doc.text(`Contact: ${order.shippingAddress.phone}`, 300, y);
-
-        // Table Header
-        y += 35;
-        doc.rect(40, y, 515, 24).fill(DARK);
-        doc.fillColor("#FFFFFF").font("Helvetica-Bold").fontSize(9);
-        doc.text("#", 50, y + 7);
-        doc.text("CREATION SPECIFICATION", 80, y + 7);
-        doc.text("STATUS", 290, y + 7);
-        doc.text("QTY", 370, y + 7);
-        doc.text("UNIT PRICE", 420, y + 7);
-        doc.text("TOTAL", 500, y + 7);
-
-        // Table Rows
-        y += 24;
-        let index = 1;
-        doc.font("Helvetica").fontSize(9);
-
-        for (const item of order.items) {
-            const rowBg = index % 2 === 0 ? LIGHT_GRAY : "#FFFFFF";
-            doc.rect(40, y, 515, 24).fill(rowBg);
-
-            doc.fillColor(DARK);
-            doc.text(String(index).padStart(2, "0"), 50, y + 7);
-            doc.text(item.name, 80, y + 7, { width: 200, ellipsis: true });
-            doc.text(item.status, 290, y + 7);
-            doc.text(String(item.quantity), 370, y + 7);
-            doc.text(`INR ${Number(item.price).toLocaleString("en-IN")}`, 420, y + 7);
-            doc.text(`INR ${Number(item.lineTotal).toLocaleString("en-IN")}`, 490, y + 7);
-
-            y += 24;
-            index++;
-        }
-
-        // Ledger Summary Block
-        y += 15;
-        const subtotal = order.pricing.subtotal || order.pricing.totalAmount;
-        const discount = order.pricing.discount || 0;
-        const total = order.pricing.totalAmount;
-
-        doc.fillColor(GRAY).font("Helvetica").fontSize(9);
-        doc.text("BAG SUBTOTAL:", 360, y);
-        doc.fillColor(DARK).text(`INR ${Number(subtotal).toLocaleString("en-IN")}`, 470, y, { align: "right" });
-
-        if (discount > 0) {
-            y += 15;
-            doc.fillColor(GRAY).text("ATELIER COURTESY DISCOUNT:", 310, y);
-            doc.fillColor(GOLD).text(`- INR ${Number(discount).toLocaleString("en-IN")}`, 470, y, { align: "right" });
-        }
-
-        y += 15;
-        doc.fillColor(GRAY).text("INSURED AIR COURIER:", 360, y);
-        doc.fillColor(DARK).text("COMPLIMENTARY", 470, y, { align: "right" });
-
-        y += 15;
-        doc.fillColor(GRAY).text("TAXES & DUTIES:", 360, y);
-        doc.fillColor(DARK).text("INCLUDED", 470, y, { align: "right" });
-
-        y += 18;
-        doc.rect(340, y, 215, 28).fill(DARK);
-        doc.fillColor(GOLD).font("Helvetica-Bold").fontSize(11).text("TOTAL PAYABLE:", 355, y + 9);
-        doc.fillColor("#FFFFFF").text(`INR ${Number(total).toLocaleString("en-IN")}`, 450, y + 9, { align: "right" });
-
-        // Authenticity Certification Footer
-        y = 730;
-        doc.strokeColor(GOLD).lineWidth(0.75).moveTo(40, y).lineTo(555, y).stroke();
-        y += 12;
-
-        doc.fillColor(GOLD)
-            .font("Helvetica-Bold")
-            .fontSize(8)
-            .text("ROYAL IGNITE SEAL OF PROVENANCE & AUTHENTICITY", 40, y, { align: "center", characterSpacing: 1.5 });
-
-        y += 12;
-        doc.fillColor(GRAY)
-            .font("Helvetica")
-            .fontSize(7.5)
-            .text(
-                "Each creation is handcrafted to horological micrometer tolerances. Serial numbers registered in the Master Registry. For ignition concierge service, visit royalignite.com",
-                40,
-                y,
-                { align: "center" }
-            );
-
-        doc.end();
+        renderInvoicePDF(order, res);
     } catch (error) {
         console.error("orderService generateInvoicePDF error:", error);
         throw error;
@@ -590,6 +502,7 @@ export const generateInvoicePDF = async (orderIdentifier, userId, res) => {
 };
 
 export default {
+    MAX_RETURN_ATTEMPTS,
     getUserOrders,
     getOrderDetails,
     cancelOrder,

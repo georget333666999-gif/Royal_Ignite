@@ -5,9 +5,12 @@ const router = express.Router();
 
 // Offer Dossier
 router.get("/offers", offerController.getOffersPage);
+router.get("/offers/:id", offerController.getOfferById);
 
 // Offer Actions
 router.post("/offers/create", offerController.postCreateOffer);
+router.put("/offers/edit/:id", offerController.putUpdateOffer);
+router.post("/offers/edit/:id", offerController.putUpdateOffer);
 router.post("/offers/toggle/:id", offerController.postToggleOffer);
 router.post("/offers/delete/:id", offerController.postDeleteOffer);
 

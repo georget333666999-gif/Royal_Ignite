@@ -1,5 +1,6 @@
 import express from "express";
 import checkoutController from "../../controllers/user/checkoutController.js";
+import { couponRateLimiter } from "../../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.post("/checkout/buy-now", checkoutController.postBuyNow);
 router.post("/checkout/place-order", checkoutController.postPlaceOrder);
 
 // Coupon Management
-router.post("/checkout/coupon/apply", checkoutController.postApplyCoupon);
+router.post("/checkout/coupon/apply", couponRateLimiter(), checkoutController.postApplyCoupon);
 router.post("/checkout/coupon/remove", checkoutController.postRemoveCoupon);
 
 // Online Payment Gateway: Razorpay

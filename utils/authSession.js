@@ -52,7 +52,30 @@ export const handleBlockedUser = (req, res, redirectUrl = "/user/login?error=" +
     }
 };
 
+/**
+ * Reuses req.user if already loaded on this request (e.g. by Passport or middleware),
+ * otherwise fetches a lightweight lean user document once and caches it on req.user.
+ */
+export const resolveRequestUser = async (req, UserModel) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) return null;
+
+    if (req.user && req.user._id && req.user._id.toString() === userId.toString()) {
+        return req.user;
+    }
+
+    const user = await UserModel.findById(userId)
+        .select("_id name email phone isBlocked isAdmin isVerified imgUrl googleId")
+        .lean();
+
+    if (user) {
+        req.user = user;
+    }
+    return user;
+};
+
 export default {
     getAuthenticatedUserId,
+    resolveRequestUser,
     handleBlockedUser
 };

@@ -1,7 +1,6 @@
 import walletService from "../../services/user/walletService.js";
-import User from "../../models/userModel.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
-import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
+import { requireActiveUser } from "../../utils/controllerHelpers.js";
 import { getRazorpayClient, getRazorpayKeyId, verifyRazorpaySignature } from "../../config/razorpay.js";
 
 /**
@@ -9,27 +8,13 @@ import { getRazorpayClient, getRazorpayKeyId, verifyRazorpaySignature } from "..
  */
 export const getWalletPage = async (req, res, next) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.redirect("/user/login?redirect=/wallet");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, { redirectUrl: "/user/login?redirect=/wallet" });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
-
         const walletData = await walletService.getWalletDetails(userId, { page, limit });
-
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-            "Surrogate-Control": "no-store"
-        });
 
         return res.status(HTTP_STATUS.OK).render("wallet", {
             pageTitle: "My Digital Wallet — ROYAL IGNITE",
@@ -56,21 +41,9 @@ export const getWalletPage = async (req, res, next) => {
  */
 export const postCreateAddFundsOrder = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return res.status(HTTP_STATUS.FORBIDDEN).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.USER_BLOCKED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const { amount } = req.body;
         const parsedAmount = Math.round(Number(amount) * 100) / 100;
@@ -132,35 +105,13 @@ export const postCreateAddFundsOrder = async (req, res) => {
  */
 export const postVerifyAddFunds = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return res.status(HTTP_STATUS.FORBIDDEN).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.USER_BLOCKED
-            });
-        }
+        const { razorpayOrderId, razorpayPaymentId, razorpaySignature, amount } = req.body;
 
-        const {
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature,
-            amount
-        } = req.body;
-
-        const isSignatureValid = verifyRazorpaySignature(
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature
-        );
-
+        const isSignatureValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
         if (!isSignatureValid) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
@@ -202,4 +153,3 @@ export default {
     postCreateAddFundsOrder,
     postVerifyAddFunds
 };
-

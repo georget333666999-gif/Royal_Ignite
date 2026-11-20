@@ -60,7 +60,7 @@ export const getOrderListPage = async (req, res, next) => {
             sort: data.sort,
             stats: data.stats,
             allowedTransitions: orderService.ORDER_STATUS_TRANSITIONS,
-            error: req.query.error || null,
+            error: req.query.error || data.searchError || null,
             success: req.query.success || null
         });
     } catch (err) {

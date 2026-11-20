@@ -1,6 +1,135 @@
+import mongoose from "mongoose";
 import Offer from "../../models/offerModel.js";
 import Product from "../../models/productModel.js";
 import Category from "../../models/categoryModel.js";
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
+
+const calculateOfferDiscount = (offer, regularPrice) => {
+    if (!offer) return 0;
+    if (offer.discountType === "percentage") {
+        return Math.round(regularPrice * (offer.discountValue / 100));
+    }
+    return Number(offer.discountValue) || 0;
+};
+
+/**
+ * Validate and normalize offer payload for creation and editing
+ */
+const validateOfferPayload = async (offerData) => {
+    const {
+        name,
+        offerType,
+        description = "",
+        discountType = "percentage",
+        discountValue = 0,
+        productId = null,
+        categoryId = null,
+        referrerReward = 0,
+        refereeReward = 0,
+        minOrderAmount = 0,
+        startDate,
+        endDate
+    } = offerData;
+
+    if (!name || name.trim().length < 2 || name.trim().length > 100) {
+        throw new Error("Offer title must be between 2 and 100 characters.");
+    }
+
+    if (!["product", "category", "referral"].includes(offerType)) {
+        throw new Error("Invalid offer type specified.");
+    }
+
+    if (description && description.trim().length > 500) {
+        throw new Error("Atelier notes cannot exceed 500 characters.");
+    }
+
+    if (!endDate) {
+        throw new Error("Offer expiration date is required.");
+    }
+
+    const end = new Date(endDate);
+    if (isNaN(end.getTime()) || end <= new Date()) {
+        throw new Error("Offer expiration date must be in the future.");
+    }
+
+    const start = startDate ? new Date(startDate) : new Date();
+    if (isNaN(start.getTime())) {
+        throw new Error("Please provide a valid launch date.");
+    }
+
+    if (end <= start) {
+        throw new Error("Offer expiration date must be after the launch date.");
+    }
+
+    let resolvedProduct = null;
+    let resolvedCategory = null;
+    const normalizedDiscountType = ["percentage", "flat"].includes(discountType) ? discountType : "percentage";
+    const numDiscount = Number(discountValue) || 0;
+
+    if (offerType === "product") {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            throw new Error("A target product is required for product offers.");
+        }
+        const product = await Product.findOne({ _id: productId, isDeleted: false });
+        if (!product) {
+            throw new Error("Selected product does not exist or has been removed.");
+        }
+        resolvedProduct = product._id;
+
+        if (normalizedDiscountType === "percentage") {
+            if (numDiscount < 1 || numDiscount > 90) {
+                throw new Error("Percentage discount must be between 1% and 90%.");
+            }
+        } else if (normalizedDiscountType === "flat") {
+            if (numDiscount <= 0 || numDiscount >= product.regularPrice) {
+                throw new Error(`Flat discount must be between ₹1 and ₹${product.regularPrice - 1}.`);
+            }
+        }
+    } else if (offerType === "category") {
+        if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
+            throw new Error("A target category is required for category offers.");
+        }
+        const category = await Category.findOne({ _id: categoryId, isDeleted: false });
+        if (!category) {
+            throw new Error("Selected category does not exist or has been removed.");
+        }
+        resolvedCategory = category._id;
+
+        if (normalizedDiscountType === "percentage") {
+            if (numDiscount < 1 || numDiscount > 90) {
+                throw new Error("Percentage discount must be between 1% and 90%.");
+            }
+        } else if (normalizedDiscountType === "flat") {
+            if (numDiscount <= 0) {
+                throw new Error("Flat discount must be greater than zero.");
+            }
+        }
+    } else if (offerType === "referral") {
+        const numReferrer = Number(referrerReward) || 0;
+        const numReferee = Number(refereeReward) || 0;
+        if (numReferrer < 0 || numReferee < 0) {
+            throw new Error("Referral rewards cannot be negative.");
+        }
+        if (numReferrer <= 0 && numReferee <= 0) {
+            throw new Error("At least one referral reward (referrer or referee) must be greater than ₹0.");
+        }
+    }
+
+    return {
+        name: name.trim(),
+        offerType,
+        description: description ? description.trim() : "",
+        discountType: offerType === "referral" ? "percentage" : normalizedDiscountType,
+        discountValue: offerType === "referral" ? 0 : numDiscount,
+        product: resolvedProduct,
+        category: resolvedCategory,
+        referrerReward: offerType === "referral" ? (Number(referrerReward) || 0) : 0,
+        refereeReward: offerType === "referral" ? (Number(refereeReward) || 0) : 0,
+        minOrderAmount: Math.max(0, Number(minOrderAmount) || 0),
+        startDate: start,
+        endDate: end
+    };
+};
 
 /**
  * Reconcile product sale prices based on active product and category offers.
@@ -22,66 +151,108 @@ export const reconcileProductPrices = async ({ productId, categoryId, all = fals
             return;
         }
 
-        const products = await Product.find(query);
+        const products = await Product.find(query)
+            .select("_id category regularPrice salePrice baseSalePrice appliedOffer")
+            .lean();
+        if (products.length === 0) return;
+
         const now = new Date();
+        const productIds = products.map((p) => p._id);
+        const categoryIds = [...new Set(products.map((p) => p.category?.toString()).filter(Boolean))];
+
+        // Single batched query for all active product & category offers
+        const activeOffers = await Offer.find({
+            isActive: true,
+            isDeleted: false,
+            startDate: { $lte: now },
+            endDate: { $gte: now },
+            $or: [
+                { offerType: "product", product: { $in: productIds } },
+                { offerType: "category", category: { $in: categoryIds } }
+            ]
+        }).lean();
+
+        const productOfferMap = new Map();
+        const categoryOfferMap = new Map();
+        for (const offer of activeOffers) {
+            if (offer.offerType === "product" && offer.product) {
+                const key = offer.product.toString();
+                if (!productOfferMap.has(key)) productOfferMap.set(key, []);
+                productOfferMap.get(key).push(offer);
+            } else if (offer.offerType === "category" && offer.category) {
+                const key = offer.category.toString();
+                if (!categoryOfferMap.has(key)) categoryOfferMap.set(key, []);
+                categoryOfferMap.get(key).push(offer);
+            }
+        }
+
+        const bulkOps = [];
 
         for (const product of products) {
-            // Preserve original base sale price if present
-            if (product.salePrice && product.baseSalePrice === null && !product.appliedOffer) {
-                product.baseSalePrice = product.salePrice;
+            let baseSalePrice = product.baseSalePrice;
+            if (product.salePrice && baseSalePrice === null && !product.appliedOffer) {
+                baseSalePrice = product.salePrice;
             }
 
-            // Find best active product-specific offer
-            const productOffer = await Offer.findOne({
-                offerType: "product",
-                product: product._id,
-                isActive: true,
-                isDeleted: false,
-                startDate: { $lte: now },
-                endDate: { $gte: now }
-            }).sort({ discountValue: -1 });
-
-            // Find best active category offer
-            const categoryOffer = await Offer.findOne({
-                offerType: "category",
-                category: product.category,
-                isActive: true,
-                isDeleted: false,
-                startDate: { $lte: now },
-                endDate: { $gte: now }
-            }).sort({ discountValue: -1 });
-
+            const pOffers = productOfferMap.get(product._id.toString()) || [];
+            let bestProductOffer = null;
             let productDiscount = 0;
-            if (productOffer) {
-                if (productOffer.discountType === "percentage") {
-                    productDiscount = Math.round(product.regularPrice * (productOffer.discountValue / 100));
-                } else {
-                    productDiscount = Number(productOffer.discountValue) || 0;
+            for (const offer of pOffers) {
+                const disc = calculateOfferDiscount(offer, product.regularPrice);
+                if (disc > productDiscount) {
+                    productDiscount = disc;
+                    bestProductOffer = offer;
                 }
             }
 
+            const cOffers = product.category ? (categoryOfferMap.get(product.category.toString()) || []) : [];
+            let bestCategoryOffer = null;
             let categoryDiscount = 0;
-            if (categoryOffer) {
-                if (categoryOffer.discountType === "percentage") {
-                    categoryDiscount = Math.round(product.regularPrice * (categoryOffer.discountValue / 100));
-                } else {
-                    categoryDiscount = Number(categoryOffer.discountValue) || 0;
+            for (const offer of cOffers) {
+                const disc = calculateOfferDiscount(offer, product.regularPrice);
+                if (disc > categoryDiscount) {
+                    categoryDiscount = disc;
+                    bestCategoryOffer = offer;
                 }
             }
 
-            // Pick the higher discount between product and category offers
             const largestDiscount = Math.max(productDiscount, categoryDiscount);
+            let nextSalePrice;
+            let nextAppliedOffer;
 
             if (largestDiscount > 0) {
-                product.salePrice = Math.max(0, product.regularPrice - largestDiscount);
-                product.appliedOffer = productDiscount >= categoryDiscount ? productOffer._id : categoryOffer._id;
+                nextSalePrice = Math.max(0, product.regularPrice - largestDiscount);
+                nextAppliedOffer = productDiscount >= categoryDiscount ? bestProductOffer._id : bestCategoryOffer._id;
             } else {
-                // Revert to original baseline or null
-                product.salePrice = product.baseSalePrice || null;
-                product.appliedOffer = null;
+                nextSalePrice = baseSalePrice || null;
+                nextAppliedOffer = null;
             }
 
-            await product.save();
+            const prevOfferId = product.appliedOffer ? product.appliedOffer.toString() : null;
+            const nextOfferId = nextAppliedOffer ? nextAppliedOffer.toString() : null;
+
+            if (
+                nextSalePrice !== product.salePrice ||
+                baseSalePrice !== product.baseSalePrice ||
+                prevOfferId !== nextOfferId
+            ) {
+                bulkOps.push({
+                    updateOne: {
+                        filter: { _id: product._id },
+                        update: {
+                            $set: {
+                                salePrice: nextSalePrice,
+                                baseSalePrice,
+                                appliedOffer: nextAppliedOffer
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        if (bulkOps.length > 0) {
+            await Product.bulkWrite(bulkOps);
         }
     } catch (error) {
         console.error("offerService reconcileProductPrices error:", error);
@@ -96,8 +267,9 @@ export const getOffers = async ({ search = "", type = "all", page = 1, limit = 1
     try {
         const query = { isDeleted: false };
 
-        if (search && search.trim()) {
-            query.name = { $regex: search.trim(), $options: "i" };
+        const { value: cleanSearch, error: searchError } = sanitizeSearchQuery(search);
+        if (cleanSearch) {
+            query.name = { $regex: escapeRegex(cleanSearch), $options: "i" };
         }
 
         if (type && type !== "all") {
@@ -123,10 +295,37 @@ export const getOffers = async ({ search = "", type = "all", page = 1, limit = 1
             offers,
             currentPage,
             totalPages: Math.ceil(totalCount / pageLimit) || 1,
-            totalOffers: totalCount
+            totalOffers: totalCount,
+            search: cleanSearch,
+            searchError
         };
     } catch (error) {
         console.error("offerService getOffers error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Get a single offer by ID for editing
+ */
+export const getOfferById = async (offerId) => {
+    try {
+        if (!offerId || !mongoose.Types.ObjectId.isValid(offerId)) {
+            throw new Error("Invalid offer identifier.");
+        }
+
+        const offer = await Offer.findOne({ _id: offerId, isDeleted: false })
+            .populate("product", "name regularPrice")
+            .populate("category", "name")
+            .lean();
+
+        if (!offer) {
+            throw new Error("Offer not found.");
+        }
+
+        return offer;
+    } catch (error) {
+        console.error("offerService getOfferById error:", error);
         throw error;
     }
 };
@@ -136,117 +335,83 @@ export const getOffers = async ({ search = "", type = "all", page = 1, limit = 1
  */
 export const createOffer = async (offerData) => {
     try {
-        const {
-            name,
-            offerType,
-            description = "",
-            discountType = "percentage",
-            discountValue = 0,
-            productId = null,
-            categoryId = null,
-            referrerReward = 0,
-            refereeReward = 0,
-            minOrderAmount = 0,
-            startDate,
-            endDate
-        } = offerData;
-
-        if (!name || name.trim().length < 2 || name.trim().length > 100) {
-            throw new Error("Offer title must be between 2 and 100 characters.");
-        }
-
-        if (!["product", "category", "referral"].includes(offerType)) {
-            throw new Error("Invalid offer type specified.");
-        }
-
-        if (!endDate) {
-            throw new Error("Offer expiration date is required.");
-        }
-
-        const end = new Date(endDate);
-        if (isNaN(end.getTime()) || end <= new Date()) {
-            throw new Error("Offer expiration date must be in the future.");
-        }
-
-        const start = startDate ? new Date(startDate) : new Date();
-
-        let resolvedProduct = null;
-        let resolvedCategory = null;
-        const numDiscount = Number(discountValue) || 0;
-
-        if (offerType === "product") {
-            if (!productId) {
-                throw new Error("A target product is required for product offers.");
-            }
-            const product = await Product.findOne({ _id: productId, isDeleted: false });
-            if (!product) {
-                throw new Error("Selected product does not exist or has been removed.");
-            }
-            resolvedProduct = product._id;
-
-            if (discountType === "percentage") {
-                if (numDiscount < 1 || numDiscount > 90) {
-                    throw new Error("Percentage discount must be between 1% and 90%.");
-                }
-            } else if (discountType === "flat") {
-                if (numDiscount <= 0 || numDiscount >= product.regularPrice) {
-                    throw new Error(`Flat discount must be between ₹1 and ₹${product.regularPrice - 1}.`);
-                }
-            }
-        } else if (offerType === "category") {
-            if (!categoryId) {
-                throw new Error("A target category is required for category offers.");
-            }
-            const category = await Category.findOne({ _id: categoryId, isDeleted: false });
-            if (!category) {
-                throw new Error("Selected category does not exist or has been removed.");
-            }
-            resolvedCategory = category._id;
-
-            if (discountType === "percentage") {
-                if (numDiscount < 1 || numDiscount > 90) {
-                    throw new Error("Percentage discount must be between 1% and 90%.");
-                }
-            } else if (discountType === "flat") {
-                if (numDiscount <= 0) {
-                    throw new Error("Flat discount must be greater than zero.");
-                }
-            }
-        } else if (offerType === "referral") {
-            const numReferrer = Number(referrerReward) || 0;
-            const numReferee = Number(refereeReward) || 0;
-            if (numReferrer <= 0 && numReferee <= 0) {
-                throw new Error("At least one referral reward (referrer or referee) must be greater than ₹0.");
-            }
-        }
+        const validated = await validateOfferPayload(offerData);
 
         const newOffer = await Offer.create({
-            name: name.trim(),
-            offerType,
-            description: description.trim(),
-            discountType,
-            discountValue: numDiscount,
-            product: resolvedProduct,
-            category: resolvedCategory,
-            referrerReward: Number(referrerReward) || 0,
-            refereeReward: Number(refereeReward) || 0,
-            minOrderAmount: Math.max(0, Number(minOrderAmount) || 0),
-            startDate: start,
-            endDate: end,
+            ...validated,
             isActive: true,
             isDeleted: false
         });
 
         // Immediately reconcile prices if product or category offer
-        if (offerType === "product") {
-            await reconcileProductPrices({ productId: resolvedProduct });
-        } else if (offerType === "category") {
-            await reconcileProductPrices({ categoryId: resolvedCategory });
+        if (validated.offerType === "product" && validated.product) {
+            await reconcileProductPrices({ productId: validated.product });
+        } else if (validated.offerType === "category" && validated.category) {
+            await reconcileProductPrices({ categoryId: validated.category });
         }
 
         return newOffer;
     } catch (error) {
         console.error("offerService createOffer error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Update an existing Offer and reconcile both previous and new target prices
+ */
+export const updateOffer = async (offerId, offerData) => {
+    try {
+        if (!offerId || !mongoose.Types.ObjectId.isValid(offerId)) {
+            throw new Error("Invalid offer identifier.");
+        }
+
+        const offer = await Offer.findOne({ _id: offerId, isDeleted: false });
+        if (!offer) {
+            throw new Error("Offer not found.");
+        }
+
+        const validated = await validateOfferPayload(offerData);
+
+        const oldOfferType = offer.offerType;
+        const oldProductId = offer.product ? offer.product.toString() : null;
+        const oldCategoryId = offer.category ? offer.category.toString() : null;
+
+        offer.name = validated.name;
+        offer.offerType = validated.offerType;
+        offer.description = validated.description;
+        offer.discountType = validated.discountType;
+        offer.discountValue = validated.discountValue;
+        offer.product = validated.product;
+        offer.category = validated.category;
+        offer.referrerReward = validated.referrerReward;
+        offer.refereeReward = validated.refereeReward;
+        offer.minOrderAmount = validated.minOrderAmount;
+        offer.startDate = validated.startDate;
+        offer.endDate = validated.endDate;
+
+        await offer.save();
+
+        const newProductId = validated.product ? validated.product.toString() : null;
+        const newCategoryId = validated.category ? validated.category.toString() : null;
+
+        // Reconcile old target if offer scope or target changed
+        if (oldOfferType === "product" && oldProductId && (validated.offerType !== "product" || oldProductId !== newProductId)) {
+            await reconcileProductPrices({ productId: oldProductId });
+        } else if (oldOfferType === "category" && oldCategoryId && (validated.offerType !== "category" || oldCategoryId !== newCategoryId)) {
+            await reconcileProductPrices({ categoryId: oldCategoryId });
+        }
+
+        // Reconcile current target
+        if (validated.offerType === "product" && validated.product) {
+            await reconcileProductPrices({ productId: validated.product });
+        } else if (validated.offerType === "category" && validated.category) {
+            await reconcileProductPrices({ categoryId: validated.category });
+        }
+
+        return offer;
+    } catch (error) {
+        console.error("offerService updateOffer error:", error);
         throw error;
     }
 };
@@ -325,7 +490,9 @@ export const getActiveReferralOffer = async () => {
 
 export default {
     getOffers,
+    getOfferById,
     createOffer,
+    updateOffer,
     toggleOfferStatus,
     deleteOffer,
     reconcileProductPrices,

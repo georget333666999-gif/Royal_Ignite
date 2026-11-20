@@ -39,6 +39,16 @@ const orderItemSchema = new mongoose.Schema(
             required: true,
             min: 0
         },
+        discountShare: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        netRefundableAmount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
         status: {
             type: String,
             enum: ["Pending", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned", "Return Requested", "Return Rejected"],
@@ -71,6 +81,15 @@ const orderItemSchema = new mongoose.Schema(
         returnRejectedAt: {
             type: Date,
             default: null
+        },
+        previousReturnRejectReason: {
+            type: String,
+            default: null
+        },
+        returnRequestCount: {
+            type: Number,
+            default: 0,
+            min: 0
         }
     },
     { _id: true }
@@ -177,15 +196,44 @@ const orderSchema = new mongoose.Schema(
             type: Date,
             default: null
         },
+        previousReturnRejectReason: {
+            type: String,
+            default: null
+        },
+        returnRequestCount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
         deliveredAt: {
             type: Date,
             default: null
+        },
+        unlockedReferralBonus: {
+            referrerId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null
+            },
+            amount: {
+                type: Number,
+                default: 0
+            },
+            isRevoked: {
+                type: Boolean,
+                default: false
+            }
         }
     },
     {
         timestamps: true
     }
 );
+
+// Indexes for fast user order history, admin filtering, and sales reports
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ orderStatus: 1, createdAt: -1 });
 
 /**
  * Generate unique human-readable Order Identifier (e.g. RYL-20261013-8472)

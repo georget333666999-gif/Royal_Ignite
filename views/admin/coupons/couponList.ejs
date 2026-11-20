@@ -357,11 +357,28 @@
                                         <!-- Action Buttons -->
                                         <td style="text-align: right;">
                                             <div class="action-buttons-group">
+                                                <!-- Edit Coupon Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon edit-btn"
+                                                    data-id="<%= cpn._id %>"
+                                                    onclick="openEditCouponModal(this.dataset.id)"
+                                                    title="Edit Coupon"
+                                                >
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                    </svg>
+                                                </button>
+
                                                 <!-- Toggle Pause/Activate Button -->
                                                 <button
                                                     type="button"
                                                     class="btn-action-icon <%= cpn.isActive ? 'toggle-active' : 'toggle-inactive' %>"
-                                                    onclick="toggleCoupon('<%= cpn._id %>', '<%= cpn.code %>', <%= cpn.isActive %>)"
+                                                    data-id="<%= cpn._id %>"
+                                                    data-code="<%= cpn.code %>"
+                                                    data-active="<%= cpn.isActive ? 'true' : 'false' %>"
+                                                    onclick="toggleCoupon(this.dataset.id, this.dataset.code, this.dataset.active === 'true')"
                                                     title="<%= cpn.isActive ? 'Deactivate Coupon' : 'Activate Coupon' %>"
                                                 >
                                                     <% if (cpn.isActive) { %>
@@ -380,7 +397,9 @@
                                                 <button
                                                     type="button"
                                                     class="btn-action-icon delete-btn"
-                                                    onclick="deleteCoupon('<%= cpn._id %>', '<%= cpn.code %>')"
+                                                    data-id="<%= cpn._id %>"
+                                                    data-code="<%= cpn.code %>"
+                                                    onclick="deleteCoupon(this.dataset.id, this.dataset.code)"
                                                     title="Permanently Delete Coupon"
                                                 >
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -473,14 +492,14 @@
                             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                             <line x1="7" y1="7" x2="7.01" y2="7"></line>
                         </svg>
-                        <span>Create Privilege Coupon</span>
+                        <span id="couponModalTitleText">Create Privilege Coupon</span>
                     </h3>
-                    <p class="modal-subtitle">Configure promo codes, discount bounds, and member redemption quotas.</p>
+                    <p class="modal-subtitle" id="couponModalSubtitle">Configure promo codes, discount bounds, and member redemption quotas.</p>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeCreateModal()">&times;</button>
             </div>
 
-            <form id="createCouponForm" novalidate onsubmit="handleCreateCouponSubmit(event)">
+            <form id="createCouponForm" novalidate onsubmit="handleCouponSubmit(event)">
                 <div class="modal-body">
                     <div class="form-grid">
                         
@@ -610,7 +629,7 @@
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            <span>Save Privilege Coupon</span>
+                            <span id="btnSubmitCouponLabel">Save Privilege Coupon</span>
                         </button>
                     </div>
                 </div>
@@ -777,6 +796,9 @@
             return true;
         }
 
+        let editingCouponId = null;
+        let editingCouponUsedCount = 0;
+
         function validateUsageLimit(showUi = true) {
             const input = document.getElementById('usageLimit');
             const rawVal = input.value.trim();
@@ -788,6 +810,11 @@
             const val = parseInt(rawVal, 10);
             if (isNaN(val) || val < 1 || String(val) !== rawVal) {
                 if (showUi) setFieldError('usageLimit', 'usageLimitError', 'Usage quota must be a positive whole number (at least 1).');
+                return false;
+            }
+
+            if (editingCouponId && editingCouponUsedCount > 0 && val < editingCouponUsedCount) {
+                if (showUi) setFieldError('usageLimit', 'usageLimitError', `Usage quota cannot be less than current redemptions (${editingCouponUsedCount}).`);
                 return false;
             }
 
@@ -810,7 +837,7 @@
                 return false;
             }
 
-            if (expTime <= Date.now() + 2 * 60 * 1000) {
+            if (expTime <= Date.now()) {
                 if (showUi) setFieldError('expiryDate', 'expiryDateError', 'Expiration date must be scheduled in the future.');
                 return false;
             }
@@ -831,21 +858,58 @@
         }
 
         // ==========================================================================
-        // Modal & Form Controls
+        // Modal & Form Controls (Create & Edit Modes)
         // ==========================================================================
+        function toLocalISO(d) {
+            const date = d instanceof Date ? d : new Date(d);
+            if (isNaN(date.getTime())) return '';
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function setCouponModalMode(mode) {
+            const titleEl = document.getElementById('couponModalTitleText');
+            const subtitleEl = document.getElementById('couponModalSubtitle');
+            const submitBtn = document.getElementById('btnSubmitCoupon');
+
+            if (mode === 'edit') {
+                if (titleEl) titleEl.textContent = 'Edit Privilege Coupon';
+                if (subtitleEl) subtitleEl.textContent = 'Update promo code, discount parameters, redemption quota, or expiry deadline.';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="btnSubmitCouponLabel">Save Coupon Changes</span>
+                    `;
+                }
+            } else {
+                if (titleEl) titleEl.textContent = 'Create Privilege Coupon';
+                if (subtitleEl) subtitleEl.textContent = 'Configure promo codes, discount bounds, and member redemption quotas.';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="btnSubmitCouponLabel">Save Privilege Coupon</span>
+                    `;
+                }
+            }
+        }
+
         function openCreateModal() {
+            editingCouponId = null;
+            editingCouponUsedCount = 0;
             const modal = document.getElementById('createCouponModal');
             document.getElementById('createCouponForm').reset();
             clearAllErrors();
+            setCouponModalMode('create');
             handleDiscountTypeChange();
 
             // Set default minimum expiry date to 30 days ahead
             const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-            const toLocalISO = (d) => {
-                const pad = (n) => String(n).padStart(2, '0');
-                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-            };
-
             const nowLocal = toLocalISO(new Date());
             document.getElementById('expiryDate').min = nowLocal;
             document.getElementById('expiryDate').value = toLocalISO(future);
@@ -857,9 +921,82 @@
             }, 100);
         }
 
+        async function openEditCouponModal(couponId) {
+            try {
+                const response = await fetch(`/admin/coupons/${couponId}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const res = await response.json();
+
+                if (!res.success || !res.coupon) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Unable to Load Coupon',
+                        text: res.message || 'Coupon details could not be retrieved.',
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    });
+                    return;
+                }
+
+                const cpn = res.coupon;
+                editingCouponId = cpn._id;
+                editingCouponUsedCount = Number(cpn.usedCount || 0);
+
+                document.getElementById('createCouponForm').reset();
+                clearAllErrors();
+                setCouponModalMode('edit');
+
+                document.getElementById('couponCode').value = cpn.code || '';
+                document.getElementById('discountType').value = cpn.discountType || 'percentage';
+                handleDiscountTypeChange();
+
+                document.getElementById('discountValue').value = cpn.discountValue ?? '';
+                if (cpn.discountType === 'percentage' && cpn.maxDiscount !== null && cpn.maxDiscount !== undefined) {
+                    document.getElementById('maxDiscount').value = cpn.maxDiscount;
+                } else {
+                    document.getElementById('maxDiscount').value = '';
+                }
+
+                document.getElementById('minPurchase').value = cpn.minPurchase ?? 0;
+                document.getElementById('usageLimit').value = cpn.usageLimit !== null && cpn.usageLimit !== undefined ? cpn.usageLimit : '';
+
+                const expiryInput = document.getElementById('expiryDate');
+                expiryInput.min = toLocalISO(new Date());
+                expiryInput.value = cpn.expiryDate ? toLocalISO(new Date(cpn.expiryDate)) : '';
+
+                document.getElementById('couponDescription').value = cpn.description || '';
+
+                const modal = document.getElementById('createCouponModal');
+                modal.classList.add('open');
+                setTimeout(() => {
+                    const codeInput = document.getElementById('couponCode');
+                    if (codeInput) codeInput.focus();
+                }, 100);
+            } catch (err) {
+                console.error('Load coupon for edit error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Notice',
+                    text: 'Unable to load coupon details from the atelier server.',
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn'
+                    }
+                });
+            }
+        }
+
         function closeCreateModal() {
             const modal = document.getElementById('createCouponModal');
             modal.classList.remove('open');
+            editingCouponId = null;
+            editingCouponUsedCount = 0;
             clearAllErrors();
         }
 
@@ -957,9 +1094,9 @@
         });
 
         // ==========================================================================
-        // Form Submission with Strict JS Validation
+        // Form Submission with Strict JS Validation (Create & Edit)
         // ==========================================================================
-        async function handleCreateCouponSubmit(e) {
+        async function handleCouponSubmit(e) {
             e.preventDefault();
 
             // Run full validation across all fields
@@ -977,6 +1114,7 @@
                 return;
             }
 
+            const isEditMode = Boolean(editingCouponId);
             const btn = document.getElementById('btnSubmitCoupon');
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
@@ -985,7 +1123,7 @@
                     <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
                     <path d="M12 2a10 10 0 0 1 10 10"></path>
                 </svg>
-                <span>Creating Coupon...</span>
+                <span>${isEditMode ? 'Saving Coupon Changes...' : 'Creating Coupon...'}</span>
             `;
 
             const code = document.getElementById('couponCode').value.trim().toUpperCase();
@@ -997,9 +1135,12 @@
             const usageLimit = document.getElementById('usageLimit').value ? parseInt(document.getElementById('usageLimit').value, 10) : null;
             const description = document.getElementById('couponDescription').value.trim();
 
+            const endpoint = isEditMode ? `/admin/coupons/edit/${editingCouponId}` : '/admin/coupons/create';
+            const method = isEditMode ? 'PUT' : 'POST';
+
             try {
-                const response = await fetch('/admin/coupons/create', {
-                    method: 'POST',
+                const response = await fetch(endpoint, {
+                    method,
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         code,
@@ -1019,7 +1160,7 @@
                     closeCreateModal();
                     Swal.fire({
                         icon: 'success',
-                        title: 'Coupon Created',
+                        title: isEditMode ? 'Coupon Updated' : 'Coupon Created',
                         text: data.message,
                         timer: 1500,
                         showConfirmButton: false,
@@ -1035,15 +1176,30 @@
                     btn.disabled = false;
                     btn.innerHTML = originalHtml;
 
-                    // If duplicate code or specific field error returned by backend, highlight field directly
-                    if (data.message && data.message.toLowerCase().includes('already exists')) {
+                    const msgLower = (data.message || '').toLowerCase();
+                    if (msgLower.includes('already exists') || msgLower.includes('code')) {
                         setFieldError('couponCode', 'couponCodeError', data.message);
                         document.getElementById('couponCode').focus();
+                    } else if (msgLower.includes('maximum discount')) {
+                        setFieldError('maxDiscount', 'maxDiscountError', data.message);
+                        document.getElementById('maxDiscount').focus();
+                    } else if (msgLower.includes('minimum')) {
+                        setFieldError('minPurchase', 'minPurchaseError', data.message);
+                        document.getElementById('minPurchase').focus();
+                    } else if (msgLower.includes('discount')) {
+                        setFieldError('discountValue', 'discountValueError', data.message);
+                        document.getElementById('discountValue').focus();
+                    } else if (msgLower.includes('usage') || msgLower.includes('redemption')) {
+                        setFieldError('usageLimit', 'usageLimitError', data.message);
+                        document.getElementById('usageLimit').focus();
+                    } else if (msgLower.includes('expiry') || msgLower.includes('date')) {
+                        setFieldError('expiryDate', 'expiryDateError', data.message);
+                        document.getElementById('expiryDate').focus();
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Creation Notice',
-                            text: data.message || 'Unable to create coupon.',
+                            title: isEditMode ? 'Update Notice' : 'Creation Notice',
+                            text: data.message || (isEditMode ? 'Unable to update coupon.' : 'Unable to create coupon.'),
                             customClass: {
                                 popup: 'royal-luxury-swal',
                                 title: 'royal-swal-title',
@@ -1055,7 +1211,7 @@
             } catch (err) {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
-                console.error('Create coupon error:', err);
+                console.error(isEditMode ? 'Update coupon error:' : 'Create coupon error:', err);
                 Swal.fire({
                     icon: 'error',
                     title: 'System Notice',
@@ -1207,5 +1363,6 @@
             });
         }
     </script>
+    <script src="/js/searchValidation.js"></script>
 </body>
 </html>

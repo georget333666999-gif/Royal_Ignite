@@ -1,6 +1,6 @@
 import User from "../../models/userModel.js";
 import { HTTP_STATUS } from "../../constants/index.js";
-import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
+import { getAuthenticatedUserId, resolveRequestUser, handleBlockedUser } from "../../utils/authSession.js";
 
 /**
  * Render home / landing page
@@ -11,7 +11,7 @@ export const getHomePage = async (req, res, next) => {
         const isUserLoggedIn = Boolean(userId);
 
         if (isUserLoggedIn) {
-            const user = await User.findById(userId);
+            const user = await resolveRequestUser(req, User);
             if (!user || user.isBlocked) {
                 return handleBlockedUser(req, res);
             }

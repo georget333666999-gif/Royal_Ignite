@@ -19,7 +19,7 @@
 body.order-success-body {
     background-color: var(--os-bg) !important;
     color: var(--os-text-main);
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -89,27 +89,33 @@ body.order-success-body {
 }
 
 .order-kicker {
-    font-size: 12px;
-    font-weight: 700;
+    font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 2.5px;
+    letter-spacing: 0.28em;
     color: var(--os-gold);
     margin-bottom: 12px;
     display: inline-block;
 }
 
 .order-success-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 34px;
-    font-weight: 400;
-    line-height: 1.2;
-    color: #FFFFFF;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2.9rem;
+    font-weight: 300;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    color: #FDFBF7;
     margin: 0 0 16px;
 }
 
 .order-success-title .italic-gold {
     font-style: italic;
-    color: var(--os-gold);
+    font-weight: 400;
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 46%, #C8892D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .order-success-desc {
@@ -159,7 +165,7 @@ body.order-success-body {
 }
 
 .ref-item-value.gold {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 17px;
     color: var(--os-gold);
     letter-spacing: 0.5px;

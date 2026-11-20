@@ -4,11 +4,15 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import express from "express";
+import compression from "compression";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 
 import passport from "./config/passport.js";
 import { SESSION, HTTP_STATUS, RESPONSE_MESSAGES } from "./constants/index.js";
+import Cart from "./models/cartModel.js";
+import Wishlist from "./models/wishlistModel.js";
+import { getCache, setCache } from "./utils/cache.js";
 
 import googleAuthRoutes from "./routes/user/googleAuthRoutes.js";
 import homeRoutes from "./routes/user/homeRoutes.js";
@@ -39,9 +43,22 @@ app.set("views", [
 // ========================================
 // Global Middlewares
 // ========================================
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+    express.static(path.join(__dirname, "public"), {
+        etag: true,
+        lastModified: true,
+        setHeaders: (res, filePath) => {
+            if (/\.(png|jpe?g|webp|gif|svg|ico|woff2?)$/i.test(filePath)) {
+                res.setHeader("Cache-Control", "public, max-age=604800");
+            } else {
+                res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+            }
+        }
+    })
+);
 
 // Cache Control Middleware (Prevents BFCache from displaying cached auth/protected pages)
 app.use((req, res, next) => {
@@ -62,7 +79,8 @@ const userSession = session({
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
-        collectionName: "user_sessions"
+        collectionName: "user_sessions",
+        touchAfter: 24 * 3600
     }),
     cookie: {
         httpOnly: true,
@@ -78,7 +96,8 @@ const adminSession = session({
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
-        collectionName: "admin_sessions"
+        collectionName: "admin_sessions",
+        touchAfter: 24 * 3600
     }),
     cookie: {
         httpOnly: true,
@@ -95,9 +114,40 @@ app.use((req, res, next) => isAdminRoute(req) ? next() : userSession(req, res, n
 app.use((req, res, next) => isAdminRoute(req) ? next() : passport.initialize()(req, res, next));
 app.use((req, res, next) => isAdminRoute(req) ? next() : passport.session()(req, res, next));
 
-// Global template locals for user session state
-app.use((req, res, next) => {
-    res.locals.isUserLoggedIn = !isAdminRoute(req) && Boolean(req.session?.isUserLoggedIn || req.session?.userId || req.user?._id);
+// Global template locals for user session state & cached header badge counts
+app.use(async (req, res, next) => {
+    const loggedIn = !isAdminRoute(req) && Boolean(req.session?.isUserLoggedIn || req.session?.userId || req.user?._id);
+    res.locals.isUserLoggedIn = loggedIn;
+    res.locals.headerCartCount = 0;
+    res.locals.headerWishlistCount = 0;
+
+    const isHtmlGet = req.method === "GET" && !req.xhr && !req.headers.accept?.includes("application/json");
+    if (loggedIn && isHtmlGet) {
+        try {
+            const uid = (req.session?.userId || req.user?._id || "").toString();
+            if (uid) {
+                const cacheKey = `user:badges:${uid}`;
+                let counts = getCache(cacheKey);
+                if (!counts) {
+                    const [cartDoc, wishlistDoc] = await Promise.all([
+                        Cart.findOne({ user: uid }).select("items.quantity").lean(),
+                        Wishlist.findOne({ user: uid }).select("products").lean()
+                    ]);
+                    const cartCount = cartDoc && Array.isArray(cartDoc.items)
+                        ? cartDoc.items.reduce((sum, item) => sum + (item.quantity || 0), 0)
+                        : 0;
+                    const wishlistCount = wishlistDoc && Array.isArray(wishlistDoc.products)
+                        ? wishlistDoc.products.length
+                        : 0;
+                    counts = setCache(cacheKey, { cartCount, wishlistCount }, 20000);
+                }
+                res.locals.headerCartCount = counts.cartCount;
+                res.locals.headerWishlistCount = counts.wishlistCount;
+            }
+        } catch (_badgeErr) {
+            // Non-blocking fallback
+        }
+    }
     next();
 });
 

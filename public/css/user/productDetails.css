@@ -3,7 +3,7 @@
    Designed to match the Haute Horology & Maison Editorial Aesthetic
    ======================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
     --dt-bg: #000000;
@@ -22,8 +22,8 @@
     --dt-text-subtle: #5C5852;
     --dt-border-subtle: rgba(255, 255, 255, 0.08);
     --dt-border-gold: rgba(229, 169, 60, 0.3);
-    --dt-font-serif: 'Bodoni Moda', Georgia, serif;
-    --dt-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --dt-font-serif: 'Cormorant Garamond', Georgia, serif;
+    --dt-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --dt-font-mono: 'JetBrains Mono', monospace;
     --dt-transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -478,27 +478,37 @@ a:visited {
 }
 
 .dt-category-kicker {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 3px;
+    font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--dt-gold);
-    margin-bottom: 12px;
-    display: inline-block;
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dt-category-kicker::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(243, 196, 108, 0.9), rgba(243, 196, 108, 0.15));
 }
 
 .dt-product-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 3.1rem;
-    font-weight: 600;
-    line-height: 1.16;
-    color: #FFFFFF;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 3.6rem;
+    font-weight: 300;
+    line-height: 1.06;
+    color: #FDFBF7;
     margin-bottom: 24px;
-    letter-spacing: 0.035em;
+    letter-spacing: -0.012em;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+    text-shadow: 0 10px 34px rgba(0, 0, 0, 0.6);
 }
 
 /* Price & Serial Row */
@@ -1467,13 +1477,13 @@ a:visited {
 }
 
 .dt-curated-card-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 600;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.55rem;
+    font-weight: 500;
     color: #FFFFFF;
     margin-bottom: 8px;
-    line-height: 1.25;
-    letter-spacing: 0.025em;
+    line-height: 1.22;
+    letter-spacing: 0.015em;
     -webkit-font-smoothing: antialiased;
 }
 

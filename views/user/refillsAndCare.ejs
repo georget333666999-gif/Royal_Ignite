@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= pageTitle || "Preserve The Flame — Refills & Atelier Care | ROYAL IGNITE" %></title>
     <meta name="description" content="Explore Refills & Care by Royal Ignite: factory-formulated zero-impurity butane fuels, Japanese organic wicks, high-spark flints, and handcrafted mahogany preservation kits.">
-    <link rel="stylesheet" href="/css/user/style.css">
-    <link rel="stylesheet" href="/css/user/refillsAndCare.css">
+    <link rel="stylesheet" href="/css/user/style.css?v=4">
+    <link rel="stylesheet" href="/css/user/refillsAndCare.css?v=4">
+    <link rel="stylesheet" href="/css/user/animations.css">
+    <script defer src="/js/luxuryAnimations.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="care-body">
 
@@ -43,12 +45,6 @@
                     </svg>
                     <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
                 </a>
-                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="care-icon-btn" title="Account">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                </a>
                 <a href="/cart" class="care-icon-btn" title="Shopping Bag" style="position: relative;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -56,6 +52,12 @@
                         <path d="M16 10a4 4 0 0 1-8 0"></path>
                     </svg>
                     <span class="header-badge-count cart-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="care-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                 </a>
             </div>
         </div>

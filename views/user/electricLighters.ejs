@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= pageTitle || "The Electric Collection — Pure Resonance & Dual-Arc Plasma | ROYAL IGNITE" %></title>
     <meta name="description" content="Explore The Electric Collection by Royal Ignite: six flameless dual-arc plasma and induction instruments engineered from aerospace grade 5 titanium and solid-state high-frequency cells.">
-    <link rel="stylesheet" href="/css/user/style.css">
-    <link rel="stylesheet" href="/css/user/electricLighters.css">
+    <link rel="stylesheet" href="/css/user/style.css?v=6">
+    <link rel="stylesheet" href="/css/user/electricLighters.css?v=6">
+    <link rel="stylesheet" href="/css/user/animations.css">
+    <script defer src="/js/luxuryAnimations.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="elec-body">
 
@@ -41,13 +43,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
-                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
-                </a>
-                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="elec-icon-btn" title="Account">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
+                    <span class="header-badge-count wishlist-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E2E8F0; color: #0B1215; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
                 </a>
                 <a href="/cart" class="elec-icon-btn" title="Shopping Bag" style="position: relative;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -55,7 +51,13 @@
                         <line x1="3" y1="6" x2="21" y2="6"></line>
                         <path d="M16 10a4 4 0 0 1-8 0"></path>
                     </svg>
-                    <span class="header-badge-count cart-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E5A93C; color: #0E0E12; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                    <span class="header-badge-count cart-badge-count" style="display: none; position: absolute; top: -2px; right: -2px; background: #E2E8F0; color: #0B1215; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; line-height: 16px; border-radius: 999px; text-align: center; padding: 0 4px; pointer-events: none;">0</span>
+                </a>
+                <a href="<%= (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) ? '/user/profile' : '/user/login' %>" class="elec-icon-btn" title="Account">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -379,7 +381,7 @@
                             text: 'Please sign in to save creations to your wishlist.',
                             background: '#141312',
                             color: '#eae6df',
-                            confirmButtonColor: '#F6BD64',
+                            confirmButtonColor: '#4FD1C5',
                             confirmButtonText: 'Sign In'
                         }).then(() => {
                             window.location.href = data.redirect || `/user/login?redirect=/electric-lighters`;
@@ -395,8 +397,8 @@
                         btn.classList.add('active');
                         btn.setAttribute('title', 'Remove from Wishlist');
                         if (svg) {
-                            svg.setAttribute('fill', '#E5A93C');
-                            svg.setAttribute('stroke', '#E5A93C');
+                            svg.setAttribute('fill', '#4FD1C5');
+                            svg.setAttribute('stroke', '#4FD1C5');
                         }
                     } else {
                         btn.classList.remove('active');
@@ -426,9 +428,9 @@
                             showConfirmButton: false,
                             timer: 2400,
                             timerProgressBar: true,
-                            background: '#141312',
+                            background: '#0E1015',
                             color: '#eae6df',
-                            iconColor: '#F6BD64'
+                            iconColor: '#4FD1C5'
                         });
                     }
                 }

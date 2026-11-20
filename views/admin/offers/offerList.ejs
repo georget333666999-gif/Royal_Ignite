@@ -405,11 +405,28 @@
                                         <!-- Action Buttons -->
                                         <td style="text-align: right;">
                                             <div class="action-buttons-group">
+                                                <!-- Edit Offer Button -->
+                                                <button
+                                                    type="button"
+                                                    class="btn-action-icon edit-btn"
+                                                    data-id="<%= offer._id %>"
+                                                    onclick="openEditOfferModal(this.dataset.id)"
+                                                    title="Edit Offer"
+                                                >
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                    </svg>
+                                                </button>
+
                                                 <!-- Pause / Activate Button -->
                                                 <button
                                                     type="button"
                                                     class="btn-action-icon <%= offer.isActive ? 'toggle-active' : 'toggle-inactive' %>"
-                                                    onclick="handleToggleOffer('<%= offer._id %>', '<%= offer.name.replace(/'/g, "\\'") %>', <%= offer.isActive %>)"
+                                                    data-id="<%= offer._id %>"
+                                                    data-name="<%= offer.name %>"
+                                                    data-active="<%= offer.isActive ? 'true' : 'false' %>"
+                                                    onclick="handleToggleOffer(this.dataset.id, this.dataset.name, this.dataset.active === 'true')"
                                                     title="<%= offer.isActive ? 'Pause Offer' : 'Activate Offer' %>"
                                                 >
                                                     <% if (offer.isActive) { %>
@@ -428,7 +445,9 @@
                                                 <button
                                                     type="button"
                                                     class="btn-action-icon delete-btn"
-                                                    onclick="handleDeleteOffer('<%= offer._id %>', '<%= offer.name.replace(/'/g, "\\'") %>')"
+                                                    data-id="<%= offer._id %>"
+                                                    data-name="<%= offer.name %>"
+                                                    onclick="handleDeleteOffer(this.dataset.id, this.dataset.name)"
                                                     title="Decommission Offer"
                                                 >
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -509,14 +528,14 @@
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        <span>Launch Privilege Offer</span>
+                        <span id="offerModalTitleText">Launch Privilege Offer</span>
                     </h3>
-                    <p class="modal-subtitle">Configure a product discount, collection privilege, or member referral campaign.</p>
+                    <p class="modal-subtitle" id="offerModalSubtitle">Configure a product discount, collection privilege, or member referral campaign.</p>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeCreateOfferModal()">&times;</button>
             </div>
 
-            <form id="createOfferForm" novalidate onsubmit="handleCreateOffer(event)">
+            <form id="createOfferForm" novalidate onsubmit="handleOfferSubmit(event)">
                 <div class="modal-body">
                     <div class="form-grid">
                         
@@ -674,7 +693,7 @@
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            <span>Launch Privilege Offer</span>
+                            <span id="btnSubmitOfferLabel">Launch Privilege Offer</span>
                         </button>
                     </div>
                 </div>
@@ -876,6 +895,18 @@
 
             let isValid = true;
 
+            if (startVal) {
+                const startTimeCheck = new Date(startVal).getTime();
+                if (isNaN(startTimeCheck)) {
+                    if (showUi) setFieldError('startDate', 'startDateError', 'Please provide a valid launch date.');
+                    isValid = false;
+                } else {
+                    clearFieldError('startDate', 'startDateError');
+                }
+            } else {
+                clearFieldError('startDate', 'startDateError');
+            }
+
             if (!endVal) {
                 if (showUi) setFieldError('endDate', 'endDateError', 'Expiration date and time is required.');
                 isValid = false;
@@ -884,7 +915,7 @@
                 if (isNaN(endTime)) {
                     if (showUi) setFieldError('endDate', 'endDateError', 'Please provide a valid expiration date.');
                     isValid = false;
-                } else if (endTime <= Date.now() + 2 * 60 * 1000) {
+                } else if (endTime <= Date.now()) {
                     if (showUi) setFieldError('endDate', 'endDateError', 'Expiration date must be scheduled in the future.');
                     isValid = false;
                 } else if (startVal) {
@@ -915,22 +946,65 @@
         }
 
         // ==========================================================================
-        // Modal Controls & Dynamic Scope
+        // Modal Controls & Dynamic Scope (Create & Edit Modes)
         // ==========================================================================
+        let editingOfferId = null;
+
+        function toLocalISO(d) {
+            const date = d instanceof Date ? d : new Date(d);
+            if (isNaN(date.getTime())) return '';
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function removeTempSelectOptions() {
+            document.querySelectorAll('#createOfferModal option[data-temp-option="true"]').forEach(opt => opt.remove());
+        }
+
+        function setModalMode(mode) {
+            const titleEl = document.getElementById('offerModalTitleText');
+            const subtitleEl = document.getElementById('offerModalSubtitle');
+            const submitBtn = document.getElementById('btnSubmitOffer');
+
+            if (mode === 'edit') {
+                if (titleEl) titleEl.textContent = 'Edit Privilege Offer';
+                if (subtitleEl) subtitleEl.textContent = 'Update discount parameters, target scope, or campaign schedule.';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="btnSubmitOfferLabel">Save Offer Changes</span>
+                    `;
+                }
+            } else {
+                if (titleEl) titleEl.textContent = 'Launch Privilege Offer';
+                if (subtitleEl) subtitleEl.textContent = 'Configure a product discount, collection privilege, or member referral campaign.';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span id="btnSubmitOfferLabel">Launch Privilege Offer</span>
+                    `;
+                }
+            }
+        }
+
         function openCreateOfferModal() {
+            editingOfferId = null;
+            removeTempSelectOptions();
             document.getElementById('createOfferForm').reset();
             clearAllErrors();
+            setModalMode('create');
             handleOfferTypeChange('product');
+            handleDiscountTypeChange('percentage');
 
             // Default launch time to now, end date to 30 days ahead
             const now = new Date();
             const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-            
-            const toLocalISO = (d) => {
-                const pad = (n) => String(n).padStart(2, '0');
-                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-            };
-
             const nowIso = toLocalISO(now);
             const futureIso = toLocalISO(future);
 
@@ -953,9 +1027,122 @@
             }, 100);
         }
 
+        async function openEditOfferModal(offerId) {
+            try {
+                const response = await fetch(`/admin/offers/${offerId}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const res = await response.json();
+
+                if (!res.success || !res.offer) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Unable to Load Offer',
+                        text: res.message || 'Offer details could not be retrieved.',
+                        customClass: {
+                            popup: 'royal-luxury-swal',
+                            title: 'royal-swal-title',
+                            confirmButton: 'royal-swal-confirm-btn'
+                        }
+                    });
+                    return;
+                }
+
+                const offer = res.offer;
+                editingOfferId = offer._id;
+                removeTempSelectOptions();
+                document.getElementById('createOfferForm').reset();
+                clearAllErrors();
+                setModalMode('edit');
+
+                document.getElementById('offerName').value = offer.name || '';
+                const offerTypeSelect = document.getElementById('offerType');
+                offerTypeSelect.value = offer.offerType || 'product';
+                handleOfferTypeChange(offerTypeSelect.value);
+
+                // Populate product selection (preserve unlisted product if needed)
+                if (offer.offerType === 'product' && offer.product) {
+                    const productSelect = document.getElementById('productId');
+                    const targetProductId = offer.product._id || offer.product;
+                    const optionExists = Array.from(productSelect.options).some(opt => opt.value === String(targetProductId));
+                    if (!optionExists && offer.product.name) {
+                        const tempOpt = document.createElement('option');
+                        tempOpt.value = String(targetProductId);
+                        tempOpt.setAttribute('data-price', offer.product.regularPrice || 0);
+                        tempOpt.setAttribute('data-temp-option', 'true');
+                        tempOpt.textContent = `${offer.product.name} (₹${Number(offer.product.regularPrice || 0).toLocaleString('en-IN')})`;
+                        productSelect.appendChild(tempOpt);
+                    }
+                    productSelect.value = String(targetProductId);
+                }
+
+                // Populate category selection (preserve unlisted category if needed)
+                if (offer.offerType === 'category' && offer.category) {
+                    const categorySelect = document.getElementById('categoryId');
+                    const targetCategoryId = offer.category._id || offer.category;
+                    const optionExists = Array.from(categorySelect.options).some(opt => opt.value === String(targetCategoryId));
+                    if (!optionExists && offer.category.name) {
+                        const tempOpt = document.createElement('option');
+                        tempOpt.value = String(targetCategoryId);
+                        tempOpt.setAttribute('data-temp-option', 'true');
+                        tempOpt.textContent = offer.category.name;
+                        categorySelect.appendChild(tempOpt);
+                    }
+                    categorySelect.value = String(targetCategoryId);
+                }
+
+                if (offer.offerType === 'referral') {
+                    document.getElementById('referrerReward').value = offer.referrerReward ?? 0;
+                    document.getElementById('refereeReward').value = offer.refereeReward ?? 0;
+                } else {
+                    const discountTypeSelect = document.getElementById('discountType');
+                    discountTypeSelect.value = offer.discountType || 'percentage';
+                    handleDiscountTypeChange(discountTypeSelect.value);
+                    document.getElementById('discountValue').value = offer.discountValue ?? '';
+                }
+
+                const nowIso = toLocalISO(new Date());
+                const startInput = document.getElementById('startDate');
+                const endInput = document.getElementById('endDate');
+
+                if (startInput) {
+                    startInput.removeAttribute('min');
+                    startInput.value = offer.startDate ? toLocalISO(new Date(offer.startDate)) : '';
+                }
+                if (endInput) {
+                    endInput.min = nowIso;
+                    endInput.value = offer.endDate ? toLocalISO(new Date(offer.endDate)) : '';
+                }
+
+                document.getElementById('description').value = offer.description || '';
+
+                const modal = document.getElementById('createOfferModal');
+                modal.classList.add('open');
+                setTimeout(() => {
+                    const nameInput = document.getElementById('offerName');
+                    if (nameInput) nameInput.focus();
+                }, 100);
+            } catch (err) {
+                console.error('Load offer for edit error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Notice',
+                    text: 'Unable to load offer details from the atelier server.',
+                    customClass: {
+                        popup: 'royal-luxury-swal',
+                        title: 'royal-swal-title',
+                        confirmButton: 'royal-swal-confirm-btn'
+                    }
+                });
+            }
+        }
+
         function closeCreateOfferModal() {
             const modal = document.getElementById('createOfferModal');
             modal.classList.remove('open');
+            editingOfferId = null;
+            removeTempSelectOptions();
             clearAllErrors();
         }
 
@@ -1081,7 +1268,8 @@
             if (startInput) {
                 startInput.addEventListener('change', () => {
                     if (endInput && startInput.value) {
-                        endInput.min = startInput.value;
+                        const nowIso = toLocalISO(new Date());
+                        endInput.min = startInput.value > nowIso ? startInput.value : nowIso;
                     }
                     validateDates(true);
                 });
@@ -1108,9 +1296,9 @@
         }
 
         // ==========================================================================
-        // Form Submission with Strict JS Validation
+        // Form Submission with Strict JS Validation (Create & Edit)
         // ==========================================================================
-        async function handleCreateOffer(event) {
+        async function handleOfferSubmit(event) {
             event.preventDefault();
 
             // Run validations across all relevant fields
@@ -1128,6 +1316,7 @@
                 return;
             }
 
+            const isEditMode = Boolean(editingOfferId);
             const btn = document.getElementById('btnSubmitOffer');
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
@@ -1136,7 +1325,7 @@
                     <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
                     <path d="M12 2a10 10 0 0 1 10 10"></path>
                 </svg>
-                <span>Configuring Atelier Offer...</span>
+                <span>${isEditMode ? 'Saving Offer Changes...' : 'Configuring Atelier Offer...'}</span>
             `;
 
             const form = event.target;
@@ -1154,9 +1343,12 @@
                 endDate: form.endDate.value
             };
 
+            const endpoint = isEditMode ? `/admin/offers/edit/${editingOfferId}` : '/admin/offers/create';
+            const method = isEditMode ? 'PUT' : 'POST';
+
             try {
-                const response = await fetch('/admin/offers/create', {
-                    method: 'POST',
+                const response = await fetch(endpoint, {
+                    method,
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify(data)
                 });
@@ -1166,7 +1358,7 @@
                     closeCreateOfferModal();
                     Swal.fire({
                         icon: 'success',
-                        title: 'Privilege Offer Launched',
+                        title: isEditMode ? 'Privilege Offer Updated' : 'Privilege Offer Launched',
                         text: res.message,
                         customClass: {
                             popup: 'royal-luxury-swal',
@@ -1204,7 +1396,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Configuration Notice',
-                            text: res.message || 'Unable to launch offer.',
+                            text: res.message || (isEditMode ? 'Unable to update offer.' : 'Unable to launch offer.'),
                             customClass: {
                                 popup: 'royal-luxury-swal',
                                 title: 'royal-swal-title',
@@ -1214,7 +1406,7 @@
                     }
                 }
             } catch (err) {
-                console.error('Create offer error:', err);
+                console.error(isEditMode ? 'Update offer error:' : 'Create offer error:', err);
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
                 Swal.fire({
@@ -1347,5 +1539,6 @@
         }
     </script>
 
+    <script src="/js/searchValidation.js"></script>
 </body>
 </html>

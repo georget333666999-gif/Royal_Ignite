@@ -7,6 +7,7 @@ import addressService from "./addressService.js";
 import couponService from "./couponService.js";
 import walletService from "./walletService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+import { invalidateUserBadgeCache } from "../../utils/cache.js";
 
 /**
  * Get aggregated checkout information (Cart items, delivery addresses, pricing totals)
@@ -94,7 +95,140 @@ export const getCheckoutDetails = async (userId, appliedCoupon = null) => {
 };
 
 /**
- * Place Order with Cash on Delivery (COD)
+ * Shared order persistence logic for both Cart & Buy-Now flows
+ */
+const persistOrderRecord = async ({
+    userId,
+    address,
+    items,
+    subtotal,
+    savings,
+    paymentMethod,
+    appliedCoupon,
+    paymentStatus,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    clearCartOnSuccess = false,
+    walletDescription = ""
+}) => {
+    let couponDiscount = 0;
+    let couponCode = null;
+    if (appliedCoupon && appliedCoupon.code) {
+        try {
+            const validation = await couponService.validateCoupon(
+                appliedCoupon.code,
+                userId,
+                subtotal
+            );
+            couponDiscount = validation.discountAmount;
+            couponCode = validation.code;
+        } catch {
+            couponDiscount = 0;
+            couponCode = null;
+        }
+    }
+
+    const totalPayable = Math.max(0, subtotal - couponDiscount);
+    const uniqueOrderId = Order.generateOrderId();
+
+    let resolvedPaymentStatus = paymentStatus;
+    if (paymentMethod === "Wallet") {
+        await walletService.debitWallet(userId, {
+            amount: totalPayable,
+            description: walletDescription || `Acquisition payment for order #${uniqueOrderId}`,
+            source: "checkout_payment",
+            orderId: uniqueOrderId
+        });
+        resolvedPaymentStatus = "Completed";
+    }
+
+    const isPaymentFailed = resolvedPaymentStatus === "Failed";
+    const initialOrderStatus = isPaymentFailed ? "Pending" : "Placed";
+
+    let remainingCouponDiscount = couponDiscount;
+    const orderItems = items.map((item, index) => {
+        let discountShare = 0;
+        if (couponDiscount > 0 && subtotal > 0) {
+            if (index === items.length - 1) {
+                discountShare = Math.max(0, remainingCouponDiscount);
+            } else {
+                discountShare = Math.min(
+                    remainingCouponDiscount,
+                    Math.round((item.lineTotal / subtotal) * couponDiscount)
+                );
+                remainingCouponDiscount -= discountShare;
+            }
+        }
+        const netRefundableAmount = Math.max(0, item.lineTotal - discountShare);
+
+        return {
+            product: item.productId || item.product,
+            name: item.name,
+            image: (item.images && item.images[0]) || item.image || "/uploads/hero_lighter.png",
+            categoryName: item.categoryName || item.category?.name || "Exclusive Edition",
+            price: item.price,
+            regularPrice: item.regularPrice || item.price,
+            quantity: item.quantity,
+            lineTotal: item.lineTotal,
+            discountShare,
+            netRefundableAmount,
+            status: initialOrderStatus
+        };
+    });
+
+    const newOrder = await Order.create({
+        orderId: uniqueOrderId,
+        user: userId,
+        items: orderItems,
+        shippingAddress: {
+            fullName: address.fullName,
+            phone: address.phone,
+            addressLine: address.addressLine,
+            city: address.city,
+            state: address.state,
+            pincode: address.pincode,
+            country: address.country || "India",
+            addressType: address.addressType || "Home"
+        },
+        paymentMethod: paymentMethod === "Razorpay" ? "Razorpay" : (paymentMethod === "Wallet" ? "Wallet" : "COD"),
+        paymentStatus: resolvedPaymentStatus || (paymentMethod === "Razorpay" || paymentMethod === "Wallet" ? "Completed" : "Pending"),
+        razorpayOrderId,
+        razorpayPaymentId,
+        razorpaySignature,
+        coupon: {
+            code: couponCode,
+            discountAmount: couponDiscount
+        },
+        pricing: {
+            subtotal,
+            discount: savings,
+            couponDiscount,
+            tax: 0,
+            shippingFee: 0,
+            totalAmount: totalPayable
+        },
+        orderStatus: initialOrderStatus
+    });
+
+    if (!isPaymentFailed) {
+        const postOrderTasks = [];
+        if (clearCartOnSuccess) {
+            postOrderTasks.push(Cart.updateOne({ user: userId }, { $set: { items: [] } }).then(() => invalidateUserBadgeCache(userId)));
+        }
+        if (couponCode) {
+            postOrderTasks.push(couponService.recordCouponUsage(couponCode, userId, newOrder._id));
+        }
+        if (postOrderTasks.length > 0) {
+            await Promise.all(postOrderTasks);
+        }
+    }
+
+    return newOrder;
+};
+
+/**
+ * Place Order with Cash on Delivery (COD) or online gateways (Cart acquisition)
  * Decrements inventory atomically and clears the user's cart
  * @param {Object} param0
  * @param {string} param0.userId
@@ -174,109 +308,26 @@ export const placeOrder = async ({
             );
         }
 
-        const isPaymentPending = paymentStatus === "Failed" || paymentStatus === "Pending";
-        const initialOrderStatus = isPaymentPending ? "Pending" : "Placed";
-
-        // 5. Build order items snapshot
-        const orderItems = cartData.items.map((item) => ({
-            product: item.productId,
-            name: item.name,
-            image: (item.images && item.images[0]) || "/uploads/hero_lighter.png",
-            categoryName: item.categoryName || "Exclusive Edition",
-            price: item.price,
-            regularPrice: item.regularPrice || item.price,
-            quantity: item.quantity,
-            lineTotal: item.lineTotal,
-            status: initialOrderStatus
-        }));
-
         const regularTotal = cartData.items.reduce(
             (acc, item) => acc + (item.regularPrice || item.price) * item.quantity,
             0
         );
         const savings = Math.max(0, regularTotal - cartData.subtotal);
 
-        let couponDiscount = 0;
-        let couponCode = null;
-        if (appliedCoupon && appliedCoupon.code) {
-            try {
-                const validation = await couponService.validateCoupon(
-                    appliedCoupon.code,
-                    userId,
-                    cartData.subtotal
-                );
-                couponDiscount = validation.discountAmount;
-                couponCode = validation.code;
-            } catch {
-                couponDiscount = 0;
-                couponCode = null;
-            }
-        }
-
-        const totalPayable = Math.max(0, cartData.totalPrice - couponDiscount);
-
-        const pricing = {
+        return await persistOrderRecord({
+            userId,
+            address,
+            items: cartData.items,
             subtotal: cartData.subtotal,
-            discount: savings,
-            couponDiscount,
-            tax: 0,
-            shippingFee: 0,
-            totalAmount: totalPayable
-        };
-
-        const uniqueOrderId = Order.generateOrderId();
-
-        // 6. If Wallet payment, debit wallet balance
-        if (paymentMethod === "Wallet") {
-            await walletService.debitWallet(userId, {
-                amount: totalPayable,
-                description: `Acquisition payment for order #${uniqueOrderId}`,
-                source: "checkout_payment",
-                orderId: uniqueOrderId
-            });
-            paymentStatus = "Completed";
-        }
-
-        // 7. Persist order
-        const newOrder = await Order.create({
-            orderId: uniqueOrderId,
-            user: userId,
-            items: orderItems,
-            shippingAddress: {
-                fullName: address.fullName,
-                phone: address.phone,
-                addressLine: address.addressLine,
-                city: address.city,
-                state: address.state,
-                pincode: address.pincode,
-                country: address.country || "India",
-                addressType: address.addressType || "Home"
-            },
-            paymentMethod: paymentMethod === "Razorpay" ? "Razorpay" : (paymentMethod === "Wallet" ? "Wallet" : "COD"),
-            paymentStatus: paymentStatus || (paymentMethod === "Razorpay" || paymentMethod === "Wallet" ? "Completed" : "Pending"),
+            savings,
+            paymentMethod,
+            appliedCoupon,
+            paymentStatus,
             razorpayOrderId,
             razorpayPaymentId,
             razorpaySignature,
-            coupon: {
-                code: couponCode,
-                discountAmount: couponDiscount
-            },
-            pricing,
-            orderStatus: initialOrderStatus
+            clearCartOnSuccess: true
         });
-
-        // 8. Clear the user's cart ONLY IF the order is placed/confirmed!
-        // If payment is pending or failed, preserve items in cart so the user does not lose their selection.
-        if (!isPaymentPending) {
-            await Cart.updateOne({ user: userId }, { $set: { items: [] } });
-        }
-
-        // 9. Record coupon redemption ONLY IF payment was completed and order is placed
-        if (couponCode && !isPaymentPending) {
-            await couponService.recordCouponUsage(couponCode, userId, newOrder._id);
-        }
-
-        return newOrder;
     } catch (error) {
         console.error("checkoutService placeOrder error:", error);
         throw error;
@@ -526,91 +577,32 @@ export const placeBuyNowOrder = async ({
 
         const { regularPrice, price, lineTotal, savings } = getProductPricing(product, qty);
 
-        let couponDiscount = 0;
-        let couponCode = null;
-        if (appliedCoupon && appliedCoupon.code) {
-            try {
-                const validation = await couponService.validateCoupon(
-                    appliedCoupon.code,
-                    userId,
-                    lineTotal
-                );
-                couponDiscount = validation.discountAmount;
-                couponCode = validation.code;
-            } catch {
-                couponDiscount = 0;
-                couponCode = null;
-            }
-        }
-
-        const totalPayable = Math.max(0, lineTotal - couponDiscount);
-        const uniqueOrderId = Order.generateOrderId();
-
-        if (paymentMethod === "Wallet") {
-            await walletService.debitWallet(userId, {
-                amount: totalPayable,
-                description: `Acquisition payment for direct buy order #${uniqueOrderId}`,
-                source: "checkout_payment",
-                orderId: uniqueOrderId
-            });
-            paymentStatus = "Completed";
-        }
-
-        const isPaymentPending = paymentStatus === "Failed" || paymentStatus === "Pending";
-        const initialOrderStatus = isPaymentPending ? "Pending" : "Placed";
-
         const orderItem = {
-            product: product._id,
+            productId: product._id,
             name: product.name,
             image: (product.images && product.images[0]) || "/uploads/hero_lighter.png",
             categoryName: product.category?.name || "Exclusive Edition",
             price,
             regularPrice,
             quantity: qty,
-            lineTotal,
-            status: initialOrderStatus
+            lineTotal
         };
 
-        const newOrder = await Order.create({
-            orderId: uniqueOrderId,
-            user: userId,
+        return await persistOrderRecord({
+            userId,
+            address,
             items: [orderItem],
-            shippingAddress: {
-                fullName: address.fullName,
-                phone: address.phone,
-                addressLine: address.addressLine,
-                city: address.city,
-                state: address.state,
-                pincode: address.pincode,
-                country: address.country || "India",
-                addressType: address.addressType || "Home"
-            },
-            paymentMethod: paymentMethod === "Razorpay" ? "Razorpay" : (paymentMethod === "Wallet" ? "Wallet" : "COD"),
-            paymentStatus: paymentStatus || (paymentMethod === "Razorpay" || paymentMethod === "Wallet" ? "Completed" : "Pending"),
+            subtotal: lineTotal,
+            savings,
+            paymentMethod,
+            appliedCoupon,
+            paymentStatus,
             razorpayOrderId,
             razorpayPaymentId,
             razorpaySignature,
-            coupon: {
-                code: couponCode,
-                discountAmount: couponDiscount
-            },
-            pricing: {
-                subtotal: lineTotal,
-                discount: savings,
-                couponDiscount,
-                tax: 0,
-                shippingFee: 0,
-                totalAmount: totalPayable
-            },
-            orderStatus: initialOrderStatus
+            clearCartOnSuccess: false,
+            walletDescription: `Acquisition payment for direct buy order`
         });
-
-        if (couponCode && !isPaymentPending) {
-            await couponService.recordCouponUsage(couponCode, userId, newOrder._id);
-        }
-
-        // The user's regular Cart in MongoDB is NOT cleared or touched!
-        return newOrder;
     } catch (error) {
         console.error("checkoutService placeBuyNowOrder error:", error);
         throw error;

@@ -52,9 +52,9 @@ const getUserList = async (req, res) => {
 
         const responseData = {
             ...result,
-            search,
+            search: result.search,
             statusFilter,
-            error: req.query.error || null,
+            error: req.query.error || result.searchError || null,
             success: req.query.success || null
         };
 

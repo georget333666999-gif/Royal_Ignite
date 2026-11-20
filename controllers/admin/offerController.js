@@ -23,10 +23,12 @@ export const getOffersPage = async (req, res, next) => {
             currentPage: offerData.currentPage,
             totalPages: offerData.totalPages,
             totalOffers: offerData.totalOffers,
-            search,
+            search: offerData.search,
             currentType: type,
             products,
-            categories
+            categories,
+            error: req.query.error || offerData.searchError || null,
+            success: req.query.success || null
         });
     } catch (error) {
         console.error("offerController getOffersPage error:", error);
@@ -35,7 +37,27 @@ export const getOffersPage = async (req, res, next) => {
 };
 
 /**
- * Create a new Offer (Product, Category, or Referral)
+ * Fetch a single Offer by ID for editing
+ */
+export const getOfferById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const offer = await offerService.getOfferById(id);
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            offer
+        });
+    } catch (error) {
+        console.error("offerController getOfferById error:", error);
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+            success: false,
+            message: error.message || "Offer not found."
+        });
+    }
+};
+
+/**
+ * Create a new Offer (product, category, or referral)
  */
 export const postCreateOffer = async (req, res) => {
     try {
@@ -50,6 +72,27 @@ export const postCreateOffer = async (req, res) => {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
             success: false,
             message: error.message || "Failed to configure privilege offer."
+        });
+    }
+};
+
+/**
+ * Update an existing Offer (product, category, or referral)
+ */
+export const putUpdateOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedOffer = await offerService.updateOffer(id, req.body);
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: "Privilege offer updated and product pricing reconciled successfully.",
+            offer: updatedOffer
+        });
+    } catch (error) {
+        console.error("offerController putUpdateOffer error:", error);
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            message: error.message || "Failed to update privilege offer."
         });
     }
 };
@@ -97,7 +140,9 @@ export const postDeleteOffer = async (req, res) => {
 
 export default {
     getOffersPage,
+    getOfferById,
     postCreateOffer,
+    putUpdateOffer,
     postToggleOffer,
     postDeleteOffer
 };

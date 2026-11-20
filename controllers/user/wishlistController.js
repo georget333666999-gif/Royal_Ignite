@@ -1,31 +1,20 @@
-import User from "../../models/userModel.js";
 import wishlistService from "../../services/user/wishlistService.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
-import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
+import { requireActiveUser, isAjaxRequest } from "../../utils/controllerHelpers.js";
+import { getAuthenticatedUserId } from "../../utils/authSession.js";
 
 /**
  * Render wishlist page
  */
 export const getWishlistPage = async (req, res, next) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.redirect("/user/login?redirect=/wishlist&error=" + encodeURIComponent(RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED));
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: "/user/login?redirect=/wishlist&error=" + encodeURIComponent(RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED)
+        });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const wishlistData = await wishlistService.getWishlist(userId);
-
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-            "Surrogate-Control": "no-store"
-        });
 
         return res.status(HTTP_STATUS.OK).render("wishlist", {
             pageTitle: "Your Wishlist Vault — ROYAL IGNITE",
@@ -47,11 +36,9 @@ export const getWishlistPage = async (req, res, next) => {
 /**
  * Toggle product in user's wishlist (Add / Remove)
  */
-export const toggleWishlist = async (req, res, next) => {
+export const toggleWishlist = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
         const productId = req.body.productId || req.params.productId;
-
         if (!productId) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
@@ -59,23 +46,13 @@ export const toggleWishlist = async (req, res, next) => {
             });
         }
 
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                redirect: `/user/login?redirect=/products/${productId}`,
-                message: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
-            });
-        }
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: `/user/login?redirect=/products/${productId}`,
+            authMessage: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
+        });
+        if (!auth) return;
 
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return res.status(HTTP_STATUS.FORBIDDEN).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.ACCOUNT_BLOCKED
-            });
-        }
-
-        const result = await wishlistService.toggleWishlist(userId, productId);
+        const result = await wishlistService.toggleWishlist(auth.userId, productId);
         return res.status(HTTP_STATUS.OK).json(result);
     } catch (err) {
         console.error("wishlistController toggleWishlist error:", err);
@@ -90,35 +67,25 @@ export const toggleWishlist = async (req, res, next) => {
  * Explicit remove from wishlist
  */
 export const removeFromWishlist = async (req, res, next) => {
+    const isAjax = isAjaxRequest(req);
     try {
-        const userId = getAuthenticatedUserId(req);
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: "/user/login?redirect=/wishlist",
+            authMessage: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
+        });
+        if (!auth) return;
+
         const productId = req.params.productId || req.body.productId;
+        const result = await wishlistService.removeFromWishlist(auth.userId, productId);
 
-        if (!userId) {
-            if (req.xhr || req.headers.accept?.includes("application/json")) {
-                return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                    success: false,
-                    message: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
-                });
-            }
-            return res.redirect("/user/login?redirect=/wishlist");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
-
-        const result = await wishlistService.removeFromWishlist(userId, productId);
-
-        if (req.xhr || req.headers.accept?.includes("application/json")) {
+        if (isAjax) {
             return res.status(HTTP_STATUS.OK).json(result);
         }
 
         return res.redirect("/wishlist?success=" + encodeURIComponent(result.message));
     } catch (err) {
         console.error("wishlistController removeFromWishlist error:", err);
-        if (req.xhr || req.headers.accept?.includes("application/json")) {
+        if (isAjax) {
             return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG
@@ -132,44 +99,29 @@ export const removeFromWishlist = async (req, res, next) => {
  * Move item from wishlist to shopping cart
  */
 export const moveToCart = async (req, res, next) => {
+    const isAjax = isAjaxRequest(req);
     try {
-        const userId = getAuthenticatedUserId(req);
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: "/user/login?redirect=/wishlist",
+            authMessage: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
+        });
+        if (!auth) return;
+
         const productId = req.params.productId || req.body.productId;
+        const result = await wishlistService.moveToCart(auth.userId, productId);
 
-        if (!userId) {
-            if (req.xhr || req.headers.accept?.includes("application/json")) {
-                return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                    success: false,
-                    redirect: "/user/login?redirect=/wishlist",
-                    message: RESPONSE_MESSAGES.WISHLIST.AUTH_REQUIRED
-                });
-            }
-            return res.redirect("/user/login?redirect=/wishlist");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
-
-        const result = await wishlistService.moveToCart(userId, productId);
-
-        if (req.xhr || req.headers.accept?.includes("application/json")) {
+        if (isAjax) {
             return res.status(HTTP_STATUS.OK).json(result);
         }
 
         return res.redirect("/cart?success=" + encodeURIComponent(result.message));
     } catch (err) {
         console.error("wishlistController moveToCart error:", err);
-        const isAjax = Boolean(req.xhr || req.headers.accept?.includes("application/json"));
         const message = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
 
         if (isAjax) {
             const status = err.code === "OUT_OF_STOCK" ? HTTP_STATUS.BAD_REQUEST : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-            return res.status(status).json({
-                success: false,
-                message
-            });
+            return res.status(status).json({ success: false, message });
         }
 
         return res.redirect("/wishlist?error=" + encodeURIComponent(message));
@@ -179,7 +131,7 @@ export const moveToCart = async (req, res, next) => {
 /**
  * Get count of items in wishlist for header badges
  */
-export const getWishlistCount = async (req, res, next) => {
+export const getWishlistCount = async (req, res) => {
     try {
         const userId = getAuthenticatedUserId(req);
         if (!userId) {
@@ -188,7 +140,7 @@ export const getWishlistCount = async (req, res, next) => {
         const count = await wishlistService.getWishlistCount(userId);
         return res.status(HTTP_STATUS.OK).json({ success: true, count });
     } catch (err) {
-        console.error("wishlistController getWishlistCount error:", err);
+        console.error("User wishlistController getWishlistCount error:", err);
         return res.status(HTTP_STATUS.OK).json({ success: true, count: 0 });
     }
 };

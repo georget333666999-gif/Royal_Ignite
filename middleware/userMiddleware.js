@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import { getAuthenticatedUserId, handleBlockedUser } from "../utils/authSession.js";
+import { getAuthenticatedUserId, resolveRequestUser, handleBlockedUser } from "../utils/authSession.js";
 
 export const userMiddleware = async (req, res, next) => {
     try {
@@ -8,7 +8,7 @@ export const userMiddleware = async (req, res, next) => {
             return res.redirect("/user/login");
         }
 
-        const user = await User.findById(userId);
+        const user = await resolveRequestUser(req, User);
         if (!user || user.isBlocked) {
             return handleBlockedUser(req, res);
         }

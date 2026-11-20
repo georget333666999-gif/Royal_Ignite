@@ -75,37 +75,51 @@ export const debitWallet = async (userId, { amount, description, source, orderId
         throw new Error("Debit amount must be greater than zero.");
     }
 
-    const wallet = await getOrCreateWallet(userId);
-    if (wallet.balance < parsedAmount) {
-        const err = new Error(
-            `Insufficient wallet balance. Available: ₹${wallet.balance.toLocaleString("en-IN")}, Required: ₹${parsedAmount.toLocaleString("en-IN")}`
-        );
-        err.code = "INSUFFICIENT_WALLET_BALANCE";
-        throw err;
-    }
-
-    const newBalance = Math.round((wallet.balance - parsedAmount) * 100) / 100;
+    await getOrCreateWallet(userId);
 
     const newTx = {
         type: "debit",
         amount: parsedAmount,
-        balanceAfter: newBalance,
         description: description || "Payment debited from wallet",
         source,
         orderId,
         date: new Date()
     };
 
-    wallet.transactions.push(newTx);
-    wallet.balance = newBalance;
-    await wallet.save();
+    // Atomic conditional debit: balance must be >= parsedAmount
+    const updatedWallet = await Wallet.findOneAndUpdate(
+        { user: userId, balance: { $gte: parsedAmount } },
+        {
+            $inc: { balance: -parsedAmount },
+            $push: { transactions: newTx }
+        },
+        { returnDocument: "after" }
+    );
 
-    const createdTx = wallet.transactions[wallet.transactions.length - 1];
+    if (!updatedWallet) {
+        const currentWallet = await Wallet.findOne({ user: userId });
+        const avail = currentWallet ? currentWallet.balance : 0;
+        const err = new Error(
+            `Insufficient wallet balance. Available: ₹${avail.toLocaleString("en-IN")}, Required: ₹${parsedAmount.toLocaleString("en-IN")}`
+        );
+        err.code = "INSUFFICIENT_WALLET_BALANCE";
+        throw err;
+    }
+
+    // Set balanceAfter on latest transaction
+    const latestTx = updatedWallet.transactions[updatedWallet.transactions.length - 1];
+    if (latestTx) {
+        latestTx.balanceAfter = updatedWallet.balance;
+        await Wallet.updateOne(
+            { _id: updatedWallet._id, "transactions._id": latestTx._id },
+            { $set: { "transactions.$.balanceAfter": updatedWallet.balance } }
+        );
+    }
 
     return {
         success: true,
-        balance: newBalance,
-        transaction: createdTx
+        balance: updatedWallet.balance,
+        transaction: latestTx || newTx
     };
 };
 

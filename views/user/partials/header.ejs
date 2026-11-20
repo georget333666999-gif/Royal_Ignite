@@ -21,21 +21,23 @@
             </a>
 
             <!-- Wishlist Icon -->
+            <% const resolvedWishlistCount = (typeof headerWishlistCount !== 'undefined' && headerWishlistCount > 0) ? headerWishlistCount : 0; %>
             <a href="/wishlist" class="header-icon header-wishlist-icon" title="Wishlist">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
-                <span class="header-badge-count wishlist-badge-count" style="display: none;">0</span>
+                <span class="header-badge-count wishlist-badge-count" style="<%= resolvedWishlistCount > 0 ? 'display: inline-block;' : 'display: none;' %>"><%= resolvedWishlistCount %></span>
             </a>
 
             <!-- Shopping Bag Icon -->
+            <% const resolvedCartCount = (typeof cart !== 'undefined' && cart && typeof cart.itemCount === 'number') ? cart.itemCount : ((typeof headerCartCount !== 'undefined' && headerCartCount > 0) ? headerCartCount : 0); %>
             <a href="/cart" class="header-icon header-cart-icon" title="Cart">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <path d="M16 10a4 4 0 0 1-8 0"></path>
                 </svg>
-                <span class="header-badge-count cart-badge-count" style="<%= (typeof cart !== 'undefined' && cart && cart.itemCount > 0) ? 'display: inline-block;' : 'display: none;' %>"><%= (typeof cart !== 'undefined' && cart && cart.itemCount > 0) ? cart.itemCount : 0 %></span>
+                <span class="header-badge-count cart-badge-count" style="<%= resolvedCartCount > 0 ? 'display: inline-block;' : 'display: none;' %>"><%= resolvedCartCount %></span>
             </a>
 
             <% if ((typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) || (typeof user !== 'undefined' && user)) { %>
@@ -91,42 +93,6 @@
                 window.history.pushState(null, null, window.location.href);
             });
         }
-    })();
-
-    (function() {
-        fetch('/wishlist/count')
-            .then(res => res.json())
-            .then(data => {
-                const badges = document.querySelectorAll('.wishlist-badge-count');
-                if (data && data.success && data.count > 0) {
-                    badges.forEach(b => {
-                        b.textContent = data.count;
-                        b.style.display = 'inline-block';
-                    });
-                } else {
-                    badges.forEach(b => {
-                        b.style.display = 'none';
-                    });
-                }
-            })
-            .catch(() => {});
-
-        fetch('/cart/count')
-            .then(res => res.json())
-            .then(data => {
-                const badges = document.querySelectorAll('.cart-badge-count');
-                if (data && data.success && data.count > 0) {
-                    badges.forEach(b => {
-                        b.textContent = data.count;
-                        b.style.display = 'inline-block';
-                    });
-                } else {
-                    badges.forEach(b => {
-                        b.style.display = 'none';
-                    });
-                }
-            })
-            .catch(() => {});
     })();
 </script>
 <% } %>

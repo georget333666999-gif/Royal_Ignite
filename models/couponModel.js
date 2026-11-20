@@ -25,7 +25,16 @@ const couponSchema = new mongoose.Schema(
         discountValue: {
             type: Number,
             required: [true, "Discount value is required"],
-            min: [1, "Discount value must be at least 1"]
+            min: [1, "Discount value must be at least 1"],
+            validate: {
+                validator: function (val) {
+                    if (this.discountType === "percentage") {
+                        return val <= 100;
+                    }
+                    return true;
+                },
+                message: "Percentage discount cannot exceed 100%"
+            }
         },
         minPurchase: {
             type: Number,
@@ -36,6 +45,10 @@ const couponSchema = new mongoose.Schema(
             type: Number,
             default: null,
             min: [0, "Maximum discount cap cannot be negative"]
+        },
+        startDate: {
+            type: Date,
+            default: Date.now
         },
         expiryDate: {
             type: Date,

@@ -38,6 +38,7 @@ const walletTransactionSchema = new mongoose.Schema(
                 "admin_adjustment",
                 "referral_bonus",
                 "referral_reward",
+                "referral_clawback",
                 "wallet_topup"
             ],
             required: true

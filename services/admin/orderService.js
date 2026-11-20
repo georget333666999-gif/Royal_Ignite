@@ -3,7 +3,9 @@ import User from "../../models/userModel.js";
 import Product from "../../models/productModel.js";
 import couponService from "../user/couponService.js";
 import walletService from "../user/walletService.js";
+import userService from "../user/userService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
 
 const syncOrderReturnSummary = (order) => {
     const activeItems = order.items.filter((i) => i.status !== "Cancelled");
@@ -15,7 +17,10 @@ const syncOrderReturnSummary = (order) => {
         order.orderStatus = "Returned";
         order.returnedAt = order.returnedAt || new Date();
         if (order.paymentStatus === "Completed") {
-            order.paymentStatus = "Refunded";
+            const allSettled = order.items.every((i) => i.status === "Cancelled" || i.status === "Returned");
+            if (allSettled) {
+                order.paymentStatus = "Refunded";
+            }
         }
         return;
     }
@@ -77,9 +82,8 @@ export const getAdminOrders = async ({
         }
 
         // 2. Search functionality (order ID, customer details, product names)
-        if (search && search.trim() !== "") {
-            const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            const cleanSearch = search.trim();
+        const { value: cleanSearch, error: searchError } = sanitizeSearchQuery(search);
+        if (cleanSearch) {
             const tokens = cleanSearch.split(/\s+/).filter(Boolean);
             const escapedTokens = tokens.map(escapeRegex);
             const phraseRegex = new RegExp(escapedTokens.join("\\s+"), "i");
@@ -221,7 +225,8 @@ export const getAdminOrders = async ({
             totalPages,
             currentPage,
             limit: pageSize,
-            search: search.trim(),
+            search: cleanSearch,
+            searchError,
             status,
             sort,
             stats
@@ -262,6 +267,131 @@ export const getAdminOrderDetails = async (orderIdentifier) => {
  * @param {string} [adminNotes=""]
  * @returns {Promise<Object>}
  */
+const validateStatusTransition = (oldStatus, newStatus) => {
+    const validNextStatuses = ORDER_STATUS_TRANSITIONS[oldStatus] || [];
+    if (!validNextStatuses.includes(newStatus)) {
+        let msg = `Cannot change order status from "${oldStatus}" to "${newStatus}".`;
+        if (oldStatus === "Delivered") {
+            msg = "Delivered orders cannot be moved back to previous statuses.";
+        } else if (["Cancelled", "Returned", "Return Rejected"].includes(oldStatus)) {
+            msg = `Orders in "${oldStatus}" status cannot be modified.`;
+        } else if (["Returned", "Return Rejected", "Return Requested"].includes(newStatus)) {
+            msg = "Return options can only be processed after a client requests a return.";
+        } else if (validNextStatuses.length > 0) {
+            msg = `Cannot skip status from "${oldStatus}" to "${newStatus}". Next allowed: ${validNextStatuses.join(", ")}.`;
+        }
+        const err = new Error(msg);
+        err.code = "INVALID_STATUS_TRANSITION";
+        throw err;
+    }
+};
+
+const processAdminOrderCancellation = async (order, adminNotes) => {
+    const refundAmount = order.pricing?.totalAmount || 0;
+    const targetUserId = order.user?._id || order.user;
+    if (order.paymentStatus === "Completed" && refundAmount > 0 && targetUserId) {
+        await walletService.creditWallet(targetUserId, {
+            amount: refundAmount,
+            description: `Direct refund for cancellation of order #${order.orderId}`,
+            source: "order_cancellation",
+            orderId: order.orderId
+        });
+        const allSettled = order.items.every((i) => i.status === "Cancelled" || i.status === "Returned");
+        if (allSettled) {
+            order.paymentStatus = "Refunded";
+            if (order.unlockedReferralBonus?.referrerId && !order.unlockedReferralBonus.isRevoked) {
+                await userService.revokeReferralRewardOnOrderSettlement(order);
+            }
+        }
+    }
+
+    for (const item of order.items) {
+        if (item.status !== "Cancelled") {
+            await Product.updateOne(
+                { _id: item.product },
+                { $inc: { stock: item.quantity } }
+            );
+            item.status = "Cancelled";
+            item.cancelReason = adminNotes || "Cancelled by atelier administrator";
+            item.cancelledAt = new Date();
+        }
+    }
+    order.cancellationReason = adminNotes || "Cancelled by atelier administrator";
+    order.cancelledAt = new Date();
+    order.pricing.totalAmount = 0;
+    if (order.coupon && order.coupon.code) {
+        await couponService.revertCouponUsage(order.coupon.code, order.user);
+    }
+    if (order.unlockedReferralBonus?.referrerId && !order.unlockedReferralBonus.isRevoked) {
+        await userService.revokeReferralRewardOnOrderSettlement(order);
+    }
+};
+
+const processAdminOrderReturn = async (order) => {
+    const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
+    let totalRefund = 0;
+    for (const item of order.items) {
+        const shouldReturnItem = hasExplicitItemRequests
+            ? item.status === "Return Requested"
+            : (item.status !== "Cancelled" && item.status !== "Returned");
+        if (shouldReturnItem) {
+            await Product.updateOne(
+                { _id: item.product },
+                { $inc: { stock: item.quantity } }
+            );
+            item.status = "Returned";
+            item.returnedAt = new Date();
+            const itemRefund = (typeof item.netRefundableAmount === "number" && item.netRefundableAmount >= 0)
+                ? item.netRefundableAmount
+                : Math.max(0, item.lineTotal - (item.discountShare || 0));
+            totalRefund += itemRefund;
+            order.pricing.totalAmount = Math.max(0, (order.pricing.totalAmount || 0) - itemRefund);
+        }
+    }
+    if (totalRefund > 0 && order.user) {
+        const targetUserId = order.user._id || order.user;
+        await walletService.creditWallet(targetUserId, {
+            amount: totalRefund,
+            description: `Refund for approved return of order #${order.orderId}`,
+            source: "order_return",
+            orderId: order.orderId
+        });
+        const allSettled = order.items.every((i) => i.status === "Cancelled" || i.status === "Returned");
+        if (allSettled) {
+            order.paymentStatus = "Refunded";
+            if (order.unlockedReferralBonus?.referrerId && !order.unlockedReferralBonus.isRevoked) {
+                await userService.revokeReferralRewardOnOrderSettlement(order);
+            }
+        }
+    }
+    syncOrderReturnSummary(order);
+};
+
+const processAdminOrderReturnRejection = (order, adminNotes) => {
+    if (!adminNotes || !adminNotes.trim()) {
+        const err = new Error("Please provide a reason for rejecting the return request.");
+        err.code = "REJECTION_REASON_REQUIRED";
+        throw err;
+    }
+    const cleanReason = adminNotes.trim();
+    order.returnRejectReason = cleanReason;
+    order.returnRejectedAt = new Date();
+    const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
+    for (const item of order.items) {
+        const shouldRejectItem = hasExplicitItemRequests
+            ? item.status === "Return Requested"
+            : (item.status === "Return Requested" || item.status === "Delivered");
+        if (shouldRejectItem) {
+            item.status = "Return Rejected";
+            item.returnRejectReason = cleanReason;
+            item.returnRejectedAt = new Date();
+            item.returnRequestCount = Math.max(1, item.returnRequestCount || 0);
+        }
+    }
+    order.returnRequestCount = Math.max(1, order.returnRequestCount || 0);
+    syncOrderReturnSummary(order);
+};
+
 export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNotes = "") => {
     try {
         const order = await getAdminOrderDetails(orderIdentifier);
@@ -272,8 +402,6 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
         }
 
         const oldStatus = order.orderStatus;
-
-        // If status didn't change, return early
         if (oldStatus === newStatus) {
             return {
                 success: true,
@@ -282,129 +410,30 @@ export const updateAdminOrderStatus = async (orderIdentifier, newStatus, adminNo
             };
         }
 
-        const validNextStatuses = ORDER_STATUS_TRANSITIONS[oldStatus] || [];
-        if (!validNextStatuses.includes(newStatus)) {
-            let msg = `Cannot change order status from "${oldStatus}" to "${newStatus}".`;
-            if (oldStatus === "Delivered") {
-                msg = "Delivered orders cannot be moved back to previous statuses.";
-            } else if (["Cancelled", "Returned", "Return Rejected"].includes(oldStatus)) {
-                msg = `Orders in "${oldStatus}" status cannot be modified.`;
-            } else if (["Returned", "Return Rejected", "Return Requested"].includes(newStatus)) {
-                msg = "Return options can only be processed after a client requests a return.";
-            } else if (validNextStatuses.length > 0) {
-                msg = `Cannot skip status from "${oldStatus}" to "${newStatus}". Next allowed: ${validNextStatuses.join(", ")}.`;
-            }
-            const err = new Error(msg);
-            err.code = "INVALID_STATUS_TRANSITION";
-            throw err;
-        }
+        validateStatusTransition(oldStatus, newStatus);
 
-        // 1. Stock Reconciliation on cancellation
+        let statusAlreadySynced = false;
         if (newStatus === "Cancelled" && oldStatus !== "Cancelled" && oldStatus !== "Returned") {
-            const refundAmount = order.pricing?.totalAmount || 0;
-            const targetUserId = order.user?._id || order.user;
-            if (order.paymentStatus === "Completed" && refundAmount > 0 && targetUserId) {
-                await walletService.creditWallet(targetUserId, {
-                    amount: refundAmount,
-                    description: `Direct refund for cancellation of order #${order.orderId}`,
-                    source: "order_cancellation",
-                    orderId: order.orderId
-                });
-                order.paymentStatus = "Refunded";
-            }
-
-            for (const item of order.items) {
-                if (item.status !== "Cancelled") {
-                    await Product.updateOne(
-                        { _id: item.product },
-                        { $inc: { stock: item.quantity } }
-                    );
-                    item.status = "Cancelled";
-                    item.cancelReason = adminNotes || "Cancelled by atelier administrator";
-                    item.cancelledAt = new Date();
-                }
-            }
-            order.cancellationReason = adminNotes || "Cancelled by atelier administrator";
-            order.cancelledAt = new Date();
-            order.pricing.totalAmount = 0;
-            if (order.coupon && order.coupon.code) {
-                await couponService.revertCouponUsage(order.coupon.code, order.user);
-            }
-        }
-
-        // 2. Sync active item statuses across fulfillment stages & handle delivery completion
-        if (["Processing", "Shipped", "Out for Delivery", "Delivered"].includes(newStatus)) {
+            await processAdminOrderCancellation(order, adminNotes);
+        } else if (["Processing", "Shipped", "Out for Delivery", "Delivered"].includes(newStatus)) {
             for (const item of order.items) {
                 if (item.status !== "Cancelled") {
                     item.status = newStatus;
                 }
             }
-        }
-        if (newStatus === "Delivered") {
-            order.deliveredAt = new Date();
-            order.paymentStatus = "Completed";
-        }
-
-        // 4. Return Approved ("Returned") - Stock reconciliation & refund handling
-        let statusAlreadySynced = false;
-        if (newStatus === "Returned" && oldStatus !== "Returned") {
-            const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
-            let totalRefund = 0;
-            for (const item of order.items) {
-                const shouldReturnItem = hasExplicitItemRequests
-                    ? item.status === "Return Requested"
-                    : (item.status !== "Cancelled" && item.status !== "Returned");
-                if (shouldReturnItem) {
-                    await Product.updateOne(
-                        { _id: item.product },
-                        { $inc: { stock: item.quantity } }
-                    );
-                    item.status = "Returned";
-                    item.returnedAt = new Date();
-                    totalRefund += item.lineTotal;
-                    order.pricing.totalAmount = Math.max(0, (order.pricing.totalAmount || 0) - item.lineTotal);
-                }
+            if (newStatus === "Delivered") {
+                order.deliveredAt = new Date();
+                order.paymentStatus = "Completed";
+                await userService.processReferralRewardOnDelivery(order);
             }
-            if (totalRefund > 0 && order.user) {
-                const targetUserId = order.user._id || order.user;
-                await walletService.creditWallet(targetUserId, {
-                    amount: totalRefund,
-                    description: `Refund for approved return of order #${order.orderId}`,
-                    source: "order_return",
-                    orderId: order.orderId
-                });
-                order.paymentStatus = "Refunded";
-            }
-            syncOrderReturnSummary(order);
+        } else if (newStatus === "Returned" && oldStatus !== "Returned") {
+            await processAdminOrderReturn(order);
+            statusAlreadySynced = true;
+        } else if (newStatus === "Return Rejected") {
+            processAdminOrderReturnRejection(order, adminNotes);
             statusAlreadySynced = true;
         }
 
-        // 5. Return Rejected - Record admin rejection reason
-        if (newStatus === "Return Rejected") {
-            if (!adminNotes || !adminNotes.trim()) {
-                const err = new Error("Please provide a reason for rejecting the return request.");
-                err.code = "REJECTION_REASON_REQUIRED";
-                throw err;
-            }
-            const cleanReason = adminNotes.trim();
-            order.returnRejectReason = cleanReason;
-            order.returnRejectedAt = new Date();
-            const hasExplicitItemRequests = order.items.some((i) => i.status === "Return Requested");
-            for (const item of order.items) {
-                const shouldRejectItem = hasExplicitItemRequests
-                    ? item.status === "Return Requested"
-                    : (item.status === "Return Requested" || item.status === "Delivered");
-                if (shouldRejectItem) {
-                    item.status = "Return Rejected";
-                    item.returnRejectReason = cleanReason;
-                    item.returnRejectedAt = new Date();
-                }
-            }
-            syncOrderReturnSummary(order);
-            statusAlreadySynced = true;
-        }
-
-        // 6. Update overall status
         if (!statusAlreadySynced) {
             order.orderStatus = newStatus;
         }
@@ -527,8 +556,10 @@ export const rejectReturnItem = async (orderIdentifier, itemId, rejectionReason)
     item.status = "Return Rejected";
     item.returnRejectReason = cleanReason;
     item.returnRejectedAt = new Date();
+    item.returnRequestCount = Math.max(1, item.returnRequestCount || 0);
     order.returnRejectReason = cleanReason;
     order.returnRejectedAt = new Date();
+    order.returnRequestCount = Math.max(1, order.returnRequestCount || 0, item.returnRequestCount);
     syncOrderReturnSummary(order);
     await order.save();
 

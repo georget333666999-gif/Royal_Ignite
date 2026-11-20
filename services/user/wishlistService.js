@@ -1,8 +1,9 @@
 import Wishlist from "../../models/wishlistModel.js";
 import Product from "../../models/productModel.js";
-import Offer from "../../models/offerModel.js";
+import { computeEffectivePricing, createOfferResolver } from "../../utils/pricingHelper.js";
 import cartService from "./cartService.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+import { invalidateUserBadgeCache } from "../../utils/cache.js";
 
 /**
  * Get user's wishlist with populated active products
@@ -19,7 +20,8 @@ export const getWishlist = async (userId) => {
                     { path: "category" },
                     { path: "appliedOffer" }
                 ]
-            });
+            })
+            .lean();
 
         if (!wishlist) {
             wishlist = await Wishlist.create({ user: userId, products: [] });
@@ -30,6 +32,9 @@ export const getWishlist = async (userId) => {
                 count: 0
             };
         }
+
+        // Batch-fetch fallback active offers via shared helper
+        const resolveOffer = await createOfferResolver(wishlist.products);
 
         // Clean up any deleted/unlisted products or products whose categories are unlisted/deleted
         const validProducts = [];
@@ -46,42 +51,8 @@ export const getWishlist = async (userId) => {
                     staleProductIds.push(product._id);
                 }
             } else {
-                const effectivePrice = (product.salePrice && product.salePrice > 0 && product.salePrice < product.regularPrice)
-                    ? product.salePrice
-                    : product.regularPrice;
-                const hasDiscount = Boolean(product.salePrice && product.salePrice > 0 && product.salePrice < product.regularPrice);
-                const discountPercent = hasDiscount
-                    ? Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)
-                    : 0;
-
-                let appliedOffer = product.appliedOffer || null;
-                if (!appliedOffer && (product.category || product._id)) {
-                    const now = new Date();
-                    const directOffer = await Offer.findOne({
-                        isActive: true,
-                        isDeleted: false,
-                        offerType: "product",
-                        product: product._id,
-                        startDate: { $lte: now },
-                        endDate: { $gte: now }
-                    }).lean();
-                    if (directOffer) {
-                        appliedOffer = directOffer;
-                    } else if (product.category) {
-                        const catId = product.category._id || product.category;
-                        const catOffer = await Offer.findOne({
-                            isActive: true,
-                            isDeleted: false,
-                            offerType: "category",
-                            category: catId,
-                            startDate: { $lte: now },
-                            endDate: { $gte: now }
-                        }).lean();
-                        if (catOffer) {
-                            appliedOffer = catOffer;
-                        }
-                    }
-                }
+                const { hasDiscount, effectivePrice, discountPercent } = computeEffectivePricing(product);
+                const appliedOffer = resolveOffer(product);
 
                 validProducts.push({
                     _id: product._id,
@@ -142,6 +113,7 @@ export const addToWishlist = async (userId, productId) => {
             { $addToSet: { products: productId } },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
+        invalidateUserBadgeCache(userId);
 
         return {
             success: true,
@@ -168,6 +140,7 @@ export const removeFromWishlist = async (userId, productId) => {
             { $pull: { products: productId } },
             { new: true }
         );
+        invalidateUserBadgeCache(userId);
 
         const count = wishlist ? wishlist.products.length : 0;
         return {
@@ -206,6 +179,7 @@ export const toggleWishlist = async (userId, productId) => {
                 { $pull: { products: productId } },
                 { new: true }
             );
+            invalidateUserBadgeCache(userId);
             return {
                 success: true,
                 inWishlist: false,
@@ -213,7 +187,7 @@ export const toggleWishlist = async (userId, productId) => {
                 message: RESPONSE_MESSAGES.WISHLIST.REMOVED_SUCCESS
             };
         } else {
-            const product = await Product.findOne({ _id: productId, isDeleted: false, isListed: true });
+            const product = await Product.findOne({ _id: productId, isDeleted: false, isListed: true }).select("_id").lean();
             if (!product) {
                 const err = new Error(RESPONSE_MESSAGES.PRODUCT.UNAVAILABLE);
                 err.code = "PRODUCT_NOT_FOUND";
@@ -225,6 +199,7 @@ export const toggleWishlist = async (userId, productId) => {
                 { $addToSet: { products: productId } },
                 { new: true }
             );
+            invalidateUserBadgeCache(userId);
             return {
                 success: true,
                 inWishlist: true,
@@ -276,10 +251,14 @@ export const moveToCart = async (userId, productId) => {
             }
         }
 
-        // Fetch remaining count
-        const updatedWishlist = await Wishlist.findOne({ user: userId });
+        invalidateUserBadgeCache(userId);
+
+        // Fetch remaining counts in parallel
+        const [updatedWishlist, cartCount] = await Promise.all([
+            Wishlist.findOne({ user: userId }).select("products").lean(),
+            cartService.getCartCount(userId)
+        ]);
         const count = updatedWishlist ? updatedWishlist.products.length : 0;
-        const cartCount = await cartService.getCartCount(userId);
 
         return {
             success: true,

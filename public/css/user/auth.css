@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
 /* ========================================
    ROYAL IGNITE - Luxury Dark & Amber Theme
@@ -83,7 +83,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .brand-logo {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 24px;
     letter-spacing: 2px;
     color: #FFFFFF;
@@ -1078,5 +1078,299 @@ input, textarea, [contenteditable="true"] {
 
     .footer-legal a {
         margin: 0 8px;
+    }
+}
+
+/* ==========================================================================
+   ROYAL IGNITE — LUXURY AUTH ANIMATIONS (LOGIN / SIGNUP / RECOVERY)
+   1. Living Flame Emblem & Breathing Halo
+   2. Slow-Drifting Golden Embers Canvas Layer
+   3. Cursor-Tracking Gold Glass Sheen & Staggered Card Reveal
+   4. Tactile Button Shimmer, Loading Spinner & Error Micro-Shake
+   5. Soft Input Focus Glow & Label Brighten
+   ========================================================================== */
+
+@keyframes authCardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(26px) scale(0.975);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes authItemFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes authDividerExpand {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes authFlameFlicker {
+    0%, 100% {
+        transform: scale(1) translateY(0) rotate(0deg);
+        filter: drop-shadow(0 0 6px rgba(251, 194, 117, 0.55));
+    }
+    25% {
+        transform: scale(1.04, 1.07) translateY(-0.6px) rotate(-1.2deg);
+        filter: drop-shadow(0 0 10px rgba(251, 194, 117, 0.78));
+    }
+    55% {
+        transform: scale(0.97, 1.02) translateY(0.3px) rotate(1deg);
+        filter: drop-shadow(0 0 5px rgba(212, 136, 51, 0.45));
+    }
+    80% {
+        transform: scale(1.03, 1.06) translateY(-0.4px) rotate(-0.6deg);
+        filter: drop-shadow(0 0 9px rgba(251, 194, 117, 0.7));
+    }
+}
+
+@keyframes authHaloBreath {
+    0%, 100% {
+        box-shadow: 0 0 18px rgba(212, 136, 51, 0.22), 0 0 0 0 rgba(212, 136, 51, 0.24);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(251, 194, 117, 0.42), 0 0 0 6px rgba(212, 136, 51, 0);
+    }
+}
+
+@keyframes authErrorShake {
+    0%, 100% { transform: translateX(0); }
+    18% { transform: translateX(-7px); }
+    36% { transform: translateX(6px); }
+    54% { transform: translateX(-4px); }
+    72% { transform: translateX(3px); }
+    88% { transform: translateX(-1.5px); }
+}
+
+@keyframes authBtnSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* 2. Background Golden Embers Layer */
+.auth-wrapper {
+    overflow: hidden;
+}
+
+.auth-embers-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 3. Frosted Card Entrance & Cursor-Tracking Gold Glass Sheen */
+.gold-card {
+    --mx: 50%;
+    --my: 18%;
+    overflow: hidden;
+    animation: authCardEnter 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition: border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gold-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        340px circle at var(--mx) var(--my),
+        rgba(251, 194, 117, 0.11) 0%,
+        rgba(212, 136, 51, 0.04) 38%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.gold-card:hover::before {
+    opacity: 1;
+}
+
+.gold-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.gold-card.has-error-shake {
+    animation: authErrorShake 0.48s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Staggered Inner Form Choreography */
+.gold-card .card-brand-header {
+    animation: authItemFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.10s both;
+}
+
+.gold-card .card-brand-divider {
+    transform-origin: center;
+    animation: authDividerExpand 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.20s both;
+}
+
+.gold-card .auth-title {
+    animation: authItemFadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+
+.gold-card .auth-subtitle {
+    animation: authItemFadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+
+.gold-card form {
+    animation: authItemFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both;
+}
+
+.gold-card .auth-switch,
+.gold-card .divider-container,
+.gold-card .google-btn,
+.gold-card .terms-notice {
+    animation: authItemFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both;
+}
+
+/* 1. Living Flame Emblem & Breathing Halo */
+.brand-emblem-badge {
+    animation: authHaloBreath 3.6s ease-in-out infinite;
+}
+
+.emblem-flame-icon {
+    transform-origin: 50% 85%;
+    animation: authFlameFlicker 2.9s ease-in-out infinite;
+}
+
+/* 4. Error Badge Micro-Shake */
+.error-badge {
+    animation: authErrorShake 0.48s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* 5. Soft Input Focus Glow & Label Brighten */
+.form-group label {
+    transition: color 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.form-group:focus-within label {
+    color: #fbc275;
+    transform: translateX(2px);
+}
+
+.form-input {
+    transition:
+        border-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: rgba(251, 194, 117, 0.68);
+    box-shadow:
+        0 0 0 3px rgba(212, 136, 51, 0.14),
+        0 0 18px rgba(212, 136, 51, 0.16);
+}
+
+/* 4. Tactile Button Shimmer & Sign-In Loading State */
+.primary-btn,
+.google-btn {
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        opacity 0.25s ease;
+}
+
+.primary-btn::after,
+.google-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -135%;
+    width: 78%;
+    height: 100%;
+    background: linear-gradient(
+        118deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.18) 44%,
+        rgba(255, 255, 255, 0.42) 50%,
+        rgba(255, 255, 255, 0.18) 56%,
+        transparent 100%
+    );
+    transform: skewX(-22deg);
+    transition: left 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+
+.primary-btn:hover::after,
+.google-btn:hover::after {
+    left: 145%;
+}
+
+.primary-btn:hover,
+.google-btn:hover {
+    transform: translateY(-2px);
+}
+
+.primary-btn:active,
+.google-btn:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.12s;
+}
+
+/* Smooth Loading Spinner Inside Sign-In Button on Valid Submit */
+.primary-btn.is-loading {
+    pointer-events: none;
+    color: transparent !important;
+    opacity: 0.92;
+}
+
+.primary-btn.is-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border-radius: 50%;
+    border: 2px solid rgba(15, 13, 10, 0.28);
+    border-top-color: #0b0a09;
+    animation: authBtnSpin 0.65s linear infinite;
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .auth-embers-canvas {
+        display: none !important;
+    }
+
+    .gold-card,
+    .gold-card > *,
+    .brand-emblem-badge,
+    .emblem-flame-icon,
+    .error-badge {
+        animation: none !important;
+    }
+
+    .primary-btn::after,
+    .google-btn::after {
+        display: none !important;
     }
 }

@@ -10,11 +10,13 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="/css/user/index.css" />
-    <link rel="stylesheet" href="/css/user/orderList.css" />
+    <link rel="stylesheet" href="/css/user/index.css?v=3" />
+    <link rel="stylesheet" href="/css/user/orderList.css?v=3" />
+    <link rel="stylesheet" href="/css/user/animations.css" />
+    <script defer src="/js/luxuryAnimations.js"></script>
 
     <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -30,7 +32,7 @@
             font-family: 'Manrope', sans-serif !important;
         }
         .royal-swal-title {
-            font-family: 'Bodoni Moda', serif !important;
+            font-family: 'Cinzel', Georgia, serif !important;
             color: #ffffff !important;
             font-size: 22px !important;
             letter-spacing: 0.3px !important;
@@ -265,12 +267,23 @@
                                         </button>
                                     <% } %>
 
-                                    <!-- Return Order -->
+                                    <!-- Return / Re-Return Order -->
+                                    <% const returnAttemptCap = typeof maxReturnAttempts !== 'undefined' ? maxReturnAttempts : 3; %>
+                                    <% const hasReReturnable = Array.isArray(order.items) && order.items.some(i => i.status === 'Return Rejected' && Math.max(1, i.returnRequestCount || 0) < returnAttemptCap); %>
                                     <% if (order.orderStatus === 'Delivered') { %>
                                         <button type="button" 
                                                 class="btn-order-return" 
-                                                onclick="promptReturnOrder('<%= order.orderId %>')">
+                                                data-order-id="<%= order.orderId %>"
+                                                onclick="promptReturnOrder(this.dataset.orderId, false)">
                                             Return Order
+                                        </button>
+                                    <% } else if (order.orderStatus === 'Return Rejected' && hasReReturnable) { %>
+                                        <button type="button" 
+                                                class="btn-order-return" 
+                                                data-order-id="<%= order.orderId %>"
+                                                data-prev-reason="<%= order.returnRejectReason || '' %>"
+                                                onclick="promptReturnOrder(this.dataset.orderId, true, this.dataset.prevReason)">
+                                            Re-Request Return
                                         </button>
                                     <% } %>
 
@@ -398,13 +411,31 @@
             });
         }
 
-        // Prompt Return Order with Mandatory Reason
-        function promptReturnOrder(orderId) {
+        function escapeSwalHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Prompt Return / Re-Return Order with Mandatory Reason
+        function promptReturnOrder(orderId, isReReturn = false, prevReason = '') {
+            const safeOrderId = escapeSwalHtml(orderId);
+            const prevBlock = isReReturn && prevReason
+                ? `<div style="margin: 10px 0 6px; padding: 10px 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); font-size: 12.5px; color: #fca5a5; text-align: left;"><strong>Previous Decline Note:</strong> ${escapeSwalHtml(prevReason)}</div>`
+                : '';
+
             Swal.fire({
-                title: 'Initiate the Order Return',
-                html: `Please provide a mandatory reason to initiate an atelier return for order <strong>#${orderId}</strong>:`,
+                title: isReReturn ? 'Re-Submit Return Request' : 'Initiate the Order Return',
+                html: isReReturn
+                    ? `Provide an updated reason or clarification to re-submit your return request for order <strong>#${safeOrderId}</strong>:${prevBlock}`
+                    : `Please provide a mandatory reason to initiate an atelier return for order <strong>#${safeOrderId}</strong>:`,
                 input: 'textarea',
-                inputPlaceholder: 'State reason for return (mandatory)...',
+                inputPlaceholder: isReReturn
+                    ? 'Provide updated details or clarification (mandatory)...'
+                    : 'State reason for return (mandatory)...',
                 inputValidator: (value) => {
                     if (!value || !value.trim()) {
                         return 'A return reason is mandatory to proceed.';
@@ -413,7 +444,7 @@
                 icon: 'question',
                 iconColor: '#F6BD64',
                 showCancelButton: true,
-                confirmButtonText: 'Submit Return Request',
+                confirmButtonText: isReReturn ? 'Re-Submit Return Request' : 'Submit Return Request',
                 cancelButtonText: 'Cancel',
                 customClass: {
                     popup: 'royal-luxury-swal',
@@ -431,7 +462,7 @@
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ reason })
+                            body: JSON.stringify({ reason, isReReturn: Boolean(isReReturn) })
                         });
 
                         const data = await response.json();
@@ -439,7 +470,7 @@
                         if (data.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Return Initiated',
+                                title: isReReturn ? 'Return Re-Submitted' : 'Return Initiated',
                                 text: data.message || 'Return request registered successfully.',
                                 background: '#141312',
                                 color: '#eae6df',
@@ -574,5 +605,6 @@
         }
     </script>
 
+    <script src="/js/searchValidation.js"></script>
 </body>
 </html>

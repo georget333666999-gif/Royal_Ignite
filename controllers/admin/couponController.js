@@ -28,12 +28,33 @@ export const getCouponsPage = async (req, res, next) => {
             status: data.status,
             stats: data.stats,
             success: req.query.success || null,
-            error: req.query.error || null,
+            error: req.query.error || data.searchError || null,
             activeNav: "coupons"
         });
     } catch (err) {
         console.error("couponController getCouponsPage error:", err);
         return next(err);
+    }
+};
+
+/**
+ * Fetch a single coupon by ID for editing
+ */
+export const getCouponById = async (req, res) => {
+    try {
+        const { couponId } = req.params;
+        const coupon = await couponService.getCouponById(couponId);
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            coupon
+        });
+    } catch (err) {
+        console.error("couponController getCouponById error:", err);
+        return res.status(err.statusCode || HTTP_STATUS.NOT_FOUND).json({
+            success: false,
+            message: err.message || "Coupon not found."
+        });
     }
 };
 
@@ -54,6 +75,28 @@ export const postCreateCoupon = async (req, res) => {
         return res.status(err.statusCode || HTTP_STATUS.BAD_REQUEST).json({
             success: false,
             message: err.message || "Failed to create coupon."
+        });
+    }
+};
+
+/**
+ * Update an existing coupon
+ */
+export const putUpdateCoupon = async (req, res) => {
+    try {
+        const { couponId } = req.params;
+        const updatedCoupon = await couponService.updateCoupon(couponId, req.body);
+
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: `Privilege coupon "${updatedCoupon.code}" updated successfully.`,
+            coupon: updatedCoupon
+        });
+    } catch (err) {
+        console.error("couponController putUpdateCoupon error:", err);
+        return res.status(err.statusCode || HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            message: err.message || "Failed to update coupon."
         });
     }
 };
@@ -103,7 +146,9 @@ export const postDeleteCoupon = async (req, res) => {
 
 export default {
     getCouponsPage,
+    getCouponById,
     postCreateCoupon,
+    putUpdateCoupon,
     postToggleCoupon,
     postDeleteCoupon
 };

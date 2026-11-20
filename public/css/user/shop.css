@@ -83,9 +83,11 @@ a:visited {
 }
 
 .shop-hero-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 2.8rem;
-    font-weight: 500;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 3.6rem;
+    font-weight: 300;
+    letter-spacing: -0.015em;
+    text-transform: none;
     color: var(--text-headline);
     letter-spacing: -0.5px;
     margin-bottom: 8px;
@@ -167,7 +169,7 @@ a:visited {
 }
 
 .filter-sidebar-title {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.25rem;
     color: var(--text-headline);
     letter-spacing: 0.5px;
@@ -680,13 +682,13 @@ a:visited {
 }
 
 .product-card-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.22rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
     color: #FFFFFF;
     margin-bottom: 10px;
-    font-weight: 600;
-    line-height: 1.35;
-    letter-spacing: 0.035em;
+    font-weight: 500;
+    line-height: 1.24;
+    letter-spacing: 0.015em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -737,7 +739,7 @@ a:visited {
 }
 
 .sale-price-tag {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.35rem;
     font-weight: 600;
     color: var(--gold-primary);
@@ -830,7 +832,7 @@ a:visited {
 }
 
 .empty-title {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.6rem;
     color: var(--text-headline);
     margin-bottom: 10px;

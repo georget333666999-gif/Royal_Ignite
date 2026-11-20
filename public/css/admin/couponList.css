@@ -691,6 +691,16 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-action-icon.edit-btn {
+    color: var(--gold-dark);
+}
+
+.btn-action-icon.edit-btn:hover {
+    background: #FAF7F2;
+    border-color: var(--gold-border);
+    color: var(--gold-primary);
+}
+
 .btn-action-icon.toggle-active {
     color: #D97706;
 }

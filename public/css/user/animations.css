@@ -1,0 +1,520 @@
+/* ==========================================================================
+   ROYAL IGNITE — HAUTE-MAISON MOTION & MICRO-INTERACTION SYSTEM
+   Pure GPU-Accelerated Luxury Animations (Zero Color Overrides)
+   ========================================================================== */
+
+:root {
+    --ri-ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+    --ri-ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ==========================================================================
+   1. SEAMLESS PAGE ENTRANCE & HERO CHOREOGRAPHY
+   ========================================================================== */
+@keyframes riPageFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes riGlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes riHairlineGrow {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes riImageReveal {
+    from {
+        opacity: 0;
+        transform: scale(1.035);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+main {
+    animation: riPageFade 0.42s ease-out both;
+}
+
+/* Staggered Editorial Hero Entrance */
+.fuel-breadcrumb,
+.gas-breadcrumb,
+.elec-breadcrumb,
+.care-breadcrumb,
+.shop-breadcrumb,
+.cart-breadcrumb,
+.wishlist-breadcrumbs,
+.checkout-breadcrumbs,
+.orders-breadcrumbs,
+.order-details-breadcrumbs,
+.hero-badge-wrap {
+    animation: riGlideUp 0.6s var(--ri-ease-luxury) 0.04s both;
+}
+
+.fuel-kicker,
+.gas-kicker,
+.elec-kicker,
+.care-kicker,
+.dt-category-kicker,
+.order-kicker {
+    animation: riGlideUp 0.65s var(--ri-ease-luxury) 0.10s both;
+}
+
+.hero-line,
+.fuel-kicker::before,
+.gas-kicker::before,
+.elec-kicker::before,
+.care-kicker::before,
+.dt-category-kicker::before {
+    transform-origin: left center;
+    animation: riHairlineGrow 0.75s var(--ri-ease-luxury) 0.14s both;
+}
+
+.hero-title,
+.shop-hero-title,
+.fuel-hero-title,
+.gas-hero-title,
+.elec-hero-title,
+.care-hero-title,
+.dt-product-title,
+.cart-title,
+.wishlist-header-title,
+.checkout-title,
+.orders-title,
+.order-details-title,
+.order-success-title {
+    animation: riGlideUp 0.78s var(--ri-ease-luxury) 0.16s both;
+}
+
+.hero-subtitle-italic,
+.fuel-hero-subheadline,
+.gas-hero-subheadline,
+.elec-hero-subheadline,
+.care-hero-subheadline {
+    animation: riGlideUp 0.75s var(--ri-ease-luxury) 0.24s both;
+}
+
+.hero-description,
+.shop-hero-desc,
+.fuel-hero-desc,
+.gas-hero-desc,
+.elec-hero-desc,
+.care-hero-desc {
+    animation: riGlideUp 0.75s var(--ri-ease-luxury) 0.30s both;
+}
+
+.hero-buttons,
+.fuel-hero-actions,
+.gas-hero-actions,
+.elec-hero-actions,
+.care-hero-actions {
+    animation: riGlideUp 0.75s var(--ri-ease-luxury) 0.34s both;
+}
+
+.fuel-metrics-strip,
+.gas-metrics-strip,
+.elec-metrics-strip,
+.care-metrics-strip,
+.stats-grid {
+    animation: riGlideUp 0.8s var(--ri-ease-luxury) 0.40s both;
+}
+
+.collection-offer-strip {
+    animation: riGlideUp 0.8s var(--ri-ease-luxury) 0.46s both;
+}
+
+.hero-image-wrap {
+    animation: riImageReveal 0.95s var(--ri-ease-luxury) 0.14s both;
+}
+
+.floating-product-card {
+    animation: riGlideUp 0.85s var(--ri-ease-luxury) 0.42s both;
+    transition: transform 0.45s var(--ri-ease-luxury), box-shadow 0.45s var(--ri-ease-luxury);
+}
+
+.floating-product-card:hover {
+    transform: translateY(-5px);
+}
+
+/* ==========================================================================
+   2. SCROLL-TRIGGERED SECTION & CARD REVEALS (IntersectionObserver)
+   ========================================================================== */
+.ri-reveal {
+    opacity: 0;
+    transform: translateY(28px) scale(0.988);
+    transition:
+        opacity 0.72s var(--ri-ease-luxury),
+        transform 0.72s var(--ri-ease-luxury);
+    will-change: opacity, transform;
+}
+
+.ri-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    will-change: auto;
+}
+
+/* ==========================================================================
+   3. SILKY NAVBAR ELEVATION, ANIMATED UNDERLINES & FLOATING ICONS
+   ========================================================================== */
+.royal-header,
+.fuel-header,
+.gas-header,
+.elec-header,
+.care-header {
+    transition:
+        background-color 0.38s var(--ri-ease-luxury),
+        box-shadow 0.38s var(--ri-ease-luxury),
+        border-color 0.38s var(--ri-ease-luxury);
+}
+
+.royal-header.is-scrolled,
+.fuel-header.is-scrolled,
+.gas-header.is-scrolled,
+.elec-header.is-scrolled,
+.care-header.is-scrolled {
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+}
+
+/* Center-Out Hairline Glide on All Nav Links */
+.header-nav a,
+.fuel-nav-link,
+.gas-nav-link,
+.elec-nav-link,
+.care-nav-link {
+    position: relative;
+    transition: color 0.3s var(--ri-ease-luxury);
+}
+
+.header-nav a::after,
+.fuel-nav-link:not(.active)::after,
+.gas-nav-link:not(.active)::after,
+.elec-nav-link:not(.active)::after,
+.care-nav-link:not(.active)::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: currentColor;
+    opacity: 0.75;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.36s var(--ri-ease-luxury), opacity 0.3s ease;
+}
+
+.header-nav a:hover::after,
+.fuel-nav-link:not(.active):hover::after,
+.gas-nav-link:not(.active):hover::after,
+.elec-nav-link:not(.active):hover::after,
+.care-nav-link:not(.active):hover::after {
+    transform: scaleX(1);
+}
+
+.header-icon,
+.fuel-icon-btn,
+.gas-icon-btn,
+.elec-icon-btn,
+.care-icon-btn {
+    transition:
+        transform 0.32s var(--ri-ease-luxury),
+        color 0.28s var(--ri-ease-luxury),
+        background-color 0.28s var(--ri-ease-luxury);
+}
+
+.header-icon:hover,
+.fuel-icon-btn:hover,
+.gas-icon-btn:hover,
+.elec-icon-btn:hover,
+.care-icon-btn:hover {
+    transform: translateY(-2px) scale(1.06);
+}
+
+.header-icon:active,
+.fuel-icon-btn:active,
+.gas-icon-btn:active,
+.elec-icon-btn:active,
+.care-icon-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+/* ==========================================================================
+   4. PREMIUM LUXURY BUTTON MICRO-INTERACTIONS (METALLIC SHEEN + WEIGHTED PRESS)
+   ========================================================================== */
+.fuel-acquire-btn,
+.gas-acquire-btn,
+.elec-acquire-btn,
+.care-acquire-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fuel-acquire-btn,
+.gas-acquire-btn,
+.elec-acquire-btn,
+.care-acquire-btn,
+.btn-gold,
+.btn-ghost,
+.btn-subscribe,
+.newsletter-btn,
+.btn-header-login,
+.btn-header-signup,
+.btn-checkout,
+.btn-place-order,
+.btn-apply-filter,
+.dt-btn-add-cart,
+.dt-btn-buy-now,
+.dt-btn-wishlist,
+.btn-move-to-cart,
+.btn-view-order,
+.btn-download-invoice,
+.btn-order-primary,
+.btn-order-secondary {
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 0.36s var(--ri-ease-luxury),
+        box-shadow 0.36s var(--ri-ease-luxury),
+        background-color 0.32s var(--ri-ease-luxury),
+        border-color 0.32s var(--ri-ease-luxury),
+        color 0.28s var(--ri-ease-luxury);
+}
+
+/* Diagonal Light-Beam Metallic Shimmer Sweep on Hover */
+.fuel-acquire-btn::before,
+.gas-acquire-btn::before,
+.elec-acquire-btn::before,
+.care-acquire-btn::before,
+.btn-ghost::before,
+.btn-subscribe::before,
+.newsletter-btn::before,
+.btn-checkout::before,
+.btn-place-order::before,
+.dt-btn-add-cart::before,
+.dt-btn-buy-now::before,
+.btn-header-signup::before,
+.btn-apply-filter::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -135%;
+    width: 80%;
+    height: 100%;
+    opacity: 0;
+    background: linear-gradient(
+        118deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.16) 44%,
+        rgba(255, 255, 255, 0.34) 50%,
+        rgba(255, 255, 255, 0.16) 56%,
+        transparent 100%
+    );
+    transform: skewX(-22deg);
+    transition: left 0.72s var(--ri-ease-luxury), opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.fuel-acquire-btn:hover::before,
+.gas-acquire-btn:hover::before,
+.elec-acquire-btn:hover::before,
+.care-acquire-btn:hover::before,
+.btn-ghost:hover::before,
+.btn-subscribe:hover::before,
+.newsletter-btn:hover::before,
+.btn-checkout:hover::before,
+.btn-place-order:hover::before,
+.dt-btn-add-cart:hover::before,
+.dt-btn-buy-now:hover::before,
+.btn-header-signup:hover::before,
+.btn-apply-filter:hover::before {
+    left: 145%;
+    opacity: 1;
+}
+
+/* Weighted Hover Lift & Tactile Click Press */
+.fuel-acquire-btn:hover,
+.gas-acquire-btn:hover,
+.elec-acquire-btn:hover,
+.care-acquire-btn:hover,
+.btn-subscribe:hover,
+.newsletter-btn:hover,
+.btn-checkout:hover,
+.btn-place-order:hover,
+.dt-btn-add-cart:hover,
+.dt-btn-buy-now:hover,
+.btn-apply-filter:hover,
+.btn-move-to-cart:hover,
+.btn-view-order:hover,
+.btn-download-invoice:hover,
+.btn-order-primary:hover,
+.btn-order-secondary:hover {
+    transform: translateY(-2.5px);
+}
+
+.fuel-acquire-btn:active,
+.gas-acquire-btn:active,
+.elec-acquire-btn:active,
+.care-acquire-btn:active,
+.btn-gold:active,
+.btn-ghost:active,
+.btn-subscribe:active,
+.newsletter-btn:active,
+.btn-checkout:active,
+.btn-place-order:active,
+.dt-btn-add-cart:active,
+.dt-btn-buy-now:active,
+.btn-apply-filter:active,
+.btn-header-login:active,
+.btn-header-signup:active,
+.btn-move-to-cart:active,
+.btn-view-order:active,
+.btn-download-invoice:active {
+    transform: translateY(0) scale(0.975);
+    transition-duration: 0.12s;
+}
+
+/* Smooth Icon & Arrow Glide Inside Links/Buttons */
+.btn-underline-gold svg,
+.collections-link svg,
+.fuel-ritual-link svg,
+.gas-ritual-link svg,
+.elec-ritual-link svg,
+.care-ritual-link svg {
+    transition: transform 0.34s var(--ri-ease-luxury);
+}
+
+.btn-underline-gold:hover svg,
+.collections-link:hover svg,
+.fuel-ritual-link:hover svg,
+.gas-ritual-link:hover svg,
+.elec-ritual-link:hover svg,
+.care-ritual-link:hover svg {
+    transform: translateX(5px);
+}
+
+/* ==========================================================================
+   5. FLUID CARD HOVER & SLOW-CINEMA PRODUCT PHOTO ZOOM
+   ========================================================================== */
+.fuel-card,
+.gas-card,
+.elec-card,
+.care-card,
+.product-card,
+.feature-card,
+.wishlist-card,
+.fuel-ritual-card,
+.gas-ritual-card,
+.elec-ritual-card,
+.care-ritual-card,
+.fuel-spec-card,
+.gas-spec-card,
+.elec-spec-card,
+.care-spec-card,
+.order-card {
+    transition:
+        transform 0.52s var(--ri-ease-luxury),
+        border-color 0.4s var(--ri-ease-luxury),
+        box-shadow 0.52s var(--ri-ease-luxury);
+}
+
+.fuel-card:hover,
+.gas-card:hover,
+.elec-card:hover,
+.care-card:hover,
+.product-card:hover,
+.feature-card:hover,
+.wishlist-card:hover {
+    transform: translateY(-7px);
+}
+
+.fuel-card-img,
+.gas-card-img,
+.elec-card-img,
+.care-card-img,
+.product-card-img,
+.wishlist-card-img,
+.collection-img-box img {
+    transition:
+        transform 0.72s var(--ri-ease-luxury),
+        filter 0.55s var(--ri-ease-luxury);
+}
+
+.fuel-card:hover .fuel-card-img,
+.gas-card:hover .gas-card-img,
+.elec-card:hover .elec-card-img,
+.care-card:hover .care-card-img,
+.product-card:hover .product-card-img,
+.wishlist-card:hover .wishlist-card-img {
+    transform: scale(1.065) translateY(-3px);
+}
+
+.collection-img-box:hover img {
+    transform: scale(1.045);
+}
+
+.fuel-sort-bar,
+.gas-sort-bar,
+.elec-sort-bar,
+.care-sort-bar {
+    transition:
+        transform 0.35s var(--ri-ease-luxury),
+        border-color 0.35s var(--ri-ease-luxury),
+        box-shadow 0.35s var(--ri-ease-luxury);
+}
+
+.fuel-sort-bar:hover,
+.gas-sort-bar:hover,
+.elec-sort-bar:hover,
+.care-sort-bar:hover {
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   6. ACCESSIBILITY: REDUCED MOTION SUPPORT
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .ri-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}

@@ -84,10 +84,12 @@ passport.serializeUser((user, done) => {
     }
 });
 
-// Retrieve user from session
+// Retrieve user from session (lightweight lean projection to avoid heavy hydration on every request)
 passport.deserializeUser(async (id, done) => {
     try {
-        const user = await User.findById(id);
+        const user = await User.findById(id)
+            .select("_id name email phone isBlocked isAdmin isVerified imgUrl googleId")
+            .lean();
         done(null, user);
     } catch (error) {
         done(error);

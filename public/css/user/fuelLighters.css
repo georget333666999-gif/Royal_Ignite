@@ -3,7 +3,7 @@
    Haute Horology & Mechanical Atelier Editorial Aesthetic
    ======================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
     --fuel-bg: #000000;
@@ -16,12 +16,13 @@
     --fuel-gold-light: #F7D08A;
     --fuel-gold-dark: #A57224;
     --fuel-amber-glow: rgba(245, 158, 11, 0.22);
-    --fuel-text: #F5F2EB;
-    --fuel-text-muted: #A39D94;
-    --fuel-text-subtle: #6B655D;
+    --fuel-text: #FAF8F4;
+    --fuel-text-muted: #B4AEA4;
+    --fuel-text-subtle: #78726A;
     --fuel-border-subtle: rgba(255, 255, 255, 0.08);
-    --fuel-font-serif: 'Bodoni Moda', Georgia, serif;
-    --fuel-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --fuel-font-serif: 'Cormorant Garamond', Georgia, serif;
+    --fuel-font-editorial: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --fuel-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --fuel-font-mono: 'JetBrains Mono', monospace;
     --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -63,17 +64,34 @@ input, textarea, [contenteditable="true"] {
 .italic-gold {
     font-family: var(--fuel-font-serif);
     font-style: italic;
+    font-weight: 400;
     color: var(--fuel-gold);
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 44%, #C8892D 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-right: 0.06em;
 }
 
 .kicker {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 3px;
+    font-family: var(--fuel-font-editorial);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--fuel-gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.kicker::before {
+    content: "";
     display: inline-block;
-    margin-bottom: 12px;
+    width: 28px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--fuel-gold));
 }
 
 /* ========================================================
@@ -183,10 +201,17 @@ input, textarea, [contenteditable="true"] {
    2. HERO & BENCHMARKS
    ======================================================== */
 .fuel-hero-section {
-    padding-top: 130px;
-    padding-bottom: 50px;
+    padding-top: 148px;
+    padding-bottom: 56px;
+    min-height: 560px;
     position: relative;
-    background: radial-gradient(circle at 75% 20%, rgba(229, 169, 60, 0.06) 0%, transparent 60%);
+    background-image:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.90) 0%, rgba(0, 0, 0, 0.70) 44%, rgba(0, 0, 0, 0.18) 74%, rgba(0, 0, 0, 0.28) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.05) 26%, rgba(0, 0, 0, 0.18) 72%, #000000 100%),
+        url('/images/hero-fuel.jpg');
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
 }
 
 .fuel-breadcrumb {
@@ -229,26 +254,33 @@ input, textarea, [contenteditable="true"] {
 
 .fuel-hero-title {
     font-family: var(--fuel-font-serif);
-    font-size: 3.8rem;
-    font-weight: 400;
-    line-height: 1.08;
-    margin-bottom: 12px;
+    font-size: 4.55rem;
+    font-weight: 300;
+    line-height: 1.03;
+    letter-spacing: -0.015em;
+    text-transform: none;
+    margin-bottom: 16px;
     color: var(--fuel-text);
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
 }
 
 .fuel-hero-subheadline {
-    font-family: var(--fuel-font-serif);
-    font-size: 1.35rem;
+    font-family: var(--fuel-font-editorial);
+    font-style: normal;
+    font-size: 0.8rem;
     color: var(--fuel-gold-light);
-    margin-bottom: 16px;
-    font-weight: 400;
+    margin-bottom: 18px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
 }
 
 .fuel-hero-desc {
     color: var(--fuel-text-muted);
-    font-size: 1rem;
-    max-width: 620px;
-    line-height: 1.7;
+    font-size: 0.96rem;
+    font-weight: 400;
+    max-width: 600px;
+    line-height: 1.82;
 }
 
 .fuel-hero-actions {
@@ -262,8 +294,10 @@ input, textarea, [contenteditable="true"] {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: var(--fuel-card);
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(12, 11, 10, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.75);
     padding: 10px 20px;
     border-radius: 30px;
@@ -333,10 +367,15 @@ input, textarea, [contenteditable="true"] {
 
 .fuel-metric-num {
     font-family: var(--fuel-font-serif);
-    font-size: 2rem;
-    color: var(--fuel-gold);
-    line-height: 1.1;
-    margin-bottom: 2px;
+    font-size: 2.5rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 50%, #C8892D 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.05;
+    margin-bottom: 4px;
 }
 
 .fuel-metric-label {
@@ -499,11 +538,11 @@ input, textarea, [contenteditable="true"] {
 }
 
 .fuel-card-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: 0.03em;
+    font-family: var(--fuel-font-serif);
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1.18;
+    letter-spacing: 0.015em;
     margin-bottom: 10px;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -917,7 +956,7 @@ input, textarea, [contenteditable="true"] {
     gap: 10px;
     text-decoration: none;
     color: #F0ECE1;
-    font-family: 'Bodoni Moda', Georgia, serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: 3.5px;

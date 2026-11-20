@@ -57,8 +57,8 @@ const postSignup = async (req, res) => {
             });
         }
 
-        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("signup", {
-            error: RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG,
+        res.status(error.statusCode || HTTP_STATUS.BAD_REQUEST).render("signup", {
+            error: error.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG,
             formData: req.body
         });
     }

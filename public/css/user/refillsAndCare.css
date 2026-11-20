@@ -3,7 +3,7 @@
    Luxury Consumables, Archival Flints & Precision Restoration
    ======================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
     --care-bg: #070605;
@@ -17,11 +17,12 @@
     --care-amber: #D48B28;
     --care-amber-glow: rgba(229, 169, 60, 0.18);
     --care-border-subtle: rgba(255, 255, 255, 0.08);
-    --care-text: #EAE6DF;
-    --care-text-muted: #9A9388;
-    --care-text-subtle: #665F55;
-    --care-font-serif: 'Bodoni Moda', Georgia, serif;
-    --care-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --care-text: #FAF8F4;
+    --care-text-muted: #B4AEA4;
+    --care-text-subtle: #78726A;
+    --care-font-serif: 'Cormorant Garamond', Georgia, serif;
+    --care-font-editorial: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --care-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --care-font-mono: 'JetBrains Mono', monospace;
     --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -75,16 +76,32 @@ a:visited {
     color: var(--care-gold);
     font-family: var(--care-font-serif);
     font-weight: 400;
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 44%, #C8892D 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-right: 0.06em;
 }
 
 .kicker {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 3px;
+    font-family: var(--care-font-editorial);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--care-gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.kicker::before {
+    content: "";
     display: inline-block;
-    margin-bottom: 12px;
+    width: 28px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--care-gold));
 }
 
 /* ========================================================
@@ -200,10 +217,17 @@ a:visited {
    2. BREADCRUMB & HERO SECTION
    ======================================================== */
 .care-hero-section {
-    padding-top: 130px;
-    padding-bottom: 50px;
+    padding-top: 148px;
+    padding-bottom: 56px;
+    min-height: 560px;
     position: relative;
-    background: radial-gradient(circle at 80% 20%, rgba(229, 169, 60, 0.07) 0%, transparent 60%);
+    background-image:
+        linear-gradient(90deg, rgba(7, 6, 5, 0.92) 0%, rgba(7, 6, 5, 0.72) 44%, rgba(7, 6, 5, 0.20) 74%, rgba(7, 6, 5, 0.30) 100%),
+        linear-gradient(180deg, rgba(7, 6, 5, 0.56) 0%, rgba(7, 6, 5, 0.06) 26%, rgba(7, 6, 5, 0.20) 72%, #070605 100%),
+        url('/images/hero-care.jpg');
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
 }
 
 .care-breadcrumb {
@@ -244,27 +268,33 @@ a:visited {
 
 .care-hero-title {
     font-family: var(--care-font-serif);
-    font-size: 3.8rem;
-    font-weight: 400;
-    line-height: 1.08;
-    letter-spacing: -0.5px;
-    margin-bottom: 12px;
-    color: #fff;
+    font-size: 4.55rem;
+    font-weight: 300;
+    line-height: 1.03;
+    letter-spacing: -0.015em;
+    text-transform: none;
+    margin-bottom: 16px;
+    color: #FAF8F4;
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
 }
 
 .care-hero-subheadline {
-    font-size: 1.15rem;
-    font-weight: 400;
+    font-family: var(--care-font-editorial);
+    font-style: normal;
+    font-size: 0.8rem;
+    font-weight: 500;
     color: var(--care-gold-light);
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
 }
 
 .care-hero-desc {
     color: var(--care-text-muted);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    max-width: 640px;
+    font-size: 0.96rem;
+    font-weight: 400;
+    line-height: 1.82;
+    max-width: 600px;
 }
 
 .care-hero-actions {
@@ -358,10 +388,15 @@ a:visited {
 
 .care-metric-num {
     font-family: var(--care-font-serif);
-    font-size: 2rem;
-    color: var(--care-gold);
-    line-height: 1.1;
-    margin-bottom: 2px;
+    font-size: 2.5rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 50%, #C8892D 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.05;
+    margin-bottom: 4px;
 }
 
 .care-metric-label {
@@ -533,11 +568,11 @@ a:visited {
 }
 
 .care-card-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: 0.03em;
+    font-family: var(--care-font-serif);
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1.18;
+    letter-spacing: 0.015em;
     margin-bottom: 10px;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -1066,7 +1101,7 @@ a:visited {
     gap: 10px;
     text-decoration: none;
     color: #F0ECE1;
-    font-family: 'Bodoni Moda', Georgia, serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: 3.5px;

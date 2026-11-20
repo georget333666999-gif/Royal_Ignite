@@ -1,4 +1,3 @@
-import User from "../../models/userModel.js";
 import Product from "../../models/productModel.js";
 import Cart from "../../models/cartModel.js";
 import checkoutService from "../../services/user/checkoutService.js";
@@ -6,32 +5,84 @@ import addressService from "../../services/user/addressService.js";
 import couponService from "../../services/user/couponService.js";
 import { getRazorpayClient, getRazorpayKeyId, verifyRazorpaySignature } from "../../config/razorpay.js";
 import { HTTP_STATUS, RESPONSE_MESSAGES } from "../../constants/index.js";
-import { getAuthenticatedUserId, handleBlockedUser } from "../../utils/authSession.js";
+import { invalidateUserBadgeCache } from "../../utils/cache.js";
+import { requireActiveUser, isAjaxRequest } from "../../utils/controllerHelpers.js";
+
+/**
+ * Helper to fetch checkout details whether Cart or Buy-Now
+ */
+const fetchCheckoutDetails = async (req, userId, coupon = null) => {
+    if (req.session?.buyNow) {
+        const { productId, quantity } = req.session.buyNow;
+        return await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, coupon);
+    }
+    return await checkoutService.getCheckoutDetails(userId, coupon);
+};
+
+/**
+ * Shared order placement execution (Cart or Buy-Now, COD, Wallet, or Razorpay)
+ */
+const executeOrderPlacement = async ({ req, userId, addressId, paymentMethod, paymentStatus = "Pending", razorpayDetails = {} }) => {
+    const isBuyNow = Boolean(req.session?.buyNow);
+    const appliedCoupon = req.session?.appliedCoupon || null;
+    let order;
+
+    if (isBuyNow) {
+        const { productId, quantity } = req.session.buyNow;
+        order = await checkoutService.placeBuyNowOrder({
+            userId,
+            addressId,
+            productId,
+            quantity,
+            paymentMethod,
+            appliedCoupon,
+            paymentStatus,
+            ...razorpayDetails
+        });
+        req.session.buyNow = null;
+    } else {
+        order = await checkoutService.placeOrder({
+            userId,
+            addressId,
+            paymentMethod,
+            appliedCoupon,
+            paymentStatus,
+            ...razorpayDetails
+        });
+    }
+
+    req.session.appliedCoupon = null;
+    await invalidateUserBadgeCache(userId);
+    return order;
+};
+
+/**
+ * Helper to parse and normalize address request body
+ */
+const parseAddressBody = (body) => ({
+    fullName: body.fullName,
+    phone: body.phone,
+    addressLine: body.addressLine,
+    city: body.city,
+    state: body.state,
+    pincode: body.pincode,
+    country: body.country || "India",
+    addressType: body.addressType || "Home",
+    isDefault: body.isDefault === "true" || body.isDefault === true
+});
 
 /**
  * Initiate Buy Now direct checkout (stores item in session and redirects to checkout)
  */
 export const postBuyNow = async (req, res, next) => {
-    const isAjax = Boolean(
-        req.xhr || req.headers.accept?.includes("application/json") || req.body.format === "json"
-    );
+    const isAjax = isAjaxRequest(req);
     try {
-        const userId = getAuthenticatedUserId(req);
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: `/user/login?redirect=/products/${req.body?.productId || ""}`
+        });
+        if (!auth) return;
+
         const { productId, quantity = 1 } = req.body;
-
-        if (!userId) {
-            const redirectUrl = `/user/login?redirect=/products/${productId}`;
-            if (isAjax) {
-                return res.status(HTTP_STATUS.OK).json({ success: false, redirect: redirectUrl });
-            }
-            return res.redirect(redirectUrl);
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
-
         const product = await Product.findOne({ _id: productId, isDeleted: false, isListed: true });
         if (!product || product.stock < 1) {
             const message = "This creation is currently unavailable.";
@@ -63,31 +114,26 @@ export const postBuyNow = async (req, res, next) => {
  */
 export const getCheckoutPage = async (req, res, next) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.redirect(
-                "/user/login?redirect=/checkout&error=" +
-                    encodeURIComponent(RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED)
-            );
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: "/user/login?redirect=/checkout&error=" + encodeURIComponent(RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED)
+        });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const isBuyNow = (req.query.buyNow === "true" || req.query.buyNow === "1") && Boolean(req.session?.buyNow);
         if (!isBuyNow && req.session?.buyNow && !req.query.buyNow) {
             req.session.buyNow = null;
         }
 
-        let checkoutData;
-        const appliedCoupon = req.session?.appliedCoupon || null;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, appliedCoupon);
-        } else {
-            checkoutData = await checkoutService.getCheckoutDetails(userId, appliedCoupon);
+        let appliedCoupon = req.session?.appliedCoupon || null;
+        const checkoutData = await fetchCheckoutDetails(req, userId, appliedCoupon);
+
+        // Synchronize session coupon state if subtotal changes invalidated or changed the coupon
+        if (appliedCoupon && !checkoutData.financials.couponCode) {
+            req.session.appliedCoupon = null;
+            appliedCoupon = null;
+        } else if (appliedCoupon && checkoutData.financials.couponCode) {
+            req.session.appliedCoupon.discountAmount = checkoutData.financials.couponDiscount;
         }
 
         if (checkoutData.isEmpty) {
@@ -99,19 +145,11 @@ export const getCheckoutPage = async (req, res, next) => {
         }
 
         if (checkoutData.hasBlockingIssues) {
-            const firstReason =
-                checkoutData.blockingReasons?.[0] || RESPONSE_MESSAGES.CHECKOUT.ITEMS_BLOCKED;
+            const firstReason = checkoutData.blockingReasons?.[0] || RESPONSE_MESSAGES.CHECKOUT.ITEMS_BLOCKED;
             return res.redirect((isBuyNow ? "/shop" : "/cart") + "?error=" + encodeURIComponent(firstReason));
         }
 
         const availableCoupons = await couponService.getAvailableCoupons(userId);
-
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-            "Surrogate-Control": "no-store"
-        });
 
         return res.status(HTTP_STATUS.OK).render("checkout", {
             pageTitle: isBuyNow ? "Instant Acquisition — ROYAL IGNITE" : "Atelier Checkout — ROYAL IGNITE",
@@ -141,109 +179,63 @@ export const getCheckoutPage = async (req, res, next) => {
  * Place order using Cash on Delivery
  */
 export const postPlaceOrder = async (req, res, next) => {
-    const isAjax = Boolean(
-        req.xhr || req.headers.accept?.includes("application/json") || req.body.format === "json"
-    );
+    const isAjax = isAjaxRequest(req);
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            if (isAjax) {
-                return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                    success: false,
-                    redirect: "/user/login?redirect=/checkout",
-                    message: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
-                });
-            }
-            return res.redirect("/user/login?redirect=/checkout");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, {
+            redirectUrl: "/user/login?redirect=/checkout",
+            authMessage: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
+        });
+        if (!auth) return;
+        const { userId } = auth;
 
         const { addressId, paymentMethod = "COD" } = req.body;
-        const isBuyNow = Boolean(req.session?.buyNow);
-        const appliedCoupon = req.session?.appliedCoupon || null;
+        const order = await executeOrderPlacement({ req, userId, addressId, paymentMethod, paymentStatus: "Pending" });
 
-        let order;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            order = await checkoutService.placeBuyNowOrder({
-                userId,
-                addressId,
-                productId,
-                quantity,
-                paymentMethod,
-                appliedCoupon
-            });
-            req.session.buyNow = null;
-        } else {
-            order = await checkoutService.placeOrder({
-                userId,
-                addressId,
-                paymentMethod,
-                appliedCoupon
-            });
-        }
-
-        req.session.appliedCoupon = null;
-
-        const successRedirect = `/checkout/success/${order.orderId}`;
+        const orderId = order.orderId || order._id;
+        const redirectUrl = `/checkout/success/${orderId}`;
 
         if (isAjax) {
             return res.status(HTTP_STATUS.OK).json({
                 success: true,
-                orderId: order.orderId,
-                redirect: successRedirect,
-                message: RESPONSE_MESSAGES.ORDER.PLACED_SUCCESS
+                message: RESPONSE_MESSAGES.CHECKOUT.ORDER_PLACED,
+                redirect: redirectUrl,
+                orderId
             });
         }
-
-        return res.redirect(HTTP_STATUS.SEE_OTHER, successRedirect);
+        return res.redirect(redirectUrl);
     } catch (err) {
         console.error("checkoutController postPlaceOrder error:", err);
-        const errorMessage = err.message || RESPONSE_MESSAGES.COMMON.SOMETHING_WENT_WRONG;
+        const isStockIssue = err.code === "STOCK_EXCEEDED" || err.code === "PRODUCT_UNAVAILABLE" || err.code === "ITEMS_BLOCKED";
+        const clientMessage = isStockIssue
+            ? err.message
+            : (err.message || RESPONSE_MESSAGES.CHECKOUT.ORDER_FAILED);
 
         if (isAjax) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            return res.status(err.statusCode || HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
-                message: errorMessage
+                message: clientMessage,
+                code: err.code || "ORDER_PLACEMENT_FAILED"
             });
         }
-
-        return res.redirect("/checkout?error=" + encodeURIComponent(errorMessage));
+        return res.redirect(`/checkout?error=${encodeURIComponent(clientMessage)}`);
     }
 };
 
 /**
- * Render order confirmation success page
+ * Render order success confirmation page
  */
 export const getOrderSuccessPage = async (req, res, next) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.redirect("/user/login");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, { redirectUrl: "/user/login" });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const { orderId } = req.params;
         const order = await checkoutService.getOrderByIdentifier(orderId, userId);
 
         if (!order) {
-            return res.redirect("/products?error=" + encodeURIComponent(RESPONSE_MESSAGES.ORDER.NOT_FOUND));
+            return res.redirect("/orders?error=" + encodeURIComponent(RESPONSE_MESSAGES.ORDER.NOT_FOUND));
         }
-
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-            "Surrogate-Control": "no-store"
-        });
 
         return res.status(HTTP_STATUS.OK).render("orderSuccess", {
             pageTitle: "Acquisition Confirmed — ROYAL IGNITE",
@@ -259,29 +251,16 @@ export const getOrderSuccessPage = async (req, res, next) => {
 };
 
 /**
- * Add new shipping address during checkout
+ * Add shipping address during checkout
  */
-export const postAddAddressCheckout = async (req, res, next) => {
+export const postAddAddressCheckout = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
-        const {
-            fullName,
-            phone,
-            addressLine,
-            city,
-            state,
-            pincode,
-            country = "India",
-            addressType = "Home",
-            isDefault = false
-        } = req.body;
+        const addressPayload = parseAddressBody(req.body);
+        const { fullName, phone, addressLine, city, state, pincode } = addressPayload;
 
         if (!fullName || !phone || !addressLine || !city || !state || !pincode) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -290,18 +269,7 @@ export const postAddAddressCheckout = async (req, res, next) => {
             });
         }
 
-        const newAddress = await addressService.createAddress({
-            userId,
-            fullName,
-            phone,
-            addressLine,
-            city,
-            state,
-            pincode,
-            country,
-            addressType,
-            isDefault: isDefault === "true" || isDefault === true
-        });
+        const newAddress = await addressService.createAddress({ userId, ...addressPayload });
 
         return res.status(HTTP_STATUS.CREATED).json({
             success: true,
@@ -320,40 +288,14 @@ export const postAddAddressCheckout = async (req, res, next) => {
 /**
  * Edit shipping address during checkout
  */
-export const postEditAddressCheckout = async (req, res, next) => {
+export const postEditAddressCheckout = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
         const { addressId } = req.params;
-        const {
-            fullName,
-            phone,
-            addressLine,
-            city,
-            state,
-            pincode,
-            country = "India",
-            addressType = "Home",
-            isDefault = false
-        } = req.body;
-
-        const updatedAddress = await addressService.updateAddress(addressId, userId, {
-            fullName,
-            phone,
-            addressLine,
-            city,
-            state,
-            pincode,
-            country,
-            addressType,
-            isDefault: isDefault === "true" || isDefault === true
-        });
+        const updatedAddress = await addressService.updateAddress(addressId, userId, parseAddressBody(req.body));
 
         if (!updatedAddress) {
             return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -381,13 +323,9 @@ export const postEditAddressCheckout = async (req, res, next) => {
  */
 export const postApplyCoupon = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
         const { code } = req.body;
         if (!code || !code.trim()) {
@@ -397,7 +335,6 @@ export const postApplyCoupon = async (req, res) => {
             });
         }
 
-        // Disallow applying multiple coupons simultaneously
         if (req.session?.appliedCoupon) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
@@ -405,18 +342,8 @@ export const postApplyCoupon = async (req, res) => {
             });
         }
 
-        const isBuyNow = Boolean(req.session?.buyNow);
-        let subtotal = 0;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            const checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity);
-            subtotal = checkoutData.financials.subtotal;
-        } else {
-            const checkoutData = await checkoutService.getCheckoutDetails(userId);
-            subtotal = checkoutData.financials.subtotal;
-        }
-
-        const validation = await couponService.validateCoupon(code, userId, subtotal);
+        const initialCheckout = await fetchCheckoutDetails(req, userId);
+        const validation = await couponService.validateCoupon(code, userId, initialCheckout.financials.subtotal);
 
         req.session.appliedCoupon = {
             code: validation.code,
@@ -425,14 +352,7 @@ export const postApplyCoupon = async (req, res) => {
             discountValue: validation.discountValue
         };
 
-        // Recalculate full financials
-        let updatedCheckout;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            updatedCheckout = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, req.session.appliedCoupon);
-        } else {
-            updatedCheckout = await checkoutService.getCheckoutDetails(userId, req.session.appliedCoupon);
-        }
+        const updatedCheckout = await fetchCheckoutDetails(req, userId, req.session.appliedCoupon);
 
         return res.status(HTTP_STATUS.OK).json({
             success: true,
@@ -454,24 +374,12 @@ export const postApplyCoupon = async (req, res) => {
  */
 export const postRemoveCoupon = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
         req.session.appliedCoupon = null;
-
-        const isBuyNow = Boolean(req.session?.buyNow);
-        let updatedCheckout;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            updatedCheckout = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, null);
-        } else {
-            updatedCheckout = await checkoutService.getCheckoutDetails(userId, null);
-        }
+        const updatedCheckout = await fetchCheckoutDetails(req, userId, null);
 
         return res.status(HTTP_STATUS.OK).json({
             success: true,
@@ -492,18 +400,9 @@ export const postRemoveCoupon = async (req, res) => {
  */
 export const postCreateRazorpayOrder = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
-            });
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const { addressId } = req.body;
         if (!addressId) {
@@ -522,14 +421,15 @@ export const postCreateRazorpayOrder = async (req, res) => {
         }
 
         const isBuyNow = Boolean(req.session?.buyNow);
-        const appliedCoupon = req.session?.appliedCoupon || null;
+        let appliedCoupon = req.session?.appliedCoupon || null;
+        const checkoutData = await fetchCheckoutDetails(req, userId, appliedCoupon);
 
-        let checkoutData;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            checkoutData = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, appliedCoupon);
-        } else {
-            checkoutData = await checkoutService.getCheckoutDetails(userId, appliedCoupon);
+        // Synchronize session coupon state if subtotal changes invalidated or changed the coupon
+        if (appliedCoupon && !checkoutData.financials.couponCode) {
+            req.session.appliedCoupon = null;
+            appliedCoupon = null;
+        } else if (appliedCoupon && checkoutData.financials.couponCode) {
+            req.session.appliedCoupon.discountAmount = checkoutData.financials.couponDiscount;
         }
 
         if (checkoutData.isEmpty || checkoutData.hasBlockingIssues) {
@@ -543,9 +443,19 @@ export const postCreateRazorpayOrder = async (req, res) => {
         const amountInPaise = Math.round(totalPayable * 100);
 
         if (amountInPaise <= 0) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
-                success: false,
-                message: "Total amount must be greater than zero for online payment."
+            // Fulfill directly as zero-payable order when total is ₹0 (100% coupon or full store credit)
+            const order = await executeOrderPlacement({
+                req,
+                userId,
+                addressId,
+                paymentMethod: "COD",
+                paymentStatus: "Completed"
+            });
+            return res.status(HTTP_STATUS.OK).json({
+                success: true,
+                isZeroPay: true,
+                orderId: order.orderId,
+                redirect: `/checkout/success/${order.orderId}`
             });
         }
 
@@ -585,30 +495,16 @@ export const postCreateRazorpayOrder = async (req, res) => {
 };
 
 /**
- * Verify Razorpay payment signature and fulfill order (a, b)
+ * Verify Razorpay payment signature and fulfill order
  */
 export const postVerifyPayment = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.CHECKOUT.AUTH_REQUIRED });
+        if (!auth) return;
+        const { userId } = auth;
 
-        const {
-            addressId,
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature
-        } = req.body;
-
-        const isSignatureValid = verifyRazorpaySignature(
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature
-        );
+        const { addressId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+        const isSignatureValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
 
         if (!isSignatureValid) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -617,39 +513,14 @@ export const postVerifyPayment = async (req, res) => {
             });
         }
 
-        const isBuyNow = Boolean(req.session?.buyNow);
-        const appliedCoupon = req.session?.appliedCoupon || null;
-
-        let order;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            order = await checkoutService.placeBuyNowOrder({
-                userId,
-                addressId,
-                productId,
-                quantity,
-                paymentMethod: "Razorpay",
-                paymentStatus: "Completed",
-                razorpayOrderId,
-                razorpayPaymentId,
-                razorpaySignature,
-                appliedCoupon
-            });
-            req.session.buyNow = null;
-        } else {
-            order = await checkoutService.placeOrder({
-                userId,
-                addressId,
-                paymentMethod: "Razorpay",
-                paymentStatus: "Completed",
-                razorpayOrderId,
-                razorpayPaymentId,
-                razorpaySignature,
-                appliedCoupon
-            });
-        }
-
-        req.session.appliedCoupon = null;
+        const order = await executeOrderPlacement({
+            req,
+            userId,
+            addressId,
+            paymentMethod: "Razorpay",
+            paymentStatus: "Completed",
+            razorpayDetails: { razorpayOrderId, razorpayPaymentId, razorpaySignature }
+        });
 
         return res.status(HTTP_STATUS.OK).json({
             success: true,
@@ -670,41 +541,19 @@ export const postVerifyPayment = async (req, res) => {
  */
 export const postPaymentFailed = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false });
-        }
+        const auth = await requireActiveUser(req, res);
+        if (!auth) return;
+        const { userId } = auth;
 
         const { addressId, razorpayOrderId, errorMessage } = req.body;
-        const isBuyNow = Boolean(req.session?.buyNow);
-        const appliedCoupon = req.session?.appliedCoupon || null;
-
-        let order;
-        if (isBuyNow) {
-            const { productId, quantity } = req.session.buyNow;
-            order = await checkoutService.placeBuyNowOrder({
-                userId,
-                addressId,
-                productId,
-                quantity,
-                paymentMethod: "Razorpay",
-                paymentStatus: "Failed",
-                razorpayOrderId,
-                appliedCoupon
-            });
-            req.session.buyNow = null;
-        } else {
-            order = await checkoutService.placeOrder({
-                userId,
-                addressId,
-                paymentMethod: "Razorpay",
-                paymentStatus: "Failed",
-                razorpayOrderId,
-                appliedCoupon
-            });
-        }
-
-        req.session.appliedCoupon = null;
+        const order = await executeOrderPlacement({
+            req,
+            userId,
+            addressId,
+            paymentMethod: "Razorpay",
+            paymentStatus: "Failed",
+            razorpayDetails: { razorpayOrderId }
+        });
 
         return res.status(HTTP_STATUS.OK).json({
             success: true,
@@ -725,15 +574,9 @@ export const postPaymentFailed = async (req, res) => {
  */
 export const getPaymentFailurePage = async (req, res, next) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.redirect("/user/login");
-        }
-
-        const user = await User.findById(userId);
-        if (!user || user.isBlocked) {
-            return handleBlockedUser(req, res);
-        }
+        const auth = await requireActiveUser(req, res, { redirectUrl: "/user/login" });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const { orderId } = req.params;
         const order = await checkoutService.getOrderByIdentifier(orderId, userId);
@@ -741,13 +584,6 @@ export const getPaymentFailurePage = async (req, res, next) => {
         if (!order) {
             return res.redirect("/orders?error=" + encodeURIComponent(RESPONSE_MESSAGES.ORDER.NOT_FOUND));
         }
-
-        res.set({
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-            "Surrogate-Control": "no-store"
-        });
 
         return res.status(HTTP_STATUS.OK).render("paymentFailure", {
             pageTitle: "Payment Pending / Failed — ROYAL IGNITE",
@@ -769,13 +605,9 @@ export const getPaymentFailurePage = async (req, res, next) => {
  */
 export const postRetryPayment = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId, user } = auth;
 
         const { orderId } = req.params;
         const order = await checkoutService.getOrderByIdentifier(orderId, userId);
@@ -809,8 +641,6 @@ export const postRetryPayment = async (req, res) => {
         order.razorpayOrderId = rzpOrder.id;
         await order.save();
 
-        const user = await User.findById(userId);
-
         return res.status(HTTP_STATUS.OK).json({
             success: true,
             razorpayOrderId: rzpOrder.id,
@@ -838,27 +668,14 @@ export const postRetryPayment = async (req, res) => {
  */
 export const postVerifyRetryPayment = async (req, res) => {
     try {
-        const userId = getAuthenticatedUserId(req);
-        if (!userId) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-                success: false,
-                message: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED
-            });
-        }
+        const auth = await requireActiveUser(req, res, { authMessage: RESPONSE_MESSAGES.AUTH.UNAUTHORIZED });
+        if (!auth) return;
+        const { userId } = auth;
 
         const { orderId } = req.params;
-        const {
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature
-        } = req.body;
+        const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
 
-        const isSignatureValid = verifyRazorpaySignature(
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature
-        );
-
+        const isSignatureValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
         if (!isSignatureValid) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
@@ -889,19 +706,21 @@ export const postVerifyRetryPayment = async (req, res) => {
         }
         await order.save();
 
-        // Since payment retry completed and order is placed, remove items from user's cart if present
+        const postRetryTasks = [];
         if (Array.isArray(order.items) && order.items.length > 0) {
             const productIds = order.items.map((i) => i.product);
-            await Cart.updateOne(
-                { user: userId },
-                { $pull: { items: { product: { $in: productIds } } } }
+            postRetryTasks.push(
+                Cart.updateOne(
+                    { user: userId },
+                    { $pull: { items: { product: { $in: productIds } } } }
+                ).then(() => invalidateUserBadgeCache(userId))
             );
         }
 
-        // Record coupon usage if any
         if (order.coupon?.code) {
-            await couponService.recordCouponUsage(order.coupon.code, userId, order._id);
+            postRetryTasks.push(couponService.recordCouponUsage(order.coupon.code, userId, order._id));
         }
+        await Promise.all(postRetryTasks).catch(() => {});
 
         return res.status(HTTP_STATUS.OK).json({
             success: true,

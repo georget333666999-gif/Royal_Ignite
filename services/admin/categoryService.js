@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 import Category from "../../models/categoryModel.js";
-
-const escapeRegex = (value) => {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
+import { invalidateCatalogCache } from "../../utils/cache.js";
 
 /**
  * Map status filters to Mongoose filter queries
@@ -60,7 +58,7 @@ const fetchCategoryMetrics = async () => {
  */
 const getCategories = async (search = "", statusFilter = "all", page = 1, limit = 5) => {
     try {
-        const trimmedSearch = search.trim();
+        const { value: trimmedSearch, error: searchError } = sanitizeSearchQuery(search);
         const filter = {
             ...getStatusFilterQuery(statusFilter),
             ...getSearchFilter(trimmedSearch)
@@ -87,7 +85,9 @@ const getCategories = async (search = "", statusFilter = "all", page = 1, limit 
             totalMatching,
             totalPages,
             currentPage,
-            limit
+            limit,
+            search: trimmedSearch,
+            searchError
         };
     } catch (error) {
         console.error("getCategories error:", error);
@@ -138,7 +138,9 @@ const addCategory = async ({ name, description = "", isListed = true }) => {
             isDeleted: false
         });
 
-        return await newCategory.save();
+        const saved = await newCategory.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("addCategory error:", error.message);
         throw error;
@@ -181,7 +183,9 @@ const editCategory = async (categoryId, { name, description = "", isListed }) =>
             category.isListed = Boolean(isListed);
         }
 
-        return await category.save();
+        const saved = await category.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("editCategory error:", error.message);
         throw error;
@@ -207,6 +211,7 @@ const softDeleteCategory = async (categoryId) => {
             throw new Error("Category not found");
         }
 
+        invalidateCatalogCache();
         return category;
     } catch (error) {
         console.error("softDeleteCategory error:", error.message);
@@ -233,6 +238,7 @@ const restoreCategory = async (categoryId) => {
             throw new Error("Category not found");
         }
 
+        invalidateCatalogCache();
         return category;
     } catch (error) {
         console.error("restoreCategory error:", error.message);
@@ -255,7 +261,9 @@ const toggleListCategory = async (categoryId) => {
         }
 
         category.isListed = !category.isListed;
-        return await category.save();
+        const saved = await category.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("toggleListCategory error:", error.message);
         throw error;

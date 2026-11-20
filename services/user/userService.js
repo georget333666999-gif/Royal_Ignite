@@ -120,10 +120,27 @@ const createUser = async ({ name, email, phone, password, referralCode = "" }) =
         // Check if referral code was supplied and matches a valid referrer
         let referrerUser = null;
         if (referralCode && referralCode.trim()) {
+            const cleanReferralCode = referralCode.trim().toUpperCase();
             referrerUser = await User.findOne({
-                referralCode: referralCode.trim().toUpperCase(),
+                referralCode: cleanReferralCode,
                 isBlocked: false
             });
+
+            if (!referrerUser) {
+                const err = new Error("The invitation code provided is invalid or inactive.");
+                err.statusCode = 400;
+                throw err;
+            }
+
+            // Self-referral prevention: check email and phone number
+            if (
+                referrerUser.email.toLowerCase() === formattedEmail ||
+                referrerUser.phone === formattedPhone
+            ) {
+                const err = new Error("Self-referral is strictly prohibited. You cannot use your own invitation code.");
+                err.statusCode = 400;
+                throw err;
+            }
         }
 
         const existingUser = await User.findOne({
@@ -204,40 +221,6 @@ const verifyOTP = async (userId, enteredOTP) => {
         }
 
         user.isVerified = true;
-
-        // Process referral rewards upon successful verification
-        if (user.referredBy && !user.referralRewarded) {
-            try {
-                const referralOffer = await offerService.getActiveReferralOffer();
-                const referrerReward = referralOffer ? Number(referralOffer.referrerReward || 0) : 100;
-                const refereeReward = referralOffer ? Number(referralOffer.refereeReward || 0) : 50;
-
-                if (refereeReward > 0) {
-                    await walletService.creditWallet(user._id, {
-                        amount: refereeReward,
-                        description: "Welcome privilege bonus for joining via referral invitation",
-                        source: "referral_bonus"
-                    });
-                }
-
-                if (referrerReward > 0) {
-                    await walletService.creditWallet(user.referredBy, {
-                        amount: referrerReward,
-                        description: `Referral privilege reward for welcoming ${user.name}`,
-                        source: "referral_bonus"
-                    });
-
-                    await User.findByIdAndUpdate(user.referredBy, {
-                        $inc: { referralRewardsEarned: referrerReward }
-                    });
-                }
-
-                user.referralRewarded = true;
-            } catch (refErr) {
-                console.error("Referral reward distribution error:", refErr);
-            }
-        }
-
         await user.save();
         return { success: true };
     } catch (error) {
@@ -535,6 +518,94 @@ const verifyEmailChange = async (userId, pendingNewEmail, enteredOTP) => {
     }
 };
 
+/**
+ * Process referral rewards upon successful delivery of the referee's first order
+ * @param {Object} order - Mongoose order document
+ */
+const processReferralRewardOnDelivery = async (order) => {
+    if (!order || !order.user) return;
+    const userId = order.user._id || order.user;
+    const user = await User.findById(userId);
+    if (!user || !user.referredBy || user.referralRewarded) return;
+
+    // Verify referrer exists and is active/not blocked
+    const referrer = await User.findOne({ _id: user.referredBy, isBlocked: false });
+    if (!referrer) return;
+
+    try {
+        const referralOffer = await offerService.getActiveReferralOffer();
+        const referrerReward = referralOffer ? Number(referralOffer.referrerReward || 0) : 100;
+        const refereeReward = referralOffer ? Number(referralOffer.refereeReward || 0) : 50;
+
+        if (refereeReward > 0) {
+            await walletService.creditWallet(user._id, {
+                amount: refereeReward,
+                description: "Welcome privilege bonus for completing your first delivered acquisition",
+                source: "referral_bonus",
+                orderId: order.orderId
+            });
+        }
+
+        if (referrerReward > 0) {
+            await walletService.creditWallet(referrer._id, {
+                amount: referrerReward,
+                description: `Referral privilege reward for welcoming ${user.name} (Order #${order.orderId})`,
+                source: "referral_bonus",
+                orderId: order.orderId
+            });
+
+            await User.findByIdAndUpdate(referrer._id, {
+                $inc: { referralRewardsEarned: referrerReward }
+            });
+        }
+
+        user.referralRewarded = true;
+        await user.save();
+
+        order.unlockedReferralBonus = {
+            referrerId: referrer._id,
+            amount: referrerReward,
+            isRevoked: false
+        };
+        await order.save();
+    } catch (refErr) {
+        console.error("Referral reward distribution on delivery error:", refErr);
+    }
+};
+
+/**
+ * Revoke referral rewards if the qualifying order is cancelled or returned
+ * @param {Object} order - Mongoose order document
+ */
+const revokeReferralRewardOnOrderSettlement = async (order) => {
+    if (!order || !order.unlockedReferralBonus) return;
+    const { referrerId, amount, isRevoked } = order.unlockedReferralBonus;
+    if (!referrerId || isRevoked || !amount || amount <= 0) return;
+
+    try {
+        const referrer = await User.findById(referrerId);
+        if (referrer) {
+            await walletService.debitWallet(referrerId, {
+                amount,
+                description: `Clawback of referral privilege reward due to cancellation/return of order #${order.orderId}`,
+                source: "referral_clawback",
+                orderId: order.orderId
+            }).catch((debitErr) => {
+                console.warn("Referrer wallet debit during clawback:", debitErr.message);
+            });
+
+            await User.findByIdAndUpdate(referrerId, {
+                $inc: { referralRewardsEarned: -amount }
+            });
+        }
+
+        order.unlockedReferralBonus.isRevoked = true;
+        await order.save();
+    } catch (revErr) {
+        console.error("revokeReferralRewardOnOrderSettlement error:", revErr);
+    }
+};
+
 export {
     createUser,
     createOTP,
@@ -548,7 +619,9 @@ export {
     changePassword,
     requestEmailChange,
     resendEmailChangeOTP,
-    verifyEmailChange
+    verifyEmailChange,
+    processReferralRewardOnDelivery,
+    revokeReferralRewardOnOrderSettlement
 };
 
 export default {
@@ -564,5 +637,7 @@ export default {
     changePassword,
     requestEmailChange,
     resendEmailChangeOTP,
-    verifyEmailChange
+    verifyEmailChange,
+    processReferralRewardOnDelivery,
+    revokeReferralRewardOnOrderSettlement
 };

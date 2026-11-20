@@ -22,7 +22,7 @@
 body.checkout-body {
     background-color: var(--co-bg) !important;
     color: var(--co-text-main);
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -79,17 +79,22 @@ input, textarea, [contenteditable="true"] {
 }
 
 .checkout-title {
-    font-family: 'Bodoni Moda', serif;
-    font-size: 36px;
-    font-weight: 400;
-    line-height: 1.15;
-    color: #FFFFFF;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 3.1rem;
+    font-weight: 300;
+    letter-spacing: -0.015em;
+    line-height: 1.08;
+    color: #FDFBF7;
     margin: 0 0 8px;
 }
 
 .checkout-title .italic-gold {
     font-style: italic;
-    color: var(--co-gold);
+    font-weight: 400;
+    background: linear-gradient(125deg, #FFF5D6 0%, #F3C46C 46%, #C8892D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .checkout-subtitle {
@@ -156,7 +161,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .section-title {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 20px;
     font-weight: 500;
     color: #FFFFFF;
@@ -565,7 +570,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .summary-title {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 22px;
     font-weight: 400;
     color: #FFFFFF;
@@ -678,7 +683,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .ledger-line.total .total-amount {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 26px;
     font-weight: 600;
     color: var(--co-gold);
@@ -783,7 +788,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .modal-title {
-    font-family: 'Bodoni Moda', serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 24px;
     color: #FFFFFF;
     margin: 0;

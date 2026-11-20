@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Coupon from "../../models/couponModel.js";
 
 /**
@@ -33,6 +34,12 @@ export const validateCoupon = async (code, userId, subtotal) => {
     }
 
     const now = new Date();
+    if (coupon.startDate && now < new Date(coupon.startDate)) {
+        const err = new Error("This coupon is not yet active.");
+        err.statusCode = 400;
+        throw err;
+    }
+
     if (now > new Date(coupon.expiryDate)) {
         const err = new Error("This coupon has expired.");
         err.statusCode = 400;
@@ -92,26 +99,56 @@ export const validateCoupon = async (code, userId, subtotal) => {
 };
 
 /**
- * Record coupon usage when an order is successfully placed
+ * Record coupon usage when an order is successfully placed (atomic conditional update)
  */
 export const recordCouponUsage = async (couponCode, userId, orderId) => {
-    if (!couponCode) return;
+    if (!couponCode) return { success: false, reason: "NO_CODE" };
     try {
-        await Coupon.updateOne(
-            { code: couponCode.trim().toUpperCase() },
+        const cleanCode = couponCode.trim().toUpperCase();
+        let userObjId = null;
+        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjId = new mongoose.Types.ObjectId(String(userId));
+        }
+
+        // Atomic condition: code matches, active, not deleted, user hasn't used it, and (usageLimit is null OR usedCount < usageLimit)
+        const updateQuery = {
+            code: cleanCode,
+            isDeleted: false,
+            $or: [
+                { usageLimit: null },
+                { $expr: { $lt: ["$usedCount", "$usageLimit"] } }
+            ]
+        };
+
+        if (userObjId) {
+            updateQuery["usedUsers.userId"] = { $ne: userObjId };
+        }
+
+        const result = await Coupon.updateOne(
+            updateQuery,
             {
                 $inc: { usedCount: 1 },
                 $push: {
                     usedUsers: {
-                        userId,
-                        orderId,
+                        userId: userObjId || userId,
+                        orderId: orderId || null,
                         usedAt: new Date()
                     }
                 }
             }
         );
+
+        if (result.matchedCount === 0) {
+            return {
+                success: false,
+                reason: "USAGE_LIMIT_EXCEEDED_OR_ALREADY_REDEEMED"
+            };
+        }
+
+        return { success: true };
     } catch (err) {
         console.error("couponService recordCouponUsage error:", err);
+        return { success: false, error: err.message };
     }
 };
 
@@ -121,12 +158,18 @@ export const recordCouponUsage = async (couponCode, userId, orderId) => {
 export const revertCouponUsage = async (couponCode, userId) => {
     if (!couponCode) return;
     try {
+        const cleanCode = couponCode.trim().toUpperCase();
+        let userObjId = null;
+        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjId = new mongoose.Types.ObjectId(String(userId));
+        }
+
         await Coupon.updateOne(
-            { code: couponCode.trim().toUpperCase() },
+            { code: cleanCode, usedCount: { $gt: 0 } },
             {
                 $inc: { usedCount: -1 },
                 $pull: {
-                    usedUsers: { userId }
+                    usedUsers: userObjId ? { userId: userObjId } : { userId }
                 }
             }
         );

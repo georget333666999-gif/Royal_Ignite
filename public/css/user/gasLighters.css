@@ -3,7 +3,7 @@
    Dual-Ceramic Jet Flame & Haute Briquet Atelier Aesthetic
    ======================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
     --gas-bg: #000000;
@@ -11,18 +11,19 @@
     --gas-card: #0E0F14;
     --gas-card-border: rgba(255, 255, 255, 0.08);
     --gas-card-hover: rgba(56, 189, 248, 0.55);
-    --gas-gold: #E5A93C;
-    --gas-gold-bright: #F6BD64;
-    --gas-gold-light: #F7D08A;
+    --gas-gold: #CBD5E1;
+    --gas-gold-bright: #F1F5F9;
+    --gas-gold-light: #E2E8F0;
     --gas-flame-blue: #38BDF8;
     --gas-blue-glow: rgba(56, 189, 248, 0.22);
-    --gas-gold-glow: rgba(229, 169, 60, 0.18);
-    --gas-text: #F5F7FA;
-    --gas-text-muted: #9BA3AF;
-    --gas-text-subtle: #5C6573;
+    --gas-gold-glow: rgba(226, 232, 240, 0.18);
+    --gas-text: #FAFBFD;
+    --gas-text-muted: #A9B1BD;
+    --gas-text-subtle: #667080;
     --gas-border-subtle: rgba(255, 255, 255, 0.08);
-    --gas-font-serif: 'Bodoni Moda', Georgia, serif;
-    --gas-font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    --gas-font-serif: 'Cormorant Garamond', Georgia, serif;
+    --gas-font-editorial: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --gas-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --gas-font-mono: 'JetBrains Mono', monospace;
     --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -66,17 +67,34 @@ textarea,
 .italic-gold {
     font-family: var(--gas-font-serif);
     font-style: italic;
-    color: var(--gas-gold);
+    font-weight: 400;
+    color: var(--gas-flame-blue);
+    background: linear-gradient(125deg, #EBF8FF 0%, #7DD3FC 45%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-right: 0.06em;
 }
 
 .kicker {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 3px;
+    font-family: var(--gas-font-editorial);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--gas-gold);
+    color: var(--gas-flame-blue);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.kicker::before {
+    content: "";
     display: inline-block;
-    margin-bottom: 12px;
+    width: 28px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gas-flame-blue));
 }
 
 /* ========================================================
@@ -186,10 +204,17 @@ textarea,
    2. HERO & BENCHMARKS
    ======================================================== */
 .gas-hero-section {
-    padding-top: 130px;
-    padding-bottom: 50px;
+    padding-top: 148px;
+    padding-bottom: 56px;
+    min-height: 560px;
     position: relative;
-    background: radial-gradient(circle at 75% 20%, rgba(56, 189, 248, 0.06) 0%, rgba(229, 169, 60, 0.03) 40%, transparent 65%);
+    background-image:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.90) 0%, rgba(0, 0, 0, 0.70) 44%, rgba(0, 0, 0, 0.16) 74%, rgba(0, 0, 0, 0.26) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.05) 26%, rgba(0, 0, 0, 0.18) 72%, #000000 100%),
+        url('/images/hero-gas.jpg');
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
 }
 
 .gas-breadcrumb {
@@ -232,26 +257,33 @@ textarea,
 
 .gas-hero-title {
     font-family: var(--gas-font-serif);
-    font-size: 3.8rem;
-    font-weight: 400;
-    line-height: 1.08;
-    margin-bottom: 12px;
+    font-size: 4.55rem;
+    font-weight: 300;
+    line-height: 1.03;
+    letter-spacing: -0.015em;
+    text-transform: none;
+    margin-bottom: 16px;
     color: var(--gas-text);
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
 }
 
 .gas-hero-subheadline {
-    font-family: var(--gas-font-serif);
-    font-size: 1.35rem;
-    color: var(--gas-gold-light);
-    margin-bottom: 16px;
-    font-weight: 400;
+    font-family: var(--gas-font-editorial);
+    font-style: normal;
+    font-size: 0.8rem;
+    color: #93C5FD;
+    margin-bottom: 18px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
 }
 
 .gas-hero-desc {
     color: var(--gas-text-muted);
-    font-size: 1rem;
-    max-width: 620px;
-    line-height: 1.7;
+    font-size: 0.96rem;
+    font-weight: 400;
+    max-width: 600px;
+    line-height: 1.82;
 }
 
 .gas-hero-actions {
@@ -265,8 +297,10 @@ textarea,
     display: flex;
     align-items: center;
     gap: 12px;
-    background: var(--gas-card);
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(11, 13, 18, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.75);
     padding: 10px 20px;
     border-radius: 30px;
@@ -362,10 +396,15 @@ textarea,
 
 .gas-metric-num {
     font-family: var(--gas-font-serif);
-    font-size: 2rem;
-    color: var(--gas-flame-blue);
-    line-height: 1.1;
-    margin-bottom: 2px;
+    font-size: 2.5rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    background: linear-gradient(125deg, #EBF8FF 0%, #7DD3FC 50%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.05;
+    margin-bottom: 4px;
 }
 
 .gas-metric-label {
@@ -516,7 +555,7 @@ textarea,
 .gas-card-flame-glow {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 60%, rgba(56, 189, 248, 0.08) 0%, rgba(229, 169, 60, 0.04) 50%, transparent 70%);
+    background: radial-gradient(circle at 50% 60%, rgba(56, 189, 248, 0.10) 0%, rgba(125, 211, 252, 0.04) 50%, transparent 70%);
     pointer-events: none;
 }
 
@@ -539,11 +578,11 @@ textarea,
 }
 
 .gas-card-title {
-    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: 0.03em;
+    font-family: var(--gas-font-serif);
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1.18;
+    letter-spacing: 0.015em;
     margin-bottom: 10px;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -935,7 +974,7 @@ textarea,
    ======================================================== */
 .royal-footer {
     background: #060608;
-    border-top: 1px solid rgba(229, 169, 60, 0.16);
+    border-top: 1px solid rgba(203, 213, 225, 0.18);
     padding: 72px 0 36px;
     color: #EAE6DF;
     font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -967,7 +1006,7 @@ textarea,
     gap: 10px;
     text-decoration: none;
     color: #F0ECE1;
-    font-family: 'Bodoni Moda', Georgia, serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: 3.5px;
@@ -977,13 +1016,13 @@ textarea,
 }
 
 .footer-brand:hover {
-    color: #E5A93C;
+    color: #E2E8F0;
 }
 
 .footer-brand-icon {
     width: 20px;
     height: 20px;
-    color: #E5A93C;
+    color: #CBD5E1;
     flex-shrink: 0;
 }
 
@@ -1000,7 +1039,7 @@ textarea,
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.62rem;
     letter-spacing: 2px;
-    color: rgba(229, 169, 60, 0.65);
+    color: rgba(203, 213, 225, 0.68);
     text-transform: uppercase;
     margin-top: 4px;
 }
@@ -1011,7 +1050,7 @@ textarea,
     font-weight: 700;
     letter-spacing: 2.2px;
     text-transform: uppercase;
-    color: #E5A93C;
+    color: #E2E8F0;
     margin-bottom: 20px;
 }
 
@@ -1053,7 +1092,7 @@ textarea,
     flex: 1;
     height: 42px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(229, 169, 60, 0.24);
+    border: 1px solid rgba(203, 213, 225, 0.24);
     border-radius: 6px;
     padding: 0 14px;
     color: #FFFFFF;
@@ -1064,9 +1103,9 @@ textarea,
 }
 
 .newsletter-input:focus {
-    border-color: #E5A93C;
+    border-color: #E2E8F0;
     background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 14px rgba(229, 169, 60, 0.2);
+    box-shadow: 0 0 14px rgba(226, 232, 240, 0.18);
 }
 
 .newsletter-input::placeholder {
@@ -1075,10 +1114,10 @@ textarea,
 
 .newsletter-btn {
     height: 42px;
-    background: rgba(229, 169, 60, 0.12);
-    border: 1px solid rgba(229, 169, 60, 0.38);
+    background: rgba(226, 232, 240, 0.10);
+    border: 1px solid rgba(226, 232, 240, 0.36);
     border-radius: 6px;
-    color: #E5A93C;
+    color: #E2E8F0;
     font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 0.72rem;
     font-weight: 700;
@@ -1090,9 +1129,9 @@ textarea,
 }
 
 .newsletter-btn:hover {
-    background: #E5A93C;
+    background: #E2E8F0;
     color: #0E0E12;
-    box-shadow: 0 4px 18px rgba(229, 169, 60, 0.35);
+    box-shadow: 0 4px 18px rgba(226, 232, 240, 0.30);
     transform: translateY(-1px);
 }
 
@@ -1124,11 +1163,11 @@ textarea,
 }
 
 .footer-legal a:hover {
-    color: #E5A93C;
+    color: #E2E8F0;
 }
 
 .footer-dot {
-    color: rgba(229, 169, 60, 0.4);
+    color: rgba(203, 213, 225, 0.45);
     font-size: 0.6rem;
 }
 

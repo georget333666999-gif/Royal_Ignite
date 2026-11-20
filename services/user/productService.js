@@ -3,6 +3,10 @@ import Product from "../../models/productModel.js";
 import Category from "../../models/categoryModel.js";
 import Offer from "../../models/offerModel.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
+import { getCache, setCache } from "../../utils/cache.js";
+
+const ACTIVE_CATEGORIES_CACHE_KEY = "catalog:activeCategoriesWithCounts";
+const ACTIVE_CATEGORIES_TTL_MS = 30000;
 
 /**
  * Escapes regex special characters to prevent regex injection
@@ -16,6 +20,9 @@ const escapeRegex = (value = "") => {
  */
 export const getActiveCategoriesWithCounts = async () => {
     try {
+        const cached = getCache(ACTIVE_CATEGORIES_CACHE_KEY);
+        if (cached) return cached;
+
         // 1. Find all listed & non-deleted categories
         const categories = await Category.find({ isListed: true, isDeleted: false })
             .sort({ name: 1 })
@@ -47,13 +54,15 @@ export const getActiveCategoriesWithCounts = async () => {
 
         const totalActiveProducts = counts.reduce((acc, curr) => acc + curr.count, 0);
 
-        return {
+        const result = {
             categories: categories.map((cat) => ({
                 ...cat,
                 productCount: countMap[cat._id.toString()] || 0
             })),
             totalActiveProducts
         };
+
+        return setCache(ACTIVE_CATEGORIES_CACHE_KEY, result, ACTIVE_CATEGORIES_TTL_MS);
     } catch (error) {
         console.error("getActiveCategoriesWithCounts error:", error);
         throw error;
@@ -74,11 +83,10 @@ export const getShopProducts = async ({
     limit = 9
 } = {}) => {
     try {
-        // 1. Determine active categories first (hiding any unlisted or soft-deleted categories)
-    const activeCategories = await Category.find({ isListed: true, isDeleted: false })
-        .select("_id name")
-        .lean();
-    const activeCategoryIds = activeCategories.map((c) => c._id);
+        // 1. Reuse cached active categories & sidebar counts (eliminates 2 redundant Atlas queries)
+        const { categories: categoryListWithCounts, totalActiveProducts } = await getActiveCategoriesWithCounts();
+        const activeCategories = categoryListWithCounts;
+        const activeCategoryIds = activeCategories.map((c) => c._id);
 
     // If no active categories exist, return empty list
     if (activeCategoryIds.length === 0) {
@@ -217,83 +225,83 @@ export const getShopProducts = async ({
 
     pipeline.push({ $sort: sortStage });
 
-    // 5. Populate Category details & Applied Live Offers
-    pipeline.push(
-        {
-            $lookup: {
-                from: "categories",
-                localField: "category",
-                foreignField: "_id",
-                as: "categoryDoc"
-            }
-        },
-        {
-            $unwind: {
-                path: "$categoryDoc",
-                preserveNullAndEmptyArrays: false
-            }
-        },
-        {
-            $lookup: {
-                from: "offers",
-                localField: "appliedOffer",
-                foreignField: "_id",
-                as: "appliedOfferDoc"
-            }
-        },
-        {
-            $unwind: {
-                path: "$appliedOfferDoc",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
-            $lookup: {
-                from: "offers",
-                let: { prodId: "$_id", catId: "$category" },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ["$isActive", true] },
-                                    { $eq: ["$isDeleted", false] },
-                                    { $lte: ["$startDate", new Date()] },
-                                    { $gte: ["$endDate", new Date()] },
-                                    {
-                                        $or: [
-                                            { $and: [{ $eq: ["$offerType", "product"] }, { $eq: ["$product", "$$prodId"] }] },
-                                            { $and: [{ $eq: ["$offerType", "category"] }, { $eq: ["$category", "$$catId"] }] }
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    },
-                    { $sort: { discountValue: -1 } },
-                    { $limit: 1 }
-                ],
-                as: "fallbackOfferDocs"
-            }
-        },
-        {
-            $addFields: {
-                appliedOfferDoc: {
-                    $ifNull: ["$appliedOfferDoc", { $arrayElemAt: ["$fallbackOfferDocs", 0] }]
-                }
-            }
-        }
-    );
-
-    // 6. Facet for total count and paginated items
+    // 5. Facet for total count and paginated items, running $lookup only on paginated items
     const parsedLimit = Math.max(1, Math.min(Number(limit) || 9, 36));
     const parsedPage = Math.max(1, Number(page) || 1);
     const skip = (parsedPage - 1) * parsedLimit;
+    const now = new Date();
 
     const facetStage = {
         $facet: {
             metadata: [{ $count: "total" }],
-            products: [{ $skip: skip }, { $limit: parsedLimit }]
+            products: [
+                { $skip: skip },
+                { $limit: parsedLimit },
+                {
+                    $lookup: {
+                        from: "categories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "categoryDoc"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$categoryDoc",
+                        preserveNullAndEmptyArrays: false
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "offers",
+                        localField: "appliedOffer",
+                        foreignField: "_id",
+                        as: "appliedOfferDoc"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$appliedOfferDoc",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "offers",
+                        let: { prodId: "$_id", catId: "$category" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ["$isActive", true] },
+                                            { $eq: ["$isDeleted", false] },
+                                            { $lte: ["$startDate", now] },
+                                            { $gte: ["$endDate", now] },
+                                            {
+                                                $or: [
+                                                    { $and: [{ $eq: ["$offerType", "product"] }, { $eq: ["$product", "$$prodId"] }] },
+                                                    { $and: [{ $eq: ["$offerType", "category"] }, { $eq: ["$category", "$$catId"] }] }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            { $sort: { discountValue: -1 } },
+                            { $limit: 1 }
+                        ],
+                        as: "fallbackOfferDocs"
+                    }
+                },
+                {
+                    $addFields: {
+                        appliedOfferDoc: {
+                            $ifNull: ["$appliedOfferDoc", { $arrayElemAt: ["$fallbackOfferDocs", 0] }]
+                        }
+                    }
+                }
+            ]
         }
     };
 
@@ -307,9 +315,6 @@ export const getShopProducts = async ({
     const products = result?.products || [];
     const totalPages = Math.ceil(totalProducts / parsedLimit) || 1;
     const currentPage = Math.min(parsedPage, totalPages);
-
-    // Fetch active categories and counts for filter sidebar
-    const { categories: categoryListWithCounts, totalActiveProducts } = await getActiveCategoriesWithCounts();
 
     return {
         products,

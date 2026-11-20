@@ -1,11 +1,27 @@
 import Category from "../models/categoryModel.js";
 import Product from "../models/productModel.js";
 import User from "../models/userModel.js";
+import { getCache, setCache } from "../utils/cache.js";
+
+const SIDEBAR_CACHE_KEY = "admin:sidebarCounts";
+const SIDEBAR_CACHE_TTL_MS = 30000;
 
 export const adminMiddleware = async (req, res, next) => {
     try {
         if (!req.session?.userId || !req.session?.isAdmin) {
             return res.redirect("/admin/login");
+        }
+
+        // Skip sidebar count queries for AJAX/JSON or non-GET mutations
+        const isHtmlGet = req.method === "GET" && !req.xhr && !req.headers.accept?.includes("application/json");
+        if (!isHtmlGet) {
+            return next();
+        }
+
+        const cachedCounts = getCache(SIDEBAR_CACHE_KEY);
+        if (cachedCounts) {
+            res.locals.sidebarCounts = cachedCounts;
+            return next();
         }
 
         try {
@@ -14,11 +30,12 @@ export const adminMiddleware = async (req, res, next) => {
                 Product.countDocuments({ isDeleted: false }),
                 User.countDocuments({ isAdmin: false })
             ]);
-            res.locals.sidebarCounts = {
+            const counts = {
                 totalCategories: categoriesCount,
                 totalProducts: productsCount,
                 totalUsers: usersCount
             };
+            res.locals.sidebarCounts = setCache(SIDEBAR_CACHE_KEY, counts, SIDEBAR_CACHE_TTL_MS);
         } catch (_countErr) {
             res.locals.sidebarCounts = {
                 totalCategories: 4,

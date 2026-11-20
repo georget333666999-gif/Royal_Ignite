@@ -1,8 +1,5 @@
 import User from "../../models/userModel.js";
-
-const escapeRegex = (value) => {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
 
 const statusFilterMap = {
     active: { isBlocked: false },
@@ -62,7 +59,7 @@ const fetchUsersStandard = (filter, skip, limit) => {
 // Get Users with Status Filter & Counts
 const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) => {
     try {
-        const trimmedSearch = search.trim();
+        const { value: trimmedSearch, error: searchError } = sanitizeSearchQuery(search);
         const filter = {
             isAdmin: false,
             ...getStatusFilter(statusFilter),
@@ -86,7 +83,9 @@ const getUsers = async (search = "", statusFilter = "all", page = 1, limit = 4) 
             totalUsers,
             totalPages,
             currentPage,
-            limit
+            limit,
+            search: trimmedSearch,
+            searchError
         };
     } catch (error) {
         console.error("getUsers error:", error);

@@ -2,10 +2,8 @@ import mongoose from "mongoose";
 import Product from "../../models/productModel.js";
 import Category from "../../models/categoryModel.js";
 import { RESPONSE_MESSAGES } from "../../constants/index.js";
-
-const escapeRegex = (value) => {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
+import { escapeRegex, sanitizeSearchQuery } from "../../utils/searchValidation.js";
+import { invalidateCatalogCache } from "../../utils/cache.js";
 
 // Map status filters to Mongoose queries
 const getStatusFilterQuery = (status) => {
@@ -56,7 +54,7 @@ const getProducts = async ({
     limit = 6
 } = {}) => {
     try {
-        const trimmedSearch = search.trim();
+        const { value: trimmedSearch, error: searchError } = sanitizeSearchQuery(search);
         const filter = {
             ...getStatusFilterQuery(statusFilter)
         };
@@ -102,7 +100,9 @@ const getProducts = async ({
             totalMatching,
             totalPages,
             currentPage,
-            limit
+            limit,
+            search: trimmedSearch,
+            searchError
         };
     } catch (error) {
         console.error("getProducts error:", error);
@@ -176,7 +176,9 @@ const addProduct = async ({
             isDeleted: false
         });
 
-        return await newProduct.save();
+        const saved = await newProduct.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("addProduct error:", error.message);
         throw error;
@@ -242,7 +244,9 @@ const editProduct = async (
             product.isListed = Boolean(isListed);
         }
 
-        return await product.save();
+        const saved = await product.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("editProduct error:", error.message);
         throw error;
@@ -266,6 +270,7 @@ const softDeleteProduct = async (productId) => {
             throw new Error("Product not found.");
         }
 
+        invalidateCatalogCache();
         return product;
     } catch (error) {
         console.error("softDeleteProduct error:", error.message);
@@ -290,6 +295,7 @@ const restoreProduct = async (productId) => {
             throw new Error("Product not found.");
         }
 
+        invalidateCatalogCache();
         return product;
     } catch (error) {
         console.error("restoreProduct error:", error.message);
@@ -310,7 +316,9 @@ const toggleListProduct = async (productId) => {
         }
 
         product.isListed = !product.isListed;
-        return await product.save();
+        const saved = await product.save();
+        invalidateCatalogCache();
+        return saved;
     } catch (error) {
         console.error("toggleListProduct error:", error.message);
         throw error;

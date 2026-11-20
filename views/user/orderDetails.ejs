@@ -10,11 +10,13 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="/css/user/index.css" />
-    <link rel="stylesheet" href="/css/user/orderDetails.css" />
+    <link rel="stylesheet" href="/css/user/index.css?v=3" />
+    <link rel="stylesheet" href="/css/user/orderDetails.css?v=3" />
+    <link rel="stylesheet" href="/css/user/animations.css" />
+    <script defer src="/js/luxuryAnimations.js"></script>
 
     <!-- SweetAlert2 library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -30,7 +32,7 @@
             font-family: 'Manrope', sans-serif !important;
         }
         .royal-swal-title {
-            font-family: 'Bodoni Moda', serif !important;
+            font-family: 'Cinzel', Georgia, serif !important;
             color: #ffffff !important;
             font-size: 22px !important;
             letter-spacing: 0.3px !important;
@@ -145,14 +147,26 @@
                             </button>
                         <% } %>
 
-                        <!-- Return Order -->
+                        <!-- Return / Re-Return Order -->
+                        <% const returnAttemptCap = typeof maxReturnAttempts !== 'undefined' ? maxReturnAttempts : 3; %>
                         <% const hasReturnableItems = Array.isArray(order.items) && order.items.some(i => i.status === 'Delivered'); %>
+                        <% const hasReReturnableItems = Array.isArray(order.items) && order.items.some(i => i.status === 'Return Rejected' && Math.max(1, i.returnRequestCount || 0) < returnAttemptCap); %>
                         <% const isDeliveredStage = Boolean(order.deliveredAt) || ['Delivered', 'Return Requested', 'Return Rejected', 'Returned'].includes(order.orderStatus); %>
                         <% if (isDeliveredStage && hasReturnableItems) { %>
                             <button type="button" 
                                     class="btn-header-return" 
-                                    onclick="promptReturnOrder('<%= order.orderId %>')">
+                                    data-order-id="<%= order.orderId %>"
+                                    onclick="promptReturnOrder(this.dataset.orderId, false)">
                                 Request Return
+                            </button>
+                        <% } %>
+                        <% if (isDeliveredStage && hasReReturnableItems) { %>
+                            <button type="button" 
+                                    class="btn-header-return" 
+                                    data-order-id="<%= order.orderId %>"
+                                    data-prev-reason="<%= order.returnRejectReason || '' %>"
+                                    onclick="promptReturnOrder(this.dataset.orderId, true, this.dataset.prevReason)">
+                                Re-Request Return
                             </button>
                         <% } %>
                     </div>
@@ -361,6 +375,25 @@
                                     <%= order.returnRejectReason || 'Return request criteria were not met under our policy guidelines.' %>
                                 </div>
                             </div>
+                            <% if (hasReReturnableItems) { %>
+                                <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                                    <span style="font-size: 12.5px; color: #b8b0a4;">
+                                        Have additional details or clarification? You may re-submit your return request for another atelier review.
+                                    </span>
+                                    <button type="button"
+                                            class="btn-header-return"
+                                            style="padding: 7px 16px; font-size: 12px;"
+                                            data-order-id="<%= order.orderId %>"
+                                            data-prev-reason="<%= order.returnRejectReason || '' %>"
+                                            onclick="promptReturnOrder(this.dataset.orderId, true, this.dataset.prevReason)">
+                                        Re-Request Return
+                                    </button>
+                                </div>
+                            <% } else { %>
+                                <div style="margin-top: 10px; font-size: 12px; color: #9a9388;">
+                                    Maximum return request attempts (<%= returnAttemptCap %>) have been reached for this order.
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 <% } %>
@@ -434,14 +467,20 @@
                                             <!-- Specific Product Cancel Button -->
                                             <button type="button" 
                                                     class="btn-cancel-piece"
-                                                    onclick="promptCancelPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
+                                                    data-order-id="<%= order.orderId %>"
+                                                    data-item-id="<%= item._id %>"
+                                                    data-item-name="<%= item.name %>"
+                                                    onclick="promptCancelPiece(this.dataset.orderId, this.dataset.itemId, this.dataset.itemName)">
                                                 Cancel This Piece
                                             </button>
                                         <% } else if (isDeliveredStage && item.status === 'Delivered') { %>
                                             <!-- Specific Product Return Button -->
                                             <button type="button"
                                                     class="btn-return-piece"
-                                                    onclick="promptReturnPiece('<%= order.orderId %>', '<%= item._id %>', '<%= item.name.replace(/'/g, "\\'") %>')">
+                                                    data-order-id="<%= order.orderId %>"
+                                                    data-item-id="<%= item._id %>"
+                                                    data-item-name="<%= item.name %>"
+                                                    onclick="promptReturnPiece(this.dataset.orderId, this.dataset.itemId, this.dataset.itemName)">
                                                 Return This Piece
                                             </button>
                                         <% } else if (item.status === 'Return Requested') { %>
@@ -450,6 +489,18 @@
                                             <span class="item-status-tag returned">Returned</span>
                                         <% } else if (item.status === 'Return Rejected') { %>
                                             <span class="item-status-tag rejected">Return Declined</span>
+                                            <% if (Math.max(1, item.returnRequestCount || 0) < returnAttemptCap) { %>
+                                                <button type="button"
+                                                        class="btn-return-piece"
+                                                        style="margin-top: 6px;"
+                                                        data-order-id="<%= order.orderId %>"
+                                                        data-item-id="<%= item._id %>"
+                                                        data-item-name="<%= item.name %>"
+                                                        data-prev-reason="<%= item.returnRejectReason || '' %>"
+                                                        onclick="promptReturnPiece(this.dataset.orderId, this.dataset.itemId, this.dataset.itemName, true, this.dataset.prevReason)">
+                                                    Re-Request Return
+                                                </button>
+                                            <% } %>
                                         <% } %>
                                     </div>
                                 </div>
@@ -705,12 +756,23 @@
             });
         }
 
-        function submitReturnPrompt(endpoint, title, html) {
+        function escapeSwalHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function submitReturnPrompt(endpoint, title, html, payloadExtra = {}, confirmLabel = 'Submit Return Request') {
             Swal.fire({
                 title,
                 html,
                 input: 'textarea',
-                inputPlaceholder: 'State detailed reason for return (mandatory)...',
+                inputPlaceholder: payloadExtra.isReReturn
+                    ? 'Provide updated details or clarification for re-evaluation (mandatory)...'
+                    : 'State detailed reason for return (mandatory)...',
                 inputValidator: (value) => {
                     if (!value || !value.trim()) {
                         return 'A return reason is mandatory to proceed.';
@@ -719,7 +781,7 @@
                 icon: 'question',
                 iconColor: '#F6BD64',
                 showCancelButton: true,
-                confirmButtonText: 'Submit Return Request',
+                confirmButtonText: confirmLabel,
                 cancelButtonText: 'Cancel',
                 customClass: {
                     popup: 'royal-luxury-swal',
@@ -737,7 +799,7 @@
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ reason })
+                            body: JSON.stringify({ reason, ...payloadExtra })
                         });
 
                         const data = await response.json();
@@ -745,7 +807,7 @@
                         if (data.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Return Initiated',
+                                title: payloadExtra.isReReturn ? 'Return Re-Submitted' : 'Return Initiated',
                                 text: data.message || 'Return request recorded. Courier concierge will coordinate pickup.',
                                 background: '#141312',
                                 color: '#eae6df',
@@ -778,21 +840,39 @@
             });
         }
 
-        // Prompt Return Delivered Order with Mandatory Reason
-        function promptReturnOrder(orderId) {
+        // Prompt Return / Re-Return Delivered Order with Mandatory Reason
+        function promptReturnOrder(orderId, isReReturn = false, prevReason = '') {
+            const safeOrderId = escapeSwalHtml(orderId);
+            const prevBlock = isReReturn && prevReason
+                ? `<div style="margin: 10px 0 6px; padding: 10px 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); font-size: 12.5px; color: #fca5a5; text-align: left;"><strong>Previous Decline Note:</strong> ${escapeSwalHtml(prevReason)}</div>`
+                : '';
+
             submitReturnPrompt(
                 `/orders/${orderId}/return`,
-                'Initiate the Order Return',
-                `Please provide a mandatory reason for returning order <strong>#${orderId}</strong>:`
+                isReReturn ? 'Re-Submit Return Request' : 'Initiate the Order Return',
+                isReReturn
+                    ? `Provide an updated reason or clarification to re-submit your return request for order <strong>#${safeOrderId}</strong>:${prevBlock}`
+                    : `Please provide a mandatory reason for returning order <strong>#${safeOrderId}</strong>:`,
+                { isReReturn: Boolean(isReReturn) },
+                isReReturn ? 'Re-Submit Return Request' : 'Submit Return Request'
             );
         }
 
-        // Prompt Return Individual Product with Mandatory Reason
-        function promptReturnPiece(orderId, itemId, itemName) {
+        // Prompt Return / Re-Return Individual Product with Mandatory Reason
+        function promptReturnPiece(orderId, itemId, itemName, isReReturn = false, prevReason = '') {
+            const safeName = escapeSwalHtml(itemName);
+            const prevBlock = isReReturn && prevReason
+                ? `<div style="margin: 10px 0 6px; padding: 10px 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); font-size: 12.5px; color: #fca5a5; text-align: left;"><strong>Previous Decline Note:</strong> ${escapeSwalHtml(prevReason)}</div>`
+                : '';
+
             submitReturnPrompt(
                 `/orders/${orderId}/items/${itemId}/return`,
-                'Return This Piece?',
-                `Please provide a mandatory reason for returning <strong>${itemName}</strong>:`
+                isReReturn ? 'Re-Submit Piece Return?' : 'Return This Piece?',
+                isReReturn
+                    ? `Provide an updated reason or clarification to re-submit the return for <strong>${safeName}</strong>:${prevBlock}`
+                    : `Please provide a mandatory reason for returning <strong>${safeName}</strong>:`,
+                { isReReturn: Boolean(isReReturn) },
+                isReReturn ? 'Re-Submit Return Request' : 'Submit Return Request'
             );
         }
 

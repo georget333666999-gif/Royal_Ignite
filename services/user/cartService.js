@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 import Cart from "../../models/cartModel.js";
 import Wishlist from "../../models/wishlistModel.js";
 import Product from "../../models/productModel.js";
-import Offer from "../../models/offerModel.js";
+import { computeEffectivePricing, createOfferResolver } from "../../utils/pricingHelper.js";
 import { CART, RESPONSE_MESSAGES } from "../../constants/index.js";
+import { invalidateUserBadgeCache } from "../../utils/cache.js";
 
 /**
  * Validates that a product is active, listed, non-deleted, and in a valid category
@@ -102,22 +103,22 @@ export const addToCart = async (userId, productId, requestedQty = 1, { isBuyNow 
 
         await cart.save();
 
-        // 5. Remove from wishlist if present
-        try {
-            await Wishlist.updateOne(
+        // 5. Remove from wishlist & invalidate cached header badge counts in parallel
+        await Promise.all([
+            Wishlist.updateOne(
                 { user: userId },
                 { $pull: { products: product._id } }
-            );
-        } catch (wishlistErr) {
-            console.warn("Could not update wishlist after adding to cart:", wishlistErr);
-        }
+            ).catch((wishlistErr) => {
+                console.warn("Could not update wishlist after adding to cart:", wishlistErr);
+            })
+        ]);
+        invalidateUserBadgeCache(userId);
 
-        const cartData = await getCart(userId);
-        let wishlistCount = 0;
-        try {
-            const wl = await Wishlist.findOne({ user: userId }, { products: 1 }).lean();
-            wishlistCount = wl && Array.isArray(wl.products) ? wl.products.length : 0;
-        } catch (_) {}
+        const [cartData, wl] = await Promise.all([
+            getCart(userId),
+            Wishlist.findOne({ user: userId }, { products: 1 }).lean().catch(() => null)
+        ]);
+        const wishlistCount = wl && Array.isArray(wl.products) ? wl.products.length : 0;
         cartData.wishlistCount = wishlistCount;
         return cartData;
     } catch (error) {
@@ -162,16 +163,22 @@ export const getCart = async (userId) => {
         const blockingReasons = [];
         let hasBlockingIssues = false;
 
-        // Retrieve raw cart first to capture unpopulated product IDs
-        const rawCart = await Cart.findOne({ user: userId }).select("items.product items._id").lean();
+        // Only fetch raw cart IDs if any populated product is missing (deleted from DB)
         const rawProductMap = new Map();
-        if (rawCart && Array.isArray(rawCart.items)) {
-            for (const rawItem of rawCart.items) {
-                if (rawItem && rawItem._id) {
-                    rawProductMap.set(rawItem._id.toString(), rawItem.product ? rawItem.product.toString() : null);
+        const hasMissingProduct = cart.items.some((item) => !item.product);
+        if (hasMissingProduct) {
+            const rawCart = await Cart.findOne({ user: userId }).select("items.product items._id").lean();
+            if (rawCart && Array.isArray(rawCart.items)) {
+                for (const rawItem of rawCart.items) {
+                    if (rawItem && rawItem._id) {
+                        rawProductMap.set(rawItem._id.toString(), rawItem.product ? rawItem.product.toString() : null);
+                    }
                 }
             }
         }
+
+        // Batch-fetch fallback active offers via shared helper
+        const resolveOffer = await createOfferResolver(cart.items);
 
         for (const item of cart.items) {
             const prod = item.product;
@@ -213,9 +220,8 @@ export const getCart = async (userId) => {
                 continue;
             }
 
-            // Check current pricing
-            const hasDiscount = Boolean(prod.salePrice && prod.salePrice > 0 && prod.salePrice < prod.regularPrice);
-            const currentEffectivePrice = hasDiscount ? prod.salePrice : prod.regularPrice;
+            // Check current pricing via shared pricing helper
+            const { hasDiscount, effectivePrice: currentEffectivePrice } = computeEffectivePricing(prod);
 
             // Check inventory stock status
             const isOutOfStock = prod.stock <= 0;
@@ -240,34 +246,7 @@ export const getCart = async (userId) => {
                 itemCount += item.quantity;
             }
 
-            let appliedOffer = prod.appliedOffer || null;
-            if (!appliedOffer && (prod.category || prod._id)) {
-                const now = new Date();
-                const directOffer = await Offer.findOne({
-                    isActive: true,
-                    isDeleted: false,
-                    offerType: "product",
-                    product: prod._id,
-                    startDate: { $lte: now },
-                    endDate: { $gte: now }
-                }).lean();
-                if (directOffer) {
-                    appliedOffer = directOffer;
-                } else if (prod.category) {
-                    const catId = prod.category._id || prod.category;
-                    const catOffer = await Offer.findOne({
-                        isActive: true,
-                        isDeleted: false,
-                        offerType: "category",
-                        category: catId,
-                        startDate: { $lte: now },
-                        endDate: { $gte: now }
-                    }).lean();
-                    if (catOffer) {
-                        appliedOffer = catOffer;
-                    }
-                }
-            }
+            const appliedOffer = resolveOffer(prod);
 
             processedItems.push({
                 _id: item._id,
@@ -362,6 +341,7 @@ export const updateCartItemQuantity = async (userId, productId, requestedQty) =>
         cart.items[itemIndex].quantity = qty;
         cart.items[itemIndex].price = effectivePrice;
         await cart.save();
+        invalidateUserBadgeCache(userId);
 
         return getCart(userId);
     } catch (error) {
@@ -389,6 +369,7 @@ export const removeFromCart = async (userId, productId) => {
                 }
             }
         );
+        invalidateUserBadgeCache(userId);
 
         return getCart(userId);
     } catch (error) {
@@ -403,6 +384,7 @@ export const removeFromCart = async (userId, productId) => {
 export const clearCart = async (userId) => {
     try {
         await Cart.updateOne({ user: userId }, { $set: { items: [] } });
+        invalidateUserBadgeCache(userId);
         return getCart(userId);
     } catch (error) {
         console.error("clearCart error:", error.message);
@@ -411,15 +393,16 @@ export const clearCart = async (userId) => {
 };
 
 /**
- * Get total item count in user's cart (sum of quantities of valid items)
+ * Get total item count in user's cart (fast lightweight query)
  * @param {string} userId
  * @returns {Promise<number>}
  */
 export const getCartCount = async (userId) => {
     try {
         if (!userId) return 0;
-        const cartData = await getCart(userId);
-        return cartData ? (cartData.itemCount || 0) : 0;
+        const cartDoc = await Cart.findOne({ user: userId }).select("items.quantity").lean();
+        if (!cartDoc || !Array.isArray(cartDoc.items)) return 0;
+        return cartDoc.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
     } catch (error) {
         console.error("cartService getCartCount error:", error);
         return 0;
