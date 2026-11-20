@@ -12,11 +12,21 @@ import { requireActiveUser, isAjaxRequest } from "../../utils/controllerHelpers.
  * Helper to fetch checkout details whether Cart or Buy-Now
  */
 const fetchCheckoutDetails = async (req, userId, coupon = null) => {
+    let details;
     if (req.session?.buyNow) {
         const { productId, quantity } = req.session.buyNow;
-        return await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, coupon);
+        details = await checkoutService.getBuyNowCheckoutDetails(userId, productId, quantity, coupon);
+    } else {
+        details = await checkoutService.getCheckoutDetails(userId, coupon);
     }
-    return await checkoutService.getCheckoutDetails(userId, coupon);
+
+    if (coupon && !details.financials.couponCode) {
+        req.session.appliedCoupon = null;
+    } else if (coupon && details.financials.couponCode && req.session?.appliedCoupon) {
+        req.session.appliedCoupon.discountAmount = details.financials.couponDiscount;
+    }
+
+    return details;
 };
 
 /**
@@ -125,16 +135,8 @@ export const getCheckoutPage = async (req, res, next) => {
             req.session.buyNow = null;
         }
 
-        let appliedCoupon = req.session?.appliedCoupon || null;
+        const appliedCoupon = req.session?.appliedCoupon || null;
         const checkoutData = await fetchCheckoutDetails(req, userId, appliedCoupon);
-
-        // Synchronize session coupon state if subtotal changes invalidated or changed the coupon
-        if (appliedCoupon && !checkoutData.financials.couponCode) {
-            req.session.appliedCoupon = null;
-            appliedCoupon = null;
-        } else if (appliedCoupon && checkoutData.financials.couponCode) {
-            req.session.appliedCoupon.discountAmount = checkoutData.financials.couponDiscount;
-        }
 
         if (checkoutData.isEmpty) {
             return res.redirect(
@@ -421,16 +423,8 @@ export const postCreateRazorpayOrder = async (req, res) => {
         }
 
         const isBuyNow = Boolean(req.session?.buyNow);
-        let appliedCoupon = req.session?.appliedCoupon || null;
+        const appliedCoupon = req.session?.appliedCoupon || null;
         const checkoutData = await fetchCheckoutDetails(req, userId, appliedCoupon);
-
-        // Synchronize session coupon state if subtotal changes invalidated or changed the coupon
-        if (appliedCoupon && !checkoutData.financials.couponCode) {
-            req.session.appliedCoupon = null;
-            appliedCoupon = null;
-        } else if (appliedCoupon && checkoutData.financials.couponCode) {
-            req.session.appliedCoupon.discountAmount = checkoutData.financials.couponDiscount;
-        }
 
         if (checkoutData.isEmpty || checkoutData.hasBlockingIssues) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
