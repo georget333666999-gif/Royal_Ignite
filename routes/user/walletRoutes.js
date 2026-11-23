@@ -4,15 +4,21 @@ import { userMiddleware } from "../../middleware/userMiddleware.js";
 
 const router = express.Router();
 
-router.use(userMiddleware);
-
 // Wallet Ledger Routes
-router.get("/wallet", walletController.getWalletPage);
-router.get("/user/wallet", walletController.getWalletPage);
+router.get("/wallet", userMiddleware, walletController.getWalletPage);
+router.get("/user/wallet", userMiddleware, walletController.getWalletPage);
 
 // Add Cash to Wallet via Razorpay
-router.post("/wallet/add-funds/create-order", walletController.postCreateAddFundsOrder);
-router.post("/wallet/add-funds/verify", walletController.postVerifyAddFunds);
+router.post(
+    "/wallet/add-funds/create-order",
+    userMiddleware,
+    walletController.postCreateAddFundsOrder
+);
+router.post(
+    "/wallet/add-funds/verify",
+    userMiddleware,
+    walletController.postVerifyAddFunds
+);
 
 export default router;
 
